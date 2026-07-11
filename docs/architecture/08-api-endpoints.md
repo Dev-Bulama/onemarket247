@@ -1,0 +1,188 @@
+# 08 — REST API Endpoint Map (`/api/v1/*`)
+
+Auth: Laravel Sanctum (bearer tokens for mobile/SPA-style consumption; the
+web Blade frontend calls the same endpoints via same-origin fetch using
+Sanctum's SPA cookie mode). Every response uses the standard envelope defined
+in [01-system-architecture.md](01-system-architecture.md) §6. Rate limiting
+via Redis-backed throttles, tiered by endpoint sensitivity (auth: strict,
+catalog read: generous, payments: strict + idempotency-key required).
+
+This endpoint map is designed and built incrementally across Phases 8–22 (as
+each web feature ships, its API is built alongside it — see per-phase notes)
+and is **finalized and hardened in Phase 28** before any mobile work starts.
+
+## 1. Auth & Session
+
+```
+POST   /api/v1/auth/register
+POST   /api/v1/auth/login
+POST   /api/v1/auth/logout
+POST   /api/v1/auth/forgot-password
+POST   /api/v1/auth/reset-password
+POST   /api/v1/auth/verify-email
+POST   /api/v1/auth/resend-verification
+POST   /api/v1/auth/2fa/challenge
+POST   /api/v1/auth/social/{provider}
+GET    /api/v1/auth/sessions
+DELETE /api/v1/auth/sessions/{id}
+POST   /api/v1/auth/device-tokens          (push notification registration)
+```
+
+## 2. Config / Reference Data
+
+```
+GET /api/v1/config                 (feature flags, min app version, gateway list)
+GET /api/v1/languages
+GET /api/v1/currencies
+GET /api/v1/countries
+GET /api/v1/countries/{id}/states
+GET /api/v1/states/{id}/cities
+```
+
+## 3. Storefront / Catalog
+
+```
+GET /api/v1/home                   (homepage sections, resolved & ready to render)
+GET /api/v1/categories
+GET /api/v1/categories/{slug}
+GET /api/v1/brands
+GET /api/v1/brands/{slug}
+GET /api/v1/products
+GET /api/v1/products/{slug}
+GET /api/v1/products/{slug}/reviews
+GET /api/v1/products/{slug}/questions
+GET /api/v1/vendors
+GET /api/v1/vendors/{slug}
+GET /api/v1/stores/{slug}
+GET /api/v1/stores/{slug}/products
+GET /api/v1/search
+GET /api/v1/search/suggestions
+```
+All list endpoints support `page`, `per_page`, `sort`, `filter[...]`, `q`.
+
+## 4. Cart & Checkout
+
+```
+GET    /api/v1/cart
+POST   /api/v1/cart/items
+PATCH  /api/v1/cart/items/{id}
+DELETE /api/v1/cart/items/{id}
+POST   /api/v1/cart/coupons
+DELETE /api/v1/cart/coupons/{code}
+POST   /api/v1/cart/merge            (guest → authenticated merge)
+
+POST   /api/v1/checkout/init         (returns idempotency key + revalidated totals)
+POST   /api/v1/checkout/complete     (Idempotency-Key header required)
+GET    /api/v1/checkout/{session}/status
+```
+
+## 5. Orders
+
+```
+GET  /api/v1/orders
+GET  /api/v1/orders/{order}
+GET  /api/v1/orders/{order}/invoice
+GET  /api/v1/orders/{order}/track
+POST /api/v1/orders/{order}/cancel
+POST /api/v1/orders/{order}/reorder
+```
+
+## 6. Payments
+
+```
+GET  /api/v1/payments/methods
+POST /api/v1/payments/{order}/initialize
+POST /api/v1/payments/{order}/verify
+POST /api/v1/webhooks/payments/{gateway}   (unauthenticated, signature-verified)
+```
+
+## 7. Wishlist / Compare / Reviews / Questions
+
+```
+GET/POST/DELETE /api/v1/wishlist
+GET/POST/DELETE /api/v1/compare
+GET/POST        /api/v1/products/{slug}/reviews
+POST            /api/v1/reviews/{id}/helpful
+GET/POST        /api/v1/products/{slug}/questions
+POST            /api/v1/questions/{id}/answers
+```
+
+## 8. Returns / Refunds / Disputes
+
+```
+GET  /api/v1/returns
+POST /api/v1/returns
+GET  /api/v1/returns/{id}
+POST /api/v1/returns/{id}/evidence
+GET  /api/v1/refunds/{id}
+GET  /api/v1/disputes
+POST /api/v1/disputes
+POST /api/v1/disputes/{id}/messages
+```
+
+## 9. Wallet / Rewards / Gift Cards
+
+```
+GET  /api/v1/wallet
+GET  /api/v1/wallet/transactions
+GET  /api/v1/rewards
+GET  /api/v1/rewards/history
+POST /api/v1/gift-cards/redeem
+GET  /api/v1/gift-cards/{code}/balance
+```
+
+## 10. Notifications / Support
+
+```
+GET   /api/v1/notifications
+PATCH /api/v1/notifications/{id}/read
+GET   /api/v1/support
+POST  /api/v1/support
+GET   /api/v1/support/{ticket}
+POST  /api/v1/support/{ticket}/messages
+POST  /api/v1/support/{ticket}/attachments
+```
+
+## 11. Profile / Addresses
+
+```
+GET/PATCH       /api/v1/profile
+POST            /api/v1/profile/password
+GET/POST        /api/v1/addresses
+PATCH/DELETE    /api/v1/addresses/{id}
+```
+
+## 12. Vendor API (guard: vendor, prefix `/api/v1/vendor`)
+
+```
+GET/POST/PATCH  /api/v1/vendor/products
+GET/PATCH       /api/v1/vendor/inventory
+GET             /api/v1/vendor/orders
+PATCH           /api/v1/vendor/orders/{id}/status
+GET             /api/v1/vendor/earnings
+GET/POST        /api/v1/vendor/withdrawals
+GET/PATCH       /api/v1/vendor/store
+GET             /api/v1/vendor/analytics
+```
+
+## 13. Standards Applied Uniformly
+
+- **Versioning**: `/api/v1` namespace; breaking changes ship as `/api/v2`
+  rather than mutating v1 contracts once mobile depends on them.
+- **Pagination**: cursor or page-based per `meta.pagination` block, consistent
+  key names across every list endpoint.
+- **Idempotency**: `Idempotency-Key` header required on
+  `POST /checkout/complete` and payment-initializing endpoints; the server
+  persists the key (`checkout_sessions`, `payments`) and returns the original
+  response on retry rather than creating a duplicate order/payment.
+- **Errors**: RFC-inspired consistent shape (see
+  [01-system-architecture.md](01-system-architecture.md) §6);
+  `error_code` is a stable machine-readable string mobile can switch on.
+- **Authorization**: every endpoint maps to the same Policy classes used by
+  Filament/Blade — one authorization source of truth across all three
+  surfaces plus the API.
+- **Caching**: `ETag`/`Last-Modified` on cacheable catalog GETs
+  (`/products`, `/categories`), cache invalidated via model observers when
+  the underlying admin/vendor edit happens — this is the mechanism that
+  satisfies the "web edits must appear via API" sync rule for the future
+  mobile app.
