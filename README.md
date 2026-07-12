@@ -4,15 +4,16 @@ OneMarket247 is a multi-vendor e-commerce marketplace platform: a Laravel + Fila
 application (customer marketplace, vendor dashboard, administration panel, and REST API)
 that will later be extended with a React Native mobile application.
 
-## Project Status: Phase 2 — Database Foundation & Core Models
+## Project Status: Phase 3 — Authentication, Authorization & Account Security
 
-Phase 0 (architecture and planning) and Phase 1 (Laravel project foundation) are
-complete — see [`docs/architecture/`](docs/architecture/README.md) and
-[`docs/reports/`](docs/reports/). Phase 2 has built the core schema explicitly scoped
-to this phase: identity extensions, vendor/store skeleton, customer profiles,
-addresses, and platform primitives (geography, settings, languages, currencies), with
-models, enums, factories, seeders, and ownership policies. Catalog, inventory, tax, and
-shipping schemas are intentionally deferred to their own later phases.
+Phases 0–2 (architecture, Laravel foundation, core schema) are complete — see
+[`docs/architecture/`](docs/architecture/README.md) and [`docs/reports/`](docs/reports/).
+Phase 3 has wired up guard-isolated authentication for administrators, vendors, and
+customers: registration, login/logout, password reset, email verification, 2FA,
+device-session management, login-history/suspicious-login alerts, API tokens
+(Sanctum, ability-scoped per actor type), and social login (Google working, Facebook
+config-gated, Apple architecture-only). A vendor session cannot satisfy the admin
+guard (or vice versa) by construction, not just by convention.
 
 The full multi-vendor e-commerce **web platform** (Phases 1–27) must be built, tested,
 documented, and pass the **Web Completion Gate** before any REST API finalization
@@ -82,6 +83,6 @@ All Phase 0 planning documents live in [`docs/architecture/`](docs/architecture/
 
 ## Next step
 
-Phase 3 — Authentication, Authorization, and Account Security — wires up multi-guard
-login (admin/vendor/customer), 2FA, and the permission checks the Phase 2 policies
-already encode.
+Phase 4 — Filament Administration Panel — builds admin resources for every module
+completed so far (vendors, stores, customers, geography/settings) on top of the
+now-working `admin` guard.

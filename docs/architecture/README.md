@@ -45,6 +45,7 @@ As each implementation phase finishes, its completion report is added under
 
 - Phase 1 (Laravel Project Foundation) — [`phase-01-completion-report.md`](../reports/phase-01-completion-report.md)
 - Phase 2 (Database Foundation & Core Models) — [`phase-02-completion-report.md`](../reports/phase-02-completion-report.md)
+- Phase 3 (Authentication, Authorization & Account Security) — [`phase-03-completion-report.md`](../reports/phase-03-completion-report.md)
 
 ## Hard constraint carried through every later phase
 

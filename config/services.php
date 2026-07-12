@@ -35,4 +35,40 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Social Login (Phase 3)
+    |--------------------------------------------------------------------------
+    |
+    | Google is fully implemented via Socialite's built-in driver. Facebook
+    | uses the same driver/controller and activates automatically once its
+    | credentials are set (see SocialAuthController::isConfigured()).
+    |
+    | Apple ("architecture" only per the Phase 3 brief) is intentionally not
+    | wired to a working driver: real Sign in with Apple needs a JWT-signed
+    | client secret (private key + key id + team id) and the
+    | socialiteproviders/apple package, neither of which are installed here.
+    | The route/controller branch exists and returns a clear "not configured"
+    | response so the integration point is unambiguous when it's built out.
+    |
+    */
+
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI'),
+    ],
+
+    'facebook' => [
+        'client_id' => env('FACEBOOK_CLIENT_ID'),
+        'client_secret' => env('FACEBOOK_CLIENT_SECRET'),
+        'redirect' => env('FACEBOOK_REDIRECT_URI'),
+    ],
+
+    'apple' => [
+        'client_id' => env('APPLE_CLIENT_ID'),
+        'client_secret' => env('APPLE_CLIENT_SECRET'),
+        'redirect' => env('APPLE_REDIRECT_URI'),
+    ],
+
 ];
