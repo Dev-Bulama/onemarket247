@@ -41,8 +41,10 @@ Phase 1 does not start until:
 ## Phase completion reports
 
 As each implementation phase finishes, its completion report is added under
-[`docs/reports/`](../reports/). Phase 1 (Laravel Project Foundation) is complete —
-see [`docs/reports/phase-01-completion-report.md`](../reports/phase-01-completion-report.md).
+[`docs/reports/`](../reports/):
+
+- Phase 1 (Laravel Project Foundation) — [`phase-01-completion-report.md`](../reports/phase-01-completion-report.md)
+- Phase 2 (Database Foundation & Core Models) — [`phase-02-completion-report.md`](../reports/phase-02-completion-report.md)
 
 ## Hard constraint carried through every later phase
 

@@ -4,13 +4,15 @@ OneMarket247 is a multi-vendor e-commerce marketplace platform: a Laravel + Fila
 application (customer marketplace, vendor dashboard, administration panel, and REST API)
 that will later be extended with a React Native mobile application.
 
-## Project Status: Phase 1 — Laravel Project Foundation
+## Project Status: Phase 2 — Database Foundation & Core Models
 
-Phase 0 (architecture and planning) is complete — see [`docs/architecture/`](docs/architecture/README.md).
-Phase 1 has scaffolded the Laravel application itself: framework install, environment
-configuration, base package set, and foundational app scaffolding (exception handling,
-API response envelope, money value object). No domain features exist yet — those begin
-in Phase 2.
+Phase 0 (architecture and planning) and Phase 1 (Laravel project foundation) are
+complete — see [`docs/architecture/`](docs/architecture/README.md) and
+[`docs/reports/`](docs/reports/). Phase 2 has built the core schema explicitly scoped
+to this phase: identity extensions, vendor/store skeleton, customer profiles,
+addresses, and platform primitives (geography, settings, languages, currencies), with
+models, enums, factories, seeders, and ownership policies. Catalog, inventory, tax, and
+shipping schemas are intentionally deferred to their own later phases.
 
 The full multi-vendor e-commerce **web platform** (Phases 1–27) must be built, tested,
 documented, and pass the **Web Completion Gate** before any REST API finalization
@@ -80,5 +82,6 @@ All Phase 0 planning documents live in [`docs/architecture/`](docs/architecture/
 
 ## Next step
 
-Phase 2 — Database Foundation and Core Models — builds the marketplace's own schema
-(vendors, stores, customers, catalog primitives) on top of this foundation.
+Phase 3 — Authentication, Authorization, and Account Security — wires up multi-guard
+login (admin/vendor/customer), 2FA, and the permission checks the Phase 2 policies
+already encode.
