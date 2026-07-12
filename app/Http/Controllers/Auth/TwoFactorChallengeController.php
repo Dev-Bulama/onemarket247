@@ -67,7 +67,7 @@ class TwoFactorChallengeController extends Controller
     {
         return match ($guard) {
             'admin' => route('filament.admin.pages.dashboard'),
-            'vendor' => route('vendor.dashboard'),
+            'vendor' => route('filament.vendor.pages.dashboard'),
             default => route('account.dashboard'),
         };
     }

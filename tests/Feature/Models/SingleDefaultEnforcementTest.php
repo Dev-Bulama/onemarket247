@@ -2,6 +2,7 @@
 
 use App\Models\Currency;
 use App\Models\Language;
+use App\Models\VendorSubscriptionPlan;
 
 test('creating a new default language unsets the previous default', function () {
     $first = Language::factory()->create(['is_default' => true]);
@@ -41,6 +42,24 @@ test('creating a new default currency unsets the previous default', function () 
 test('updating an existing currency to default unsets siblings', function () {
     $first = Currency::factory()->create(['is_default' => true]);
     $second = Currency::factory()->create(['is_default' => false]);
+
+    $second->update(['is_default' => true]);
+
+    expect($first->fresh()->is_default)->toBeFalse()
+        ->and($second->fresh()->is_default)->toBeTrue();
+});
+
+test('creating a new default vendor subscription plan unsets the previous default', function () {
+    $first = VendorSubscriptionPlan::factory()->create(['is_default' => true]);
+    $second = VendorSubscriptionPlan::factory()->create(['is_default' => true]);
+
+    expect($first->fresh()->is_default)->toBeFalse()
+        ->and($second->fresh()->is_default)->toBeTrue();
+});
+
+test('updating an existing vendor subscription plan to default unsets siblings', function () {
+    $first = VendorSubscriptionPlan::factory()->create(['is_default' => true]);
+    $second = VendorSubscriptionPlan::factory()->create(['is_default' => false]);
 
     $second->update(['is_default' => true]);
 

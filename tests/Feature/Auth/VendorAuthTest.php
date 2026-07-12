@@ -12,9 +12,9 @@ test('an approved vendor can sign in and reach the dashboard', function () {
     ]);
 
     $this->assertAuthenticatedAs($vendor->user, 'vendor');
-    $response->assertRedirect(route('vendor.dashboard'));
+    $response->assertRedirect(route('filament.vendor.pages.dashboard'));
 
-    $this->get('/vendor/dashboard')->assertSee($vendor->business_name);
+    $this->get('/vendor')->assertOk();
 });
 
 test('a suspended vendor cannot access the dashboard even with correct credentials', function () {

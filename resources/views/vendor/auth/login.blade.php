@@ -31,6 +31,9 @@
     </form>
 
     <p class="mt-6 text-center text-sm text-gray-600">
-        Want to sell on OneMarket247? Vendor registration opens in a later phase.
+        Forgot your password? <a href="{{ route('vendor.password.request') }}" class="text-indigo-600 font-medium">Reset it</a>
+    </p>
+    <p class="mt-2 text-center text-sm text-gray-600">
+        Want to sell on OneMarket247? <a href="{{ route('vendor.register') }}" class="text-indigo-600 font-medium">Apply now</a>
     </p>
 @endsection

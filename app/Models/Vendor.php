@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\VendorStatus;
+use App\Enums\VendorSubscriptionStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -72,9 +73,22 @@ class Vendor extends Model
         return $this->hasMany(VendorDocument::class);
     }
 
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(VendorSubscription::class);
+    }
+
     public function addresses(): MorphMany
     {
         return $this->morphMany(Address::class, 'addressable');
+    }
+
+    public function currentSubscription(): ?VendorSubscription
+    {
+        return $this->subscriptions()
+            ->where('status', VendorSubscriptionStatus::Active)
+            ->latest('starts_at')
+            ->first();
     }
 
     public function canAccessDashboard(): bool

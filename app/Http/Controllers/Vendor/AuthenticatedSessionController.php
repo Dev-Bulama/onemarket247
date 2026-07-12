@@ -22,14 +22,12 @@ class AuthenticatedSessionController extends Controller
     {
         $user = $request->resolveUser('vendor');
 
-        // Vendor staff accounts have no Vendor record of their own; only the
-        // owning Vendor's status gates dashboard access — see
-        // docs/architecture/07-vendor-dashboard.md §3.
-        $vendor = $user->vendor;
-
-        if ($vendor && ! $vendor->canAccessDashboard()) {
+        // Covers both a suspended vendor owner and a staff member whose
+        // owning store's vendor is suspended — see User::canAccessVendorDashboard()
+        // and docs/architecture/07-vendor-dashboard.md §3.
+        if (! $user->canAccessVendorDashboard()) {
             throw ValidationException::withMessages([
-                'email' => 'Your store account is '.$vendor->status->getLabel().' and cannot access the dashboard right now.',
+                'email' => 'Your store account cannot access the dashboard right now.',
             ]);
         }
 
@@ -42,7 +40,7 @@ class AuthenticatedSessionController extends Controller
         Auth::guard('vendor')->login($user, $request->boolean('remember'));
         $request->session()->regenerate();
 
-        return redirect()->intended(route('vendor.dashboard'));
+        return redirect()->intended(route('filament.vendor.pages.dashboard'));
     }
 
     public function destroy(Request $request): RedirectResponse

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\StoreStaffStatus;
 use App\Enums\UserStatus;
 use App\Enums\UserType;
 use Database\Factories\UserFactory;
@@ -102,11 +103,48 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         return $this->twoFactorCredential()->whereNotNull('confirmed_at')->exists();
     }
 
+    /**
+     * The Vendor a "vendor" guard actor is acting on behalf of: their own
+     * Vendor record for an owner, or their store's owning Vendor for staff.
+     * Used by BelongsToVendorScope to isolate vendor-owned data — the
+     * VendorStaff branch MUST query Store without its own BelongsToVendorScope,
+     * since that scope calls back into this method to resolve its filter
+     * (a normal Eloquent load here would recurse infinitely).
+     */
+    public function actingVendorId(): ?int
+    {
+        return match ($this->user_type) {
+            UserType::VendorOwner => $this->vendor?->id,
+            UserType::VendorStaff => $this->storeStaff()
+                ->with(['store' => fn ($query) => $query->withoutGlobalScopes()])
+                ->first()?->store?->vendor_id,
+            default => null,
+        };
+    }
+
     public function canAccessPanel(Panel $panel): bool
     {
         return match ($panel->getId()) {
             'admin' => in_array($this->user_type, [UserType::SuperAdmin, UserType::Admin, UserType::Staff], true) && $this->isActive(),
+            'vendor' => in_array($this->user_type, [UserType::VendorOwner, UserType::VendorStaff], true)
+                && $this->isActive()
+                && $this->canAccessVendorDashboard(),
             default => false,
         };
+    }
+
+    public function canAccessVendorDashboard(): bool
+    {
+        if ($this->user_type === UserType::VendorOwner) {
+            return $this->vendor?->canAccessDashboard() ?? false;
+        }
+
+        $staff = $this->storeStaff()
+            ->with(['store' => fn ($query) => $query->withoutGlobalScopes()->with('vendor')])
+            ->first();
+
+        return $staff
+            && $staff->status === StoreStaffStatus::Active
+            && ($staff->store?->vendor?->canAccessDashboard() ?? false);
     }
 }

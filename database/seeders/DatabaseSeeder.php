@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             CurrencySeeder::class,
             LanguageSeeder::class,
             SettingsSeeder::class,
+            VendorSubscriptionPlanSeeder::class,
         ]);
 
         User::factory()->create([

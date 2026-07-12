@@ -27,7 +27,27 @@ class VendorApplicationFactory extends Factory
             'store_slug' => Str::slug($storeName).'-'.fake()->unique()->numberBetween(1, 99999),
             'address' => fake()->address(),
             'store_description' => fake()->paragraph(),
+            'bank_name' => fake()->company().' Bank',
+            'bank_account_name' => fake()->name(),
+            'bank_account_number' => fake()->bankAccountNumber(),
             'status' => VendorApplicationStatus::Pending,
         ];
+    }
+
+    public function approved(): static
+    {
+        return $this->state(fn () => [
+            'status' => VendorApplicationStatus::Approved,
+            'reviewed_at' => now(),
+        ]);
+    }
+
+    public function rejected(): static
+    {
+        return $this->state(fn () => [
+            'status' => VendorApplicationStatus::Rejected,
+            'rejection_reason' => fake()->sentence(),
+            'reviewed_at' => now(),
+        ]);
     }
 }
