@@ -105,6 +105,11 @@ class Product extends Model implements HasMedia
         return $this->hasMany(ProductDigitalFile::class);
     }
 
+    public function warehouseStocks(): HasMany
+    {
+        return $this->hasMany(WarehouseStock::class);
+    }
+
     public function relatedProducts(): BelongsToMany
     {
         return $this->belongsToMany(self::class, 'related_products', 'product_id', 'related_product_id')

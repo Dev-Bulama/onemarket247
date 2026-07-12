@@ -4,19 +4,21 @@ OneMarket247 is a multi-vendor e-commerce marketplace platform: a Laravel + Fila
 application (customer marketplace, vendor dashboard, administration panel, and REST API)
 that will later be extended with a React Native mobile application.
 
-## Project Status: Phase 6 — Product Catalog, Categories, Brands, Attributes & Media
+## Project Status: Phase 7 — Inventory & Warehouse Management
 
-Phases 0–5 (architecture, Laravel foundation, core schema, guard-isolated
-authentication, the Filament admin panel, vendor onboarding/approval and the
-vendor dashboard panel) are complete — see
+Phases 0–6 (architecture, Laravel foundation, core schema, guard-isolated
+authentication, the Filament admin panel, vendor onboarding/approval, the
+vendor dashboard panel, and the full product catalog) are complete — see
 [`docs/architecture/`](docs/architecture/README.md) and [`docs/reports/`](docs/reports/).
-Phase 6 has built the full product catalog: categories (materialized-path
-tree), brands, attributes/attribute values (including swatches), collections,
-and tags in the admin panel; a vendor-facing product resource (simple,
-variable, and digital products) with variations, staged image/digital-file
-uploads via Spatie MediaLibrary, and a manual/automatic admin
-approve/reject/feature workflow; vendor data isolation extended to products;
-and a private, policy-gated download endpoint for digital product files.
+Phase 7 has built the real multi-warehouse inventory engine: vendor-owned
+warehouses; a `warehouse_stocks` on_hand/reserved/damaged/incoming ledger per
+product or variation, with `products`/`product_variations.stock_quantity`
+kept as a derived cache; a `stock_movements` immutable audit ledger; a
+concurrency-safe (`lockForUpdate()`) reserve → deduct → restore lifecycle
+with no-overselling guarantees; warehouse-to-warehouse stock transfers
+(request → dispatch → complete/cancel); admin `WarehouseResource`/
+`StockTransferResource` plus a low-stock dashboard widget; and a vendor
+`/vendor/inventory` page for stock adjustments and transfer requests.
 
 The full multi-vendor e-commerce **web platform** (Phases 1–27) must be built, tested,
 documented, and pass the **Web Completion Gate** before any REST API finalization
@@ -87,5 +89,6 @@ All Phase 0 planning documents live in [`docs/architecture/`](docs/architecture/
 
 ## Next step
 
-Phase 7 — Inventory, Warehouses & Stock Management — builds on the product
-catalog Phase 6 now provides.
+Phase 8 — Customer-Facing Web Marketplace (storefront pages, search,
+discovery) — is the first phase to put the catalog and inventory Phases 6–7
+built in front of a shopper.

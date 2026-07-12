@@ -8,6 +8,7 @@ use App\Models\StoreStaff;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Models\VendorDocument;
+use App\Models\Warehouse;
 
 test('a vendor owner only sees their own store when querying', function () {
     $vendorA = Vendor::factory()->create();
@@ -76,4 +77,17 @@ test('products are isolated the same way', function () {
 
     expect(Product::all())->toHaveCount(1)
         ->and(Product::first()->vendor_id)->toBe($vendorA->id);
+});
+
+test('warehouses are isolated the same way', function () {
+    $vendorA = Vendor::factory()->create();
+    Warehouse::factory()->create(['vendor_id' => $vendorA->id]);
+
+    $vendorB = Vendor::factory()->create();
+    Warehouse::factory()->create(['vendor_id' => $vendorB->id]);
+
+    test()->actingAs($vendorA->user, 'vendor');
+
+    expect(Warehouse::all())->toHaveCount(1)
+        ->and(Warehouse::first()->vendor_id)->toBe($vendorA->id);
 });
