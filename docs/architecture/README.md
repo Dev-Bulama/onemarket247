@@ -38,6 +38,12 @@ Phase 1 does not start until:
 - [x] Commission and wallet flows are defined ([09](09-lifecycles.md))
 - [x] The phased development order is documented ([13](13-development-roadmap.md))
 
+## Phase completion reports
+
+As each implementation phase finishes, its completion report is added under
+[`docs/reports/`](../reports/). Phase 1 (Laravel Project Foundation) is complete —
+see [`docs/reports/phase-01-completion-report.md`](../reports/phase-01-completion-report.md).
+
 ## Hard constraint carried through every later phase
 
 **No React Native code, screens, or project files are created until the Web
