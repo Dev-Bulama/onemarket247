@@ -15,7 +15,7 @@ class LanguageFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->unique()->languageName(),
+            'name' => fake()->unique()->word(),
             'native_name' => fake()->word(),
             'code' => fake()->unique()->languageCode(),
             'direction' => 'ltr',

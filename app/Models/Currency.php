@@ -30,4 +30,21 @@ class Currency extends Model
     {
         return $this->hasOne(ExchangeRate::class);
     }
+
+    protected static function booted(): void
+    {
+        static::saving(function (self $currency) {
+            if (! $currency->is_default) {
+                return;
+            }
+
+            $query = static::query();
+
+            if ($currency->exists) {
+                $query->where('id', '!=', $currency->id);
+            }
+
+            $query->update(['is_default' => false]);
+        });
+    }
 }

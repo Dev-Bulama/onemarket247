@@ -4,16 +4,15 @@ OneMarket247 is a multi-vendor e-commerce marketplace platform: a Laravel + Fila
 application (customer marketplace, vendor dashboard, administration panel, and REST API)
 that will later be extended with a React Native mobile application.
 
-## Project Status: Phase 3 — Authentication, Authorization & Account Security
+## Project Status: Phase 4 — Filament Administration Panel
 
-Phases 0–2 (architecture, Laravel foundation, core schema) are complete — see
-[`docs/architecture/`](docs/architecture/README.md) and [`docs/reports/`](docs/reports/).
-Phase 3 has wired up guard-isolated authentication for administrators, vendors, and
-customers: registration, login/logout, password reset, email verification, 2FA,
-device-session management, login-history/suspicious-login alerts, API tokens
-(Sanctum, ability-scoped per actor type), and social login (Google working, Facebook
-config-gated, Apple architecture-only). A vendor session cannot satisfy the admin
-guard (or vice versa) by construction, not just by convention.
+Phases 0–3 (architecture, Laravel foundation, core schema, guard-isolated
+authentication) are complete — see [`docs/architecture/`](docs/architecture/README.md)
+and [`docs/reports/`](docs/reports/). Phase 4 has built the full Filament back office
+on top of the `admin` guard: administrators, roles/permissions, customers, vendors
+(with approve/reject/suspend/reactivate/terminate actions), stores, geography
+(countries/states/cities), languages, currencies/exchange rates, settings, and a
+read-only audit log — every resource gated by Spatie permissions, not role names.
 
 The full multi-vendor e-commerce **web platform** (Phases 1–27) must be built, tested,
 documented, and pass the **Web Completion Gate** before any REST API finalization
@@ -44,7 +43,7 @@ php artisan serve
 ```
 
 Visit `http://localhost:8000` for the storefront shell and `http://localhost:8000/admin`
-for the Filament administration panel (no resources yet — those land in Phase 4).
+for the Filament administration panel.
 
 `.env.example` targets MySQL 8+ and Redis per the required production stack (see
 [`docs/architecture/12-deployment-roadmap.md`](docs/architecture/12-deployment-roadmap.md)).
@@ -83,6 +82,6 @@ All Phase 0 planning documents live in [`docs/architecture/`](docs/architecture/
 
 ## Next step
 
-Phase 4 — Filament Administration Panel — builds admin resources for every module
-completed so far (vendors, stores, customers, geography/settings) on top of the
-now-working `admin` guard.
+Phase 5 — Vendor Registration, Approval & Store Management — builds the flow that
+actually creates `Vendor`/`Store` records (application submission, document upload,
+admin review) that Phase 4's admin panel now manages.

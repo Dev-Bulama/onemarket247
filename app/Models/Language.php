@@ -21,6 +21,23 @@ class Language extends Model
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::saving(function (self $language) {
+            if (! $language->is_default) {
+                return;
+            }
+
+            $query = static::query();
+
+            if ($language->exists) {
+                $query->where('id', '!=', $language->id);
+            }
+
+            $query->update(['is_default' => false]);
+        });
+    }
+
     public function isRtl(): bool
     {
         return $this->direction === LanguageDirection::Rtl;
