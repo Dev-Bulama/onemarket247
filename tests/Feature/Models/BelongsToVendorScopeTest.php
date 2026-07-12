@@ -2,6 +2,7 @@
 
 use App\Enums\StoreStaffStatus;
 use App\Enums\UserType;
+use App\Models\Product;
 use App\Models\Store;
 use App\Models\StoreStaff;
 use App\Models\User;
@@ -62,4 +63,17 @@ test('vendor documents are isolated the same way', function () {
 
     expect(VendorDocument::all())->toHaveCount(1)
         ->and(VendorDocument::first()->vendor_id)->toBe($vendorA->id);
+});
+
+test('products are isolated the same way', function () {
+    $vendorA = Vendor::factory()->create();
+    Product::factory()->for($vendorA)->create();
+
+    $vendorB = Vendor::factory()->create();
+    Product::factory()->for($vendorB)->create();
+
+    test()->actingAs($vendorA->user, 'vendor');
+
+    expect(Product::all())->toHaveCount(1)
+        ->and(Product::first()->vendor_id)->toBe($vendorA->id);
 });

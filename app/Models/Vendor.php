@@ -78,6 +78,11 @@ class Vendor extends Model
         return $this->hasMany(VendorSubscription::class);
     }
 
+    public function products(): HasMany
+    {
+        return $this->hasMany(Product::class);
+    }
+
     public function addresses(): MorphMany
     {
         return $this->morphMany(Address::class, 'addressable');

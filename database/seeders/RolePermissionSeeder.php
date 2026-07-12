@@ -20,7 +20,7 @@ class RolePermissionSeeder extends Seeder
         'stores.manage', 'subscription_plans.manage',
         'customers.view', 'customers.manage',
         'products.view', 'products.create', 'products.update', 'products.delete', 'products.approve', 'products.feature',
-        'categories.manage', 'brands.manage', 'attributes.manage',
+        'categories.manage', 'brands.manage', 'attributes.manage', 'collections.manage',
         'inventory.manage', 'warehouses.manage',
         'orders.view', 'orders.manage', 'orders.export',
         'payments.view', 'payments.manage', 'refunds.manage',

@@ -4,16 +4,19 @@ OneMarket247 is a multi-vendor e-commerce marketplace platform: a Laravel + Fila
 application (customer marketplace, vendor dashboard, administration panel, and REST API)
 that will later be extended with a React Native mobile application.
 
-## Project Status: Phase 5 — Vendor Registration, Approval & Store Management
+## Project Status: Phase 6 — Product Catalog, Categories, Brands, Attributes & Media
 
-Phases 0–4 (architecture, Laravel foundation, core schema, guard-isolated
-authentication, the Filament admin panel) are complete — see
+Phases 0–5 (architecture, Laravel foundation, core schema, guard-isolated
+authentication, the Filament admin panel, vendor onboarding/approval and the
+vendor dashboard panel) are complete — see
 [`docs/architecture/`](docs/architecture/README.md) and [`docs/reports/`](docs/reports/).
-Phase 5 has built the full vendor onboarding pipeline: a public multi-step
-application wizard, manual/automatic admin approval that provisions a real
-vendor account (`User` + `Vendor` + `Store` + subscription), a second Filament
-panel (guard `vendor`) for store settings, staff invites, and document
-management, three-layer vendor data isolation, and a public store page.
+Phase 6 has built the full product catalog: categories (materialized-path
+tree), brands, attributes/attribute values (including swatches), collections,
+and tags in the admin panel; a vendor-facing product resource (simple,
+variable, and digital products) with variations, staged image/digital-file
+uploads via Spatie MediaLibrary, and a manual/automatic admin
+approve/reject/feature workflow; vendor data isolation extended to products;
+and a private, policy-gated download endpoint for digital product files.
 
 The full multi-vendor e-commerce **web platform** (Phases 1–27) must be built, tested,
 documented, and pass the **Web Completion Gate** before any REST API finalization
@@ -84,5 +87,5 @@ All Phase 0 planning documents live in [`docs/architecture/`](docs/architecture/
 
 ## Next step
 
-Phase 6 — Product Catalog, Categories, Brands, Attributes & Media — gives the
-vendors and stores Phase 5 now provisions something to actually sell.
+Phase 7 — Inventory, Warehouses & Stock Management — builds on the product
+catalog Phase 6 now provides.

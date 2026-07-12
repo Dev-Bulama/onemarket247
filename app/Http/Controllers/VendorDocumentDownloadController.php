@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\VendorDocument;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Vendor documents live on the private "local" disk (see Phase 5
@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Storage;
  */
 class VendorDocumentDownloadController extends Controller
 {
-    public function __invoke(VendorDocument $vendorDocument): Response
+    public function __invoke(VendorDocument $vendorDocument): StreamedResponse
     {
         Gate::authorize('view', $vendorDocument);
 

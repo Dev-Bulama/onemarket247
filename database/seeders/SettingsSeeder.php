@@ -20,6 +20,7 @@ class SettingsSeeder extends Seeder
             ['key' => 'app.default_language', 'value' => 'en', 'type' => 'string', 'group' => 'general'],
             ['key' => 'vendor.approval_mode', 'value' => 'manual', 'type' => 'string', 'group' => 'vendor'],
             ['key' => 'vendor.require_document_verification', 'value' => '1', 'type' => 'boolean', 'group' => 'vendor'],
+            ['key' => 'products.approval_mode', 'value' => 'manual', 'type' => 'string', 'group' => 'products'],
         ];
 
         foreach ($settings as $data) {
