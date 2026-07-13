@@ -50,6 +50,16 @@
             @endif
             <h1 class="text-2xl font-bold text-gray-900">{{ $product->name }}</h1>
 
+            @php $averageRating = $product->averageRating(); @endphp
+            <a href="#reviews" class="mt-1 inline-flex items-center gap-1 text-sm text-gray-600 hover:text-indigo-600">
+                @if ($averageRating !== null)
+                    <span class="text-amber-500">★</span> {{ $averageRating }} / 5
+                    <span class="text-gray-400">({{ $product->approvedReviews->count() }} {{ Str::plural('review', $product->approvedReviews->count()) }})</span>
+                @else
+                    <span class="text-gray-400">No reviews yet</span>
+                @endif
+            </a>
+
             <div class="mt-3 flex items-center gap-3">
                 <p class="text-2xl font-semibold text-gray-900">
                     @if ($range)
@@ -100,6 +110,27 @@
                 Ordering isn't open yet — cart and checkout are coming in a later release.
             </div>
 
+            @auth
+                <div class="mt-4 flex items-center gap-3">
+                    <form method="POST" action="{{ route('account.wishlist.store', $product) }}">
+                        @csrf
+                        <button type="submit" class="inline-flex items-center gap-1.5 rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:border-indigo-500 hover:text-indigo-600">
+                            Add to wishlist
+                        </button>
+                    </form>
+                    <form method="POST" action="{{ route('account.compare.store', $product) }}">
+                        @csrf
+                        <button type="submit" class="inline-flex items-center gap-1.5 rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:border-indigo-500 hover:text-indigo-600">
+                            Add to compare
+                        </button>
+                    </form>
+                </div>
+            @else
+                <p class="mt-4 text-sm text-gray-500">
+                    <a href="{{ route('login') }}" class="text-indigo-600 hover:underline">Log in</a> to save this product to your wishlist or compare list.
+                </p>
+            @endauth
+
             @if ($product->categories->isNotEmpty())
                 <div class="mt-6 flex flex-wrap gap-2">
                     @foreach ($product->categories as $category)
@@ -118,4 +149,142 @@
             <div class="mt-3 text-sm text-gray-700 whitespace-pre-line">{{ $product->description }}</div>
         </div>
     @endif
+
+    <div id="reviews" class="mt-12 border-t border-gray-200 pt-8">
+        <h2 class="text-lg font-semibold text-gray-900">Reviews</h2>
+
+        @if ($product->approvedReviews->isEmpty())
+            <p class="mt-3 text-sm text-gray-500">No reviews yet. Be the first to review this product.</p>
+        @else
+            <div class="mt-4 space-y-6">
+                @foreach ($product->approvedReviews as $review)
+                    <div class="border-b border-gray-100 pb-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <span class="text-amber-500">{{ str_repeat('★', $review->rating) }}{{ str_repeat('☆', 5 - $review->rating) }}</span>
+                                @if ($review->title)
+                                    <span class="ml-2 font-medium text-gray-900">{{ $review->title }}</span>
+                                @endif
+                            </div>
+                            <span class="text-xs text-gray-400">{{ $review->created_at->format('M j, Y') }}</span>
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">{{ $review->customer->name }}</p>
+                        <p class="mt-2 text-sm text-gray-700">{{ $review->body }}</p>
+
+                        @if ($review->vendor_response)
+                            <div class="mt-3 rounded-md bg-gray-50 px-4 py-3">
+                                <p class="text-xs font-medium text-gray-600">Response from the seller</p>
+                                <p class="mt-1 text-sm text-gray-700">{{ $review->vendor_response }}</p>
+                            </div>
+                        @endif
+
+                        <div class="mt-3 flex items-center gap-3 text-xs text-gray-500">
+                            <span>{{ $review->helpful_count }} {{ Str::plural('person', $review->helpful_count) }} found this helpful</span>
+                            @auth
+                                @if (! $review->votes->firstWhere('customer_id', auth()->id()))
+                                    <form method="POST" action="{{ route('reviews.vote', $review) }}">
+                                        @csrf
+                                        <button type="submit" class="text-indigo-600 hover:underline">Helpful?</button>
+                                    </form>
+                                @endif
+                            @endauth
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @endif
+
+        @auth
+            @if ($userReview)
+                <div class="mt-6 rounded-md bg-gray-50 px-4 py-3 text-sm text-gray-600">
+                    You reviewed this product — status:
+                    <span class="font-medium">{{ $userReview->status->getLabel() }}</span>
+                    @if ($userReview->status->value === 'rejected' && $userReview->rejection_reason)
+                        <p class="mt-1 text-xs text-gray-500">{{ $userReview->rejection_reason }}</p>
+                    @endif
+                </div>
+            @else
+                <form method="POST" action="{{ route('products.reviews.store', $product) }}" class="mt-6 max-w-lg space-y-3">
+                    @csrf
+                    <h3 class="text-sm font-semibold text-gray-900">Write a review</h3>
+
+                    <div>
+                        <label for="rating" class="block text-sm font-medium text-gray-700">Rating</label>
+                        <select id="rating" name="rating" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            <option value="">—</option>
+                            @for ($i = 5; $i >= 1; $i--)
+                                <option value="{{ $i }}" @selected(old('rating') == $i)>{{ $i }} star{{ $i > 1 ? 's' : '' }}</option>
+                            @endfor
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="title" class="block text-sm font-medium text-gray-700">Title (optional)</label>
+                        <input id="title" type="text" name="title" value="{{ old('title') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    </div>
+
+                    <div>
+                        <label for="body" class="block text-sm font-medium text-gray-700">Review</label>
+                        <textarea id="body" name="body" rows="3" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">{{ old('body') }}</textarea>
+                    </div>
+
+                    <button type="submit" class="rounded-md bg-indigo-600 px-4 py-2 text-white text-sm font-medium hover:bg-indigo-700">
+                        Submit review
+                    </button>
+
+                    <p class="text-xs text-gray-500">Your review will be published after moderation.</p>
+                </form>
+            @endif
+        @else
+            <p class="mt-6 text-sm text-gray-500">
+                <a href="{{ route('login') }}" class="text-indigo-600 hover:underline">Log in</a> to write a review.
+            </p>
+        @endauth
+    </div>
+
+    <div class="mt-12 border-t border-gray-200 pt-8">
+        <h2 class="text-lg font-semibold text-gray-900">Questions &amp; answers</h2>
+
+        @if ($product->questions->isEmpty())
+            <p class="mt-3 text-sm text-gray-500">No questions yet.</p>
+        @else
+            <div class="mt-4 space-y-6">
+                @foreach ($product->questions as $question)
+                    <div class="border-b border-gray-100 pb-6">
+                        <p class="text-sm font-medium text-gray-900">Q: {{ $question->question }}</p>
+                        <p class="text-xs text-gray-500">Asked by {{ $question->customer->name }} &middot; {{ $question->created_at->format('M j, Y') }}</p>
+
+                        @foreach ($question->answers as $answer)
+                            <div class="mt-3 ml-4 rounded-md bg-gray-50 px-4 py-3">
+                                <p class="text-sm text-gray-700">A: {{ $answer->answer }}</p>
+                                <p class="mt-1 text-xs text-gray-500">{{ $answer->answeredBy->name }} &middot; {{ $answer->created_at->format('M j, Y') }}</p>
+                            </div>
+                        @endforeach
+                    </div>
+                @endforeach
+            </div>
+        @endif
+
+        @auth
+            <form method="POST" action="{{ route('products.questions.store', $product) }}" class="mt-6 max-w-lg space-y-3">
+                @csrf
+                <h3 class="text-sm font-semibold text-gray-900">Ask a question</h3>
+
+                <div>
+                    <label for="question" class="block text-sm font-medium text-gray-700">Your question</label>
+                    <textarea id="question" name="question" rows="3" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">{{ old('question') }}</textarea>
+                </div>
+
+                <button type="submit" class="rounded-md bg-indigo-600 px-4 py-2 text-white text-sm font-medium hover:bg-indigo-700">
+                    Ask question
+                </button>
+
+                <p class="text-xs text-gray-500">The seller will be notified and can answer here.</p>
+            </form>
+        @else
+            <p class="mt-6 text-sm text-gray-500">
+                <a href="{{ route('login') }}" class="text-indigo-600 hover:underline">Log in</a> to ask a question.
+            </p>
+        @endauth
+    </div>
 @endsection

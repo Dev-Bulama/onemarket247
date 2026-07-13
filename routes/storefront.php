@@ -5,6 +5,9 @@ use App\Http\Controllers\Storefront\CategoryController;
 use App\Http\Controllers\Storefront\CollectionController;
 use App\Http\Controllers\Storefront\PageController;
 use App\Http\Controllers\Storefront\ProductController;
+use App\Http\Controllers\Storefront\QuestionController;
+use App\Http\Controllers\Storefront\ReviewController;
+use App\Http\Controllers\Storefront\ReviewVoteController;
 use App\Http\Controllers\Storefront\SearchController;
 use App\Http\Controllers\Storefront\ShopController;
 use App\Http\Controllers\Storefront\StoreController;
@@ -24,6 +27,12 @@ Route::get('collections/{collection:slug}', [CollectionController::class, 'show'
 Route::get('search', [SearchController::class, 'index'])->name('search.index');
 
 Route::get('products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
+
+Route::middleware(['auth:web', 'verified'])->group(function () {
+    Route::post('products/{product:slug}/reviews', [ReviewController::class, 'store'])->name('products.reviews.store');
+    Route::post('products/{product:slug}/questions', [QuestionController::class, 'store'])->name('products.questions.store');
+    Route::post('reviews/{review}/helpful-vote', [ReviewVoteController::class, 'store'])->name('reviews.vote');
+});
 
 Route::get('stores', [StoreController::class, 'index'])->name('stores.index');
 Route::get('stores/{slug}', [StoreController::class, 'show'])->name('stores.show');

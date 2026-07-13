@@ -12,6 +12,10 @@
             <a href="{{ route('home') }}" class="font-bold text-gray-900">OneMarket247</a>
             <div class="flex items-center gap-4 text-sm">
                 <a href="{{ route('account.dashboard') }}" class="text-gray-600 hover:text-gray-900">Account</a>
+                <a href="{{ route('account.profile.edit') }}" class="text-gray-600 hover:text-gray-900">Profile</a>
+                <a href="{{ route('account.addresses.index') }}" class="text-gray-600 hover:text-gray-900">Addresses</a>
+                <a href="{{ route('account.wishlist.index') }}" class="text-gray-600 hover:text-gray-900">Wishlist</a>
+                <a href="{{ route('account.compare.index') }}" class="text-gray-600 hover:text-gray-900">Compare</a>
                 <a href="{{ route('account.security') }}" class="text-gray-600 hover:text-gray-900">Security</a>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf

@@ -5,6 +5,8 @@ namespace App\Filament\Resources\Customers;
 use App\Enums\UserType;
 use App\Filament\Resources\Customers\Pages\EditCustomer;
 use App\Filament\Resources\Customers\Pages\ListCustomers;
+use App\Filament\Resources\Customers\RelationManagers\AddressesRelationManager;
+use App\Filament\Resources\Customers\RelationManagers\ProductReviewsRelationManager;
 use App\Filament\Resources\Customers\Schemas\CustomerForm;
 use App\Filament\Resources\Customers\Tables\CustomersTable;
 use App\Models\User;
@@ -48,6 +50,14 @@ class CustomerResource extends Resource
     public static function table(Table $table): Table
     {
         return CustomersTable::configure($table);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            AddressesRelationManager::class,
+            ProductReviewsRelationManager::class,
+        ];
     }
 
     public static function getPages(): array

@@ -22,8 +22,16 @@ class ProductController extends Controller
             'vendor.store',
             'variations' => fn ($query) => $query->where('is_active', true),
             'variations.attributeValues.attribute',
+            'approvedReviews' => fn ($query) => $query->latest()->with('customer'),
+            'approvedReviews.votes',
+            'questions' => fn ($query) => $query->where('is_answered', true)->latest()->with(['customer', 'answers.answeredBy']),
         ]);
 
-        return view('storefront.products.show', ['product' => $product]);
+        $user = auth()->user();
+
+        return view('storefront.products.show', [
+            'product' => $product,
+            'userReview' => $user ? $product->reviews()->where('customer_id', $user->id)->first() : null,
+        ]);
     }
 }

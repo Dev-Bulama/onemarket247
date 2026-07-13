@@ -93,6 +93,36 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         return $this->hasMany(SocialAccount::class);
     }
 
+    public function wishlist(): HasOne
+    {
+        return $this->hasOne(Wishlist::class, 'customer_id');
+    }
+
+    public function compareList(): HasOne
+    {
+        return $this->hasOne(CompareList::class, 'customer_id');
+    }
+
+    public function productReviews(): HasMany
+    {
+        return $this->hasMany(ProductReview::class, 'customer_id');
+    }
+
+    public function productQuestions(): HasMany
+    {
+        return $this->hasMany(ProductQuestion::class, 'customer_id');
+    }
+
+    public function wishlistOrCreate(): Wishlist
+    {
+        return $this->wishlist()->first() ?? $this->wishlist()->create();
+    }
+
+    public function compareListOrCreate(): CompareList
+    {
+        return $this->compareList()->first() ?? $this->compareList()->create();
+    }
+
     public function isActive(): bool
     {
         return $this->status === UserStatus::Active;

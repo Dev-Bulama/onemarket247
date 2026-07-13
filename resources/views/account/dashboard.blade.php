@@ -29,6 +29,25 @@
         @endif
     </div>
 
+    <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <a href="{{ route('account.profile.edit') }}" class="bg-white shadow rounded-lg p-4 hover:shadow-md">
+            <div class="font-medium text-gray-900">Profile</div>
+            <p class="text-sm text-gray-500">Update your personal details and preferences.</p>
+        </a>
+        <a href="{{ route('account.addresses.index') }}" class="bg-white shadow rounded-lg p-4 hover:shadow-md">
+            <div class="font-medium text-gray-900">Addresses</div>
+            <p class="text-sm text-gray-500">Manage your shipping and billing addresses.</p>
+        </a>
+        <a href="{{ route('account.wishlist.index') }}" class="bg-white shadow rounded-lg p-4 hover:shadow-md">
+            <div class="font-medium text-gray-900">Wishlist</div>
+            <p class="text-sm text-gray-500">Products you've saved for later.</p>
+        </a>
+        <a href="{{ route('account.compare.index') }}" class="bg-white shadow rounded-lg p-4 hover:shadow-md">
+            <div class="font-medium text-gray-900">Compare</div>
+            <p class="text-sm text-gray-500">Products you're comparing side by side.</p>
+        </a>
+    </div>
+
     <div class="mt-6">
         <a href="{{ route('account.security') }}" class="text-indigo-600 hover:underline text-sm">Manage password, two-factor authentication, and active sessions &rarr;</a>
     </div>

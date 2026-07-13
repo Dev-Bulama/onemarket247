@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\Account\AddressController;
+use App\Http\Controllers\Account\CompareController;
+use App\Http\Controllers\Account\WishlistController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\DeviceSessionController;
@@ -60,5 +63,23 @@ Route::middleware('auth:web')->group(function () {
         Route::get('two-factor-authentication', [TwoFactorAuthenticationController::class, 'create'])->name('two-factor.show');
         Route::post('two-factor-authentication', [TwoFactorAuthenticationController::class, 'store'])->name('two-factor.confirm');
         Route::delete('two-factor-authentication', [TwoFactorAuthenticationController::class, 'destroy'])->name('two-factor.disable');
+
+        Route::get('account/profile', [AccountController::class, 'editProfile'])->name('account.profile.edit');
+        Route::put('account/profile', [AccountController::class, 'updateProfile'])->name('account.profile.update');
+
+        Route::get('account/addresses', [AddressController::class, 'index'])->name('account.addresses.index');
+        Route::get('account/addresses/create', [AddressController::class, 'create'])->name('account.addresses.create');
+        Route::post('account/addresses', [AddressController::class, 'store'])->name('account.addresses.store');
+        Route::get('account/addresses/{address}/edit', [AddressController::class, 'edit'])->name('account.addresses.edit');
+        Route::put('account/addresses/{address}', [AddressController::class, 'update'])->name('account.addresses.update');
+        Route::delete('account/addresses/{address}', [AddressController::class, 'destroy'])->name('account.addresses.destroy');
+
+        Route::get('account/wishlist', [WishlistController::class, 'index'])->name('account.wishlist.index');
+        Route::post('account/wishlist/{product}', [WishlistController::class, 'store'])->name('account.wishlist.store');
+        Route::delete('account/wishlist/{product}', [WishlistController::class, 'destroy'])->name('account.wishlist.destroy');
+
+        Route::get('account/compare', [CompareController::class, 'index'])->name('account.compare.index');
+        Route::post('account/compare/{product}', [CompareController::class, 'store'])->name('account.compare.store');
+        Route::delete('account/compare/{product}', [CompareController::class, 'destroy'])->name('account.compare.destroy');
     });
 });

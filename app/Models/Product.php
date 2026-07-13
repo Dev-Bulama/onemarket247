@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\ProductStatus;
 use App\Enums\ProductType;
+use App\Enums\ReviewStatus;
 use App\Enums\StockStatus;
 use App\Models\Scopes\BelongsToVendorScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -114,6 +115,28 @@ class Product extends Model implements HasMedia
     {
         return $this->belongsToMany(self::class, 'related_products', 'product_id', 'related_product_id')
             ->withPivot('relation_type', 'sort_order');
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(ProductReview::class);
+    }
+
+    public function approvedReviews(): HasMany
+    {
+        return $this->reviews()->where('status', ReviewStatus::Approved);
+    }
+
+    public function questions(): HasMany
+    {
+        return $this->hasMany(ProductQuestion::class);
+    }
+
+    public function averageRating(): ?float
+    {
+        $average = $this->approvedReviews()->avg('rating');
+
+        return $average !== null ? round((float) $average, 1) : null;
     }
 
     public function primaryCategory(): ?Category
