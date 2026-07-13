@@ -11,7 +11,7 @@ class OrderItem extends Model
     use HasFactory;
 
     protected $fillable = [
-        'vendor_order_id', 'product_id', 'product_variation_id',
+        'vendor_order_id', 'product_id', 'product_variation_id', 'warehouse_id',
         'product_name', 'sku', 'unit_price', 'quantity', 'line_total',
     ];
 
@@ -37,5 +37,15 @@ class OrderItem extends Model
     public function variation(): BelongsTo
     {
         return $this->belongsTo(ProductVariation::class, 'product_variation_id');
+    }
+
+    public function warehouse(): BelongsTo
+    {
+        return $this->belongsTo(Warehouse::class);
+    }
+
+    public function sellable(): Product|ProductVariation
+    {
+        return $this->variation ?? $this->product;
     }
 }

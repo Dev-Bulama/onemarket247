@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 
 class Order extends Model
@@ -68,6 +71,21 @@ class Order extends Model
         return $this->hasMany(Payment::class);
     }
 
+    public function notes(): HasMany
+    {
+        return $this->hasMany(OrderNote::class);
+    }
+
+    public function statusHistories(): MorphMany
+    {
+        return $this->morphMany(OrderStatusHistory::class, 'historyable');
+    }
+
+    public function invoice(): HasOne
+    {
+        return $this->hasOne(Invoice::class);
+    }
+
     public function currency(): BelongsTo
     {
         return $this->belongsTo(Currency::class);
@@ -101,5 +119,15 @@ class Order extends Model
     public function isGuestOrder(): bool
     {
         return $this->customer_id === null;
+    }
+
+    /**
+     * A registered customer notifies through their own account; a guest
+     * order has no account to route through, so it notifies by email
+     * address directly via Laravel's on-demand (anonymous) notifiable.
+     */
+    public function notifiable(): mixed
+    {
+        return $this->customer ?? Notification::route('mail', $this->guest_email);
     }
 }

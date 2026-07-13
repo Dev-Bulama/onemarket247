@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class VendorOrder extends Model
 {
@@ -65,5 +67,15 @@ class VendorOrder extends Model
     public function orderItems(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function statusHistories(): MorphMany
+    {
+        return $this->morphMany(OrderStatusHistory::class, 'historyable');
+    }
+
+    public function packingSlip(): HasOne
+    {
+        return $this->hasOne(PackingSlip::class);
     }
 }

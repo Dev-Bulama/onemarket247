@@ -107,9 +107,13 @@ class CompleteCheckoutAction
                 ]);
 
                 foreach ($vendorItems as $item) {
+                    $sellable = $item->variation ?? $item->product;
+                    $stock = $sellable->manage_stock ? $this->selectWarehouseStock($sellable, $item->quantity) : null;
+
                     $vendorOrder->orderItems()->create([
                         'product_id' => $item->product_id,
                         'product_variation_id' => $item->product_variation_id,
+                        'warehouse_id' => $stock?->warehouse_id,
                         'product_name' => $item->product->name,
                         'sku' => $item->variation->sku ?? $item->product->sku,
                         'unit_price' => $item->unit_price,
@@ -117,10 +121,7 @@ class CompleteCheckoutAction
                         'line_total' => $item->lineTotal(),
                     ]);
 
-                    $sellable = $item->variation ?? $item->product;
-
-                    if ($sellable->manage_stock) {
-                        $stock = $this->selectWarehouseStock($sellable, $item->quantity);
+                    if ($stock) {
                         app(ReserveStockAction::class)->handle($stock->warehouse, $sellable, $item->quantity, $order->customer, $order);
                     }
                 }
@@ -133,10 +134,19 @@ class CompleteCheckoutAction
                 'amount' => $order->total,
             ]);
 
+            $order->invoice()->create([
+                'invoice_number' => sprintf('INV-%d-%06d', $order->created_at->year, $order->id),
+                'issued_at' => now(),
+            ]);
+
+            foreach ($order->vendorOrders as $vendorOrder) {
+                $vendorOrder->packingSlip()->create(['generated_at' => now()]);
+            }
+
             $cart->update(['status' => CartStatus::Converted]);
             $lockedSession->update(['order_id' => $order->id]);
 
-            return $order->fresh(['vendorOrders.orderItems', 'payments']);
+            return $order->fresh(['vendorOrders.orderItems', 'payments', 'invoice']);
         });
     }
 

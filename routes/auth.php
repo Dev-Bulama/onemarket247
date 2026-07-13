@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Account\AddressController;
 use App\Http\Controllers\Account\CompareController;
+use App\Http\Controllers\Account\OrderController;
 use App\Http\Controllers\Account\WishlistController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
@@ -81,5 +82,9 @@ Route::middleware('auth:web')->group(function () {
         Route::get('account/compare', [CompareController::class, 'index'])->name('account.compare.index');
         Route::post('account/compare/{product}', [CompareController::class, 'store'])->name('account.compare.store');
         Route::delete('account/compare/{product}', [CompareController::class, 'destroy'])->name('account.compare.destroy');
+
+        Route::get('account/orders', [OrderController::class, 'index'])->name('account.orders.index');
+        Route::get('account/orders/{order}', [OrderController::class, 'show'])->name('account.orders.show');
+        Route::post('account/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('account.orders.cancel');
     });
 });
