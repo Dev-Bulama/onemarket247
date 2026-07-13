@@ -131,6 +131,43 @@ class Product extends Model implements HasMedia
         return $this->stock_status === StockStatus::InStock;
     }
 
+    public function isVisibleToCustomers(): bool
+    {
+        return $this->status->isVisibleToCustomers();
+    }
+
+    /**
+     * A single representative price for cards/listings: the product's own
+     * price for simple/digital products, or the lowest active variation
+     * price for a variable product (its "from" price).
+     */
+    public function displayPrice(): ?int
+    {
+        if ($this->type !== ProductType::Variable) {
+            return $this->price;
+        }
+
+        return $this->variations()->where('is_active', true)->min('price');
+    }
+
+    /**
+     * @return array{min: int, max: int}|null
+     */
+    public function displayPriceRange(): ?array
+    {
+        if ($this->type !== ProductType::Variable) {
+            return null;
+        }
+
+        $prices = $this->variations()->where('is_active', true)->pluck('price');
+
+        if ($prices->isEmpty()) {
+            return null;
+        }
+
+        return ['min' => $prices->min(), 'max' => $prices->max()];
+    }
+
     public function registerMediaConversions(?Media $media = null): void
     {
         $this->addMediaConversion('thumb')

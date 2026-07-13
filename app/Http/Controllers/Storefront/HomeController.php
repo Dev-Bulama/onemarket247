@@ -1,0 +1,45 @@
+<?php
+
+namespace App\Http\Controllers\Storefront;
+
+use App\Enums\ProductStatus;
+use App\Enums\StoreStatus;
+use App\Http\Controllers\Controller;
+use App\Models\Category;
+use App\Models\Product;
+use App\Models\Store;
+use Illuminate\View\View;
+
+class HomeController extends Controller
+{
+    public function index(): View
+    {
+        $featuredProducts = Product::query()
+            ->where('status', ProductStatus::Published)
+            ->where('is_featured', true)
+            ->with(['brand', 'media'])
+            ->latest('published_at')
+            ->take(8)
+            ->get();
+
+        $categories = Category::query()
+            ->whereNull('parent_id')
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->take(8)
+            ->get();
+
+        $stores = Store::query()
+            ->where('status', StoreStatus::Active)
+            ->where('is_featured', true)
+            ->with('vendor')
+            ->take(4)
+            ->get();
+
+        return view('storefront.home', [
+            'featuredProducts' => $featuredProducts,
+            'categories' => $categories,
+            'stores' => $stores,
+        ]);
+    }
+}

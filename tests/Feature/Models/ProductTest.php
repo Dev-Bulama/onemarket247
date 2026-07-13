@@ -60,6 +60,31 @@ test('a variation is attached to the attribute values that define it', function 
     expect($variation->attributeValues()->first()->color_code)->toBe('#FF0000');
 });
 
+test('displayPrice returns a simple products own price', function () {
+    $product = Product::factory()->create(['price' => 1999]);
+
+    expect($product->displayPrice())->toBe(1999)
+        ->and($product->displayPriceRange())->toBeNull();
+});
+
+test('displayPrice returns the lowest active variation price for a variable product', function () {
+    $product = Product::factory()->variable()->create();
+    ProductVariation::factory()->create(['product_id' => $product->id, 'price' => 900, 'is_active' => true]);
+    ProductVariation::factory()->create(['product_id' => $product->id, 'price' => 500, 'is_active' => true]);
+    ProductVariation::factory()->create(['product_id' => $product->id, 'price' => 100, 'is_active' => false]);
+
+    expect($product->displayPrice())->toBe(500)
+        ->and($product->displayPriceRange())->toBe(['min' => 500, 'max' => 900]);
+});
+
+test('a published product is visible to customers and every other status is not', function () {
+    $published = Product::factory()->create();
+    $draft = Product::factory()->draft()->create();
+
+    expect($published->isVisibleToCustomers())->toBeTrue()
+        ->and($draft->isVisibleToCustomers())->toBeFalse();
+});
+
 test('deleting a digital file record removes the underlying file from disk', function () {
     Storage::fake('local');
     Storage::disk('local')->put('product-digital-files/1/secret.pdf', 'contents');

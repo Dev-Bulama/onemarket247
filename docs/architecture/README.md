@@ -50,6 +50,7 @@ As each implementation phase finishes, its completion report is added under
 - Phase 5 (Vendor Registration, Approval & Store Management) — [`phase-05-completion-report.md`](../reports/phase-05-completion-report.md)
 - Phase 6 (Product Catalog, Categories, Brands, Attributes & Media) — [`phase-06-completion-report.md`](../reports/phase-06-completion-report.md)
 - Phase 7 (Inventory & Warehouse Management) — [`phase-07-completion-report.md`](../reports/phase-07-completion-report.md)
+- Phase 8 (Customer-Facing Web Marketplace) — [`phase-08-completion-report.md`](../reports/phase-08-completion-report.md)
 
 ## Hard constraint carried through every later phase
 

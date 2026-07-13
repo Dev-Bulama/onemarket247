@@ -1,22 +1,12 @@
-<!doctype html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ app()->isLocale('ar') ? 'rtl' : 'ltr' }}">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $store->name }} — {{ config('app.name') }}</title>
-    @if ($store->seo_description)
-        <meta name="description" content="{{ $store->seo_description }}">
-    @endif
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="min-h-screen bg-gray-50">
-<header class="bg-white border-b">
-    <div class="mx-auto max-w-4xl px-4 py-4">
-        <a href="{{ route('home') }}" class="text-xl font-bold text-gray-900">{{ config('app.name') }}</a>
-    </div>
-</header>
+@extends('layouts.storefront')
 
-<main class="mx-auto max-w-4xl px-4 py-10">
+@section('title', $store->seo_title ?: $store->name)
+
+@section('meta_description')
+    {{ $store->seo_description }}
+@endsection
+
+@section('content')
     <div class="bg-white shadow rounded-lg p-8">
         <div class="flex items-center justify-between">
             <h1 class="text-2xl font-bold text-gray-900">{{ $store->seo_title ?: $store->name }}</h1>
@@ -72,9 +62,10 @@
                 </div>
             @endif
         </dl>
-
-        <p class="mt-8 text-sm text-gray-500">Products from this store will be available once the catalog module launches.</p>
     </div>
-</main>
-</body>
-</html>
+
+    <div class="mt-10">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Products from this store</h2>
+        @include('storefront.partials.product-listing', ['products' => $products, 'categories' => $categories, 'brands' => $brands])
+    </div>
+@endsection

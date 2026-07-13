@@ -4,21 +4,19 @@ OneMarket247 is a multi-vendor e-commerce marketplace platform: a Laravel + Fila
 application (customer marketplace, vendor dashboard, administration panel, and REST API)
 that will later be extended with a React Native mobile application.
 
-## Project Status: Phase 7 — Inventory & Warehouse Management
+## Project Status: Phase 8 — Customer-Facing Web Marketplace
 
-Phases 0–6 (architecture, Laravel foundation, core schema, guard-isolated
+Phases 0–7 (architecture, Laravel foundation, core schema, guard-isolated
 authentication, the Filament admin panel, vendor onboarding/approval, the
-vendor dashboard panel, and the full product catalog) are complete — see
-[`docs/architecture/`](docs/architecture/README.md) and [`docs/reports/`](docs/reports/).
-Phase 7 has built the real multi-warehouse inventory engine: vendor-owned
-warehouses; a `warehouse_stocks` on_hand/reserved/damaged/incoming ledger per
-product or variation, with `products`/`product_variations.stock_quantity`
-kept as a derived cache; a `stock_movements` immutable audit ledger; a
-concurrency-safe (`lockForUpdate()`) reserve → deduct → restore lifecycle
-with no-overselling guarantees; warehouse-to-warehouse stock transfers
-(request → dispatch → complete/cancel); admin `WarehouseResource`/
-`StockTransferResource` plus a low-stock dashboard widget; and a vendor
-`/vendor/inventory` page for stock adjustments and transfer requests.
+vendor dashboard panel, the full product catalog, and multi-warehouse
+inventory) are complete — see [`docs/architecture/`](docs/architecture/README.md)
+and [`docs/reports/`](docs/reports/). Phase 8 has built the public storefront:
+a homepage, full shop catalog with category/brand/price/stock filters and
+sorting, category (with subcategory) and brand index/detail pages, a
+collection page, product search, a product detail page (image gallery,
+variation pricing, honest no-cart-yet state), a store directory, and the
+store page now lists a vendor's real published products in place of Phase
+5's placeholder note — plus working contact/FAQ/terms/privacy pages.
 
 The full multi-vendor e-commerce **web platform** (Phases 1–27) must be built, tested,
 documented, and pass the **Web Completion Gate** before any REST API finalization
@@ -48,7 +46,7 @@ npm run build   # or `npm run dev` for local asset watching
 php artisan serve
 ```
 
-Visit `http://localhost:8000` for the storefront shell, `http://localhost:8000/admin`
+Visit `http://localhost:8000` for the customer storefront, `http://localhost:8000/admin`
 for the Filament administration panel, `http://localhost:8000/vendor/register` to apply
 as a vendor, and `http://localhost:8000/vendor` for the vendor dashboard panel.
 
@@ -89,6 +87,7 @@ All Phase 0 planning documents live in [`docs/architecture/`](docs/architecture/
 
 ## Next step
 
-Phase 8 — Customer-Facing Web Marketplace (storefront pages, search,
-discovery) — is the first phase to put the catalog and inventory Phases 6–7
-built in front of a shopper.
+Phase 9 — Customer Account, Wishlist, Compare, Reviews & Questions — builds
+the authenticated shopper features (profile, addresses, wishlist, compare,
+verified reviews, product Q&A) on top of the storefront Phase 8 now
+provides.

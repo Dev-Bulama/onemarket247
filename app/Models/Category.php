@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Collection;
 
 class Category extends Model
 {
@@ -59,5 +60,25 @@ class Category extends Model
     public function isRoot(): bool
     {
         return $this->parent_id === null;
+    }
+
+    /**
+     * This category's id plus every descendant's id, using the
+     * materialized `path` column (an ancestor-id chain — see the `saving`
+     * hook above) so a category page can include products filed under any
+     * of its subcategories without a recursive query.
+     *
+     * @return Collection<int, int>
+     */
+    public function descendantIds(): Collection
+    {
+        $descendantIds = static::query()
+            ->where('path', $this->id)
+            ->orWhere('path', 'like', "{$this->id}/%")
+            ->orWhere('path', 'like', "%/{$this->id}")
+            ->orWhere('path', 'like', "%/{$this->id}/%")
+            ->pluck('id');
+
+        return $descendantIds->push($this->id);
     }
 }

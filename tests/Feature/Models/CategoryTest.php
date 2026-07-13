@@ -36,3 +36,22 @@ test('moving a category to a new parent recomputes its path', function () {
 
     expect($child->fresh()->path)->toBe((string) $rootB->id);
 });
+
+test('descendantIds includes the category itself plus every level of descendant', function () {
+    $root = Category::factory()->create();
+    $child = Category::factory()->childOf($root)->create();
+    $grandchild = Category::factory()->childOf($child)->create();
+    $unrelated = Category::factory()->create();
+
+    $ids = $root->descendantIds();
+
+    expect($ids->sort()->values()->all())->toEqual(collect([$root->id, $child->id, $grandchild->id])->sort()->values()->all())
+        ->and($ids->contains($unrelated->id))->toBeFalse();
+});
+
+test('descendantIds for a leaf category is just itself', function () {
+    $root = Category::factory()->create();
+    $leaf = Category::factory()->childOf($root)->create();
+
+    expect($leaf->descendantIds()->all())->toEqual([$leaf->id]);
+});
