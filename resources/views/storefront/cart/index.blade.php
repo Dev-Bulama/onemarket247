@@ -160,9 +160,11 @@
 
                 <p class="text-xs text-gray-500">Tax and shipping are calculated at checkout.</p>
 
-                <div class="rounded-md bg-gray-50 px-4 py-3 text-sm text-gray-600">
-                    Checkout isn't open yet — it's coming in a later release.
-                </div>
+                @if ($cart->activeItems->isNotEmpty())
+                    <a href="{{ route('checkout.index') }}" class="block text-center rounded-md bg-indigo-600 px-4 py-2 text-white text-sm font-medium hover:bg-indigo-700">
+                        Proceed to checkout
+                    </a>
+                @endif
             </div>
         </div>
     @endif

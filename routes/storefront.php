@@ -5,6 +5,7 @@ use App\Http\Controllers\Storefront\CartController;
 use App\Http\Controllers\Storefront\CartCouponController;
 use App\Http\Controllers\Storefront\CartItemController;
 use App\Http\Controllers\Storefront\CategoryController;
+use App\Http\Controllers\Storefront\CheckoutController;
 use App\Http\Controllers\Storefront\CollectionController;
 use App\Http\Controllers\Storefront\PageController;
 use App\Http\Controllers\Storefront\ProductController;
@@ -48,6 +49,11 @@ Route::patch('cart/items/{cartItem}/save-for-later', [CartItemController::class,
 Route::patch('cart/items/{cartItem}/move-to-cart', [CartItemController::class, 'moveToCart'])->name('cart.items.move-to-cart');
 Route::post('cart/coupon', [CartCouponController::class, 'store'])->name('cart.coupon.store');
 Route::delete('cart/coupon', [CartCouponController::class, 'destroy'])->name('cart.coupon.destroy');
+
+// Checkout is guest+authenticated too, same reasoning as cart above.
+Route::get('checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+Route::post('checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+Route::get('checkout/confirmation/{order}', [CheckoutController::class, 'confirmation'])->name('checkout.confirmation');
 
 Route::get('stores', [StoreController::class, 'index'])->name('stores.index');
 Route::get('stores/{slug}', [StoreController::class, 'show'])->name('stores.show');

@@ -124,6 +124,11 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         return $this->carts()->where('status', CartStatus::Active)->first();
     }
 
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class, 'customer_id');
+    }
+
     public function wishlistOrCreate(): Wishlist
     {
         return $this->wishlist()->first() ?? $this->wishlist()->create();

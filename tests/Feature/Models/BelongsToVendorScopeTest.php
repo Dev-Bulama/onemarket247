@@ -2,12 +2,14 @@
 
 use App\Enums\StoreStaffStatus;
 use App\Enums\UserType;
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\Store;
 use App\Models\StoreStaff;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Models\VendorDocument;
+use App\Models\VendorOrder;
 use App\Models\Warehouse;
 
 test('a vendor owner only sees their own store when querying', function () {
@@ -90,4 +92,17 @@ test('warehouses are isolated the same way', function () {
 
     expect(Warehouse::all())->toHaveCount(1)
         ->and(Warehouse::first()->vendor_id)->toBe($vendorA->id);
+});
+
+test('vendor orders are isolated the same way', function () {
+    $vendorA = Vendor::factory()->create();
+    VendorOrder::factory()->create(['order_id' => Order::factory(), 'vendor_id' => $vendorA->id]);
+
+    $vendorB = Vendor::factory()->create();
+    VendorOrder::factory()->create(['order_id' => Order::factory(), 'vendor_id' => $vendorB->id]);
+
+    test()->actingAs($vendorA->user, 'vendor');
+
+    expect(VendorOrder::all())->toHaveCount(1)
+        ->and(VendorOrder::first()->vendor_id)->toBe($vendorA->id);
 });
