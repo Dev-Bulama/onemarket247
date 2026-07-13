@@ -34,6 +34,12 @@
         </form>
 
         <div class="flex items-center gap-4 text-sm text-gray-600">
+            <a href="{{ route('cart.index') }}" class="hover:text-gray-900">
+                Cart
+                @if (($cartItemCount ?? 0) > 0)
+                    <span class="ml-1 inline-flex items-center justify-center rounded-full bg-indigo-600 px-1.5 py-0.5 text-xs font-medium text-white">{{ $cartItemCount }}</span>
+                @endif
+            </a>
             @auth
                 <a href="{{ route('account.dashboard') }}" class="hover:text-gray-900">Account</a>
             @else

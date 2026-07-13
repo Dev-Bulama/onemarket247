@@ -4,7 +4,12 @@ namespace App\Providers;
 
 use App\Auth\ScopedEloquentUserProvider;
 use App\Enums\UserType;
+use App\Listeners\MergeGuestCartOnLogin;
+use App\Support\Cart\CartResolver;
+use Illuminate\Auth\Events\Login;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -31,6 +36,12 @@ class AppServiceProvider extends ServiceProvider
                     $config['allowed_user_types'],
                 ),
             );
+        });
+
+        Event::listen(Login::class, MergeGuestCartOnLogin::class);
+
+        View::composer('layouts.storefront', function ($view) {
+            $view->with('cartItemCount', app(CartResolver::class)->peek()?->activeItems()->sum('quantity') ?? 0);
         });
     }
 }

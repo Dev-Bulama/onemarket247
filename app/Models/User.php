@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\CartStatus;
 use App\Enums\StoreStaffStatus;
 use App\Enums\UserStatus;
 use App\Enums\UserType;
@@ -111,6 +112,16 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     public function productQuestions(): HasMany
     {
         return $this->hasMany(ProductQuestion::class, 'customer_id');
+    }
+
+    public function carts(): HasMany
+    {
+        return $this->hasMany(Cart::class, 'customer_id');
+    }
+
+    public function activeCart(): ?Cart
+    {
+        return $this->carts()->where('status', CartStatus::Active)->first();
     }
 
     public function wishlistOrCreate(): Wishlist

@@ -10,6 +10,9 @@
     $images = $product->getMedia('images');
     $range = $product->displayPriceRange();
     $price = $product->displayPrice();
+    $canOrder = $product->variations->isNotEmpty()
+        ? $product->variations->where('is_active', true)->contains(fn ($variation) => $variation->isInStock())
+        : $product->isInStock();
 @endphp
 
 @section('content')
@@ -106,9 +109,42 @@
                 </div>
             @endif
 
-            <div class="mt-6 rounded-md bg-gray-50 px-4 py-3 text-sm text-gray-600">
-                Ordering isn't open yet — cart and checkout are coming in a later release.
-            </div>
+            @if ($canOrder)
+                <form method="POST" action="{{ route('cart.items.store') }}" class="mt-6 flex items-end gap-3">
+                    @csrf
+                    <input type="hidden" name="product_id" value="{{ $product->id }}">
+
+                    @if ($product->variations->isNotEmpty())
+                        <div>
+                            <label for="product_variation_id" class="block text-sm font-medium text-gray-700">Option</label>
+                            <select id="product_variation_id" name="product_variation_id" required
+                                    class="mt-1 block rounded-md border-gray-300 shadow-sm">
+                                <option value="">Choose an option</option>
+                                @foreach ($product->variations->where('is_active', true) as $variation)
+                                    <option value="{{ $variation->id }}" @disabled(! $variation->isInStock())>
+                                        {{ $variation->attributeValues->pluck('value')->implode(' / ') }}
+                                        (${{ number_format($variation->price / 100, 2) }})
+                                        @if (! $variation->isInStock()) — out of stock @endif
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endif
+
+                    <div>
+                        <label for="quantity" class="block text-sm font-medium text-gray-700">Qty</label>
+                        <input id="quantity" type="number" name="quantity" value="1" min="1" class="mt-1 block w-20 rounded-md border-gray-300 shadow-sm">
+                    </div>
+
+                    <button type="submit" class="rounded-md bg-indigo-600 px-4 py-2 text-white text-sm font-medium hover:bg-indigo-700">
+                        Add to cart
+                    </button>
+                </form>
+            @else
+                <div class="mt-6 rounded-md bg-gray-50 px-4 py-3 text-sm text-gray-600">
+                    This product is currently out of stock.
+                </div>
+            @endif
 
             @auth
                 <div class="mt-4 flex items-center gap-3">

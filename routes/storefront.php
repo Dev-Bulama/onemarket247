@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\Storefront\BrandController;
+use App\Http\Controllers\Storefront\CartController;
+use App\Http\Controllers\Storefront\CartCouponController;
+use App\Http\Controllers\Storefront\CartItemController;
 use App\Http\Controllers\Storefront\CategoryController;
 use App\Http\Controllers\Storefront\CollectionController;
 use App\Http\Controllers\Storefront\PageController;
@@ -33,6 +36,18 @@ Route::middleware(['auth:web', 'verified'])->group(function () {
     Route::post('products/{product:slug}/questions', [QuestionController::class, 'store'])->name('products.questions.store');
     Route::post('reviews/{review}/helpful-vote', [ReviewVoteController::class, 'store'])->name('reviews.vote');
 });
+
+// Cart is guest+authenticated: no auth middleware. CartResolver identifies
+// the guest cart via a signed cookie and the customer cart via the web
+// guard, and merges the two on login (see App\Listeners\MergeGuestCartOnLogin).
+Route::get('cart', [CartController::class, 'index'])->name('cart.index');
+Route::post('cart/items', [CartItemController::class, 'store'])->name('cart.items.store');
+Route::patch('cart/items/{cartItem}', [CartItemController::class, 'update'])->name('cart.items.update');
+Route::delete('cart/items/{cartItem}', [CartItemController::class, 'destroy'])->name('cart.items.destroy');
+Route::patch('cart/items/{cartItem}/save-for-later', [CartItemController::class, 'saveForLater'])->name('cart.items.save-for-later');
+Route::patch('cart/items/{cartItem}/move-to-cart', [CartItemController::class, 'moveToCart'])->name('cart.items.move-to-cart');
+Route::post('cart/coupon', [CartCouponController::class, 'store'])->name('cart.coupon.store');
+Route::delete('cart/coupon', [CartCouponController::class, 'destroy'])->name('cart.coupon.destroy');
 
 Route::get('stores', [StoreController::class, 'index'])->name('stores.index');
 Route::get('stores/{slug}', [StoreController::class, 'show'])->name('stores.show');
