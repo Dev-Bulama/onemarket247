@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Storefront;
 use App\Enums\ProductStatus;
 use App\Enums\StoreStatus;
 use App\Http\Controllers\Controller;
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Store;
@@ -19,14 +20,27 @@ class HomeController extends Controller
             ->where('is_featured', true)
             ->with(['brand', 'media'])
             ->latest('published_at')
-            ->take(8)
+            ->take(12)
+            ->get();
+
+        $newArrivals = Product::query()
+            ->where('status', ProductStatus::Published)
+            ->with(['brand', 'media'])
+            ->latest('published_at')
+            ->take(12)
             ->get();
 
         $categories = Category::query()
             ->whereNull('parent_id')
             ->where('is_active', true)
             ->orderBy('sort_order')
-            ->take(8)
+            ->take(10)
+            ->get();
+
+        $brands = Brand::query()
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->take(12)
             ->get();
 
         $stores = Store::query()
@@ -38,7 +52,9 @@ class HomeController extends Controller
 
         return view('storefront.home', [
             'featuredProducts' => $featuredProducts,
+            'newArrivals' => $newArrivals,
             'categories' => $categories,
+            'brands' => $brands,
             'stores' => $stores,
         ]);
     }

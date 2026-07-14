@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Brands\Schemas;
 
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -13,6 +14,12 @@ class BrandForm
     {
         return $schema
             ->components([
+                FileUpload::make('logo')
+                    ->image()
+                    ->disk('public')
+                    ->directory('tmp-brand-media')
+                    ->visibility('public')
+                    ->columnSpanFull(),
                 TextInput::make('name')
                     ->required()
                     ->maxLength(255),

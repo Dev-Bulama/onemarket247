@@ -1,11 +1,17 @@
 <?php
 
 use App\Enums\ProductStatus;
+use App\Filament\Resources\Brands\Pages\CreateBrand;
+use App\Filament\Resources\Categories\Pages\CreateCategory;
 use App\Filament\Resources\Products\Pages\ListProducts;
 use App\Models\Attribute;
+use App\Models\Brand;
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Role;
 
@@ -95,4 +101,44 @@ test('a support staff admin without catalog permissions cannot access categories
     $staff->assignRole(Role::where('name', 'Support Staff')->where('guard_name', 'admin')->first());
 
     $this->actingAs($staff, 'admin')->get('/admin/categories')->assertForbidden();
+});
+
+test('an admin can create a category with an uploaded image', function () {
+    Storage::fake('public');
+    $admin = superAdminForCatalog();
+
+    Livewire::actingAs($admin, 'admin')
+        ->test(CreateCategory::class)
+        ->fillForm([
+            'name' => 'Electronics',
+            'slug' => 'electronics',
+            'sort_order' => 0,
+            'image' => [UploadedFile::fake()->image('category.jpg')->store('tmp-category-media', 'public')],
+        ])
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    $category = Category::where('slug', 'electronics')->firstOrFail();
+
+    expect($category->getFirstMediaUrl('image'))->not->toBe('');
+});
+
+test('an admin can create a brand with an uploaded logo', function () {
+    Storage::fake('public');
+    $admin = superAdminForCatalog();
+
+    Livewire::actingAs($admin, 'admin')
+        ->test(CreateBrand::class)
+        ->fillForm([
+            'name' => 'Acme',
+            'slug' => 'acme',
+            'sort_order' => 0,
+            'logo' => [UploadedFile::fake()->image('logo.jpg')->store('tmp-brand-media', 'public')],
+        ])
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    $brand = Brand::where('slug', 'acme')->firstOrFail();
+
+    expect($brand->getFirstMediaUrl('logo'))->not->toBe('');
 });

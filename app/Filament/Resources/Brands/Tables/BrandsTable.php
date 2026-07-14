@@ -8,6 +8,7 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
@@ -18,6 +19,10 @@ class BrandsTable
     {
         return $table
             ->columns([
+                ImageColumn::make('logo')
+                    ->label('')
+                    ->getStateUsing(fn ($record) => $record->getFirstMediaUrl('logo'))
+                    ->circular(),
                 TextColumn::make('name')
                     ->searchable(),
                 TextColumn::make('slug')

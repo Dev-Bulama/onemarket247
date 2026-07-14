@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Categories\Schemas;
 
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -14,6 +15,12 @@ class CategoryForm
     {
         return $schema
             ->components([
+                FileUpload::make('image')
+                    ->image()
+                    ->disk('public')
+                    ->directory('tmp-category-media')
+                    ->visibility('public')
+                    ->columnSpanFull(),
                 Select::make('parent_id')
                     ->label('Parent category')
                     ->relationship('parent', 'name', fn ($query, $record) => $record
