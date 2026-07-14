@@ -8,11 +8,38 @@
             <h1 class="text-lg font-semibold text-gray-900">Thank you — your order has been placed</h1>
             <p class="mt-1 text-sm text-gray-600">Order number <span class="font-medium text-gray-900">{{ $order->order_number }}</span></p>
 
-            <div class="mt-4 rounded-md bg-gray-50 px-4 py-3 text-sm text-gray-600">
-                Your items are reserved and payment collection isn't live yet — we'll follow up by email with payment
-                instructions. Your order status is currently
-                <span class="font-medium text-gray-900">{{ $order->status->getLabel() }}</span>.
-            </div>
+            @if ($errors->has('payment'))
+                <div class="mt-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {{ $errors->first('payment') }}
+                </div>
+            @endif
+
+            @if ($payment?->status === \App\Enums\PaymentStatus::Paid)
+                <div class="mt-4 rounded-md bg-green-50 px-4 py-3 text-sm text-green-700">
+                    Payment received — thank you! Your order status is currently
+                    <span class="font-medium">{{ $order->status->getLabel() }}</span>.
+                </div>
+            @elseif ($payment && in_array($payment->status, [\App\Enums\PaymentStatus::Failed, \App\Enums\PaymentStatus::Cancelled], true))
+                <div class="mt-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+                    <p>Your last payment attempt didn't go through.</p>
+                    <form method="POST" action="{{ route('checkout.payment.initialize', $order) }}" class="mt-2">
+                        @csrf
+                        <button type="submit" class="rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-500">
+                            Try again
+                        </button>
+                    </form>
+                </div>
+            @elseif ($payment)
+                <div class="mt-4 rounded-md bg-gray-50 px-4 py-3 text-sm text-gray-600">
+                    <p>Your items are reserved. Complete payment to confirm your order.</p>
+                    <form method="POST" action="{{ route('checkout.payment.initialize', $order) }}" class="mt-2">
+                        @csrf
+                        <button type="submit" class="rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-500">
+                            Pay now
+                        </button>
+                    </form>
+                </div>
+            @endif
 
             <div class="mt-6">
                 <h2 class="text-sm font-semibold text-gray-900">Shipping to</h2>

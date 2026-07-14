@@ -71,4 +71,25 @@ return [
         'redirect' => env('APPLE_REDIRECT_URI'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Payment Gateways (Phase 13)
+    |--------------------------------------------------------------------------
+    |
+    | These env values are only the seed source for the payment_gateways
+    | table's 'paystack' row (see database/seeders/PaymentGatewaySeeder.php)
+    | — App\Services\Payment\PaystackGateway always reads its keys from that
+    | encrypted DB row at runtime, never from this config array directly,
+    | so an admin can rotate keys via PaymentGatewayResource without a
+    | redeploy.
+    |
+    */
+
+    'paystack' => [
+        'public_key' => env('PAYSTACK_PUBLIC_KEY'),
+        'secret_key' => env('PAYSTACK_SECRET_KEY'),
+        'webhook_secret' => env('PAYSTACK_WEBHOOK_SECRET'),
+        'base_url' => env('PAYSTACK_BASE_URL', 'https://api.paystack.co'),
+    ],
+
 ];

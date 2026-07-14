@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\PaymentWebhookController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -16,4 +17,7 @@ Route::prefix('v1')->group(function () {
             Route::delete('sessions/{tokenId}', [AuthController::class, 'destroySession']);
         });
     });
+
+    // Unauthenticated by design — see PaymentWebhookController.
+    Route::post('webhooks/payments/{gateway}', PaymentWebhookController::class)->name('api.webhooks.payments');
 });

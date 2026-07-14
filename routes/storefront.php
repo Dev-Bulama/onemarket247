@@ -8,6 +8,7 @@ use App\Http\Controllers\Storefront\CategoryController;
 use App\Http\Controllers\Storefront\CheckoutController;
 use App\Http\Controllers\Storefront\CollectionController;
 use App\Http\Controllers\Storefront\PageController;
+use App\Http\Controllers\Storefront\PaymentController;
 use App\Http\Controllers\Storefront\ProductController;
 use App\Http\Controllers\Storefront\QuestionController;
 use App\Http\Controllers\Storefront\ReviewController;
@@ -54,6 +55,12 @@ Route::delete('cart/coupon', [CartCouponController::class, 'destroy'])->name('ca
 Route::get('checkout', [CheckoutController::class, 'index'])->name('checkout.index');
 Route::post('checkout', [CheckoutController::class, 'store'])->name('checkout.store');
 Route::get('checkout/confirmation/{order}', [CheckoutController::class, 'confirmation'])->name('checkout.confirmation');
+
+// Payment routes are gated by OrderPolicy::view() (guest via public_id,
+// same as the confirmation page above), not an auth guard, since a guest
+// order's owner has no account to authenticate as.
+Route::post('checkout/{order}/pay', [PaymentController::class, 'initialize'])->name('checkout.payment.initialize');
+Route::get('checkout/{order}/pay/callback', [PaymentController::class, 'callback'])->name('checkout.payment.callback');
 
 Route::get('stores', [StoreController::class, 'index'])->name('stores.index');
 Route::get('stores/{slug}', [StoreController::class, 'show'])->name('stores.show');

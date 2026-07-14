@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             LanguageSeeder::class,
             SettingsSeeder::class,
             VendorSubscriptionPlanSeeder::class,
+            PaymentGatewaySeeder::class,
         ]);
 
         User::factory()->create([

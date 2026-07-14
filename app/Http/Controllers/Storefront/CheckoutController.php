@@ -90,6 +90,9 @@ class CheckoutController extends Controller
 
         $order->load(['vendorOrders.orderItems', 'payments', 'shippingCountry', 'shippingState', 'shippingCity']);
 
-        return view('storefront.checkout.confirmation', ['order' => $order]);
+        return view('storefront.checkout.confirmation', [
+            'order' => $order,
+            'payment' => $order->payments->sortByDesc('id')->first(),
+        ]);
     }
 }
