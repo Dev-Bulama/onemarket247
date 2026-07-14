@@ -8,6 +8,7 @@
         <meta name="description" content="@yield('meta_description')">
     @endif
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body class="min-h-screen bg-gray-50 flex flex-col">
 
@@ -30,7 +31,7 @@
             <a href="{{ route('account.orders.index') }}" class="hover:text-gray-900">Order Tracking</a>
         </nav>
         <div class="flex items-center gap-4">
-            <span class="hidden sm:inline">🔒 Secure checkout</span>
+            <span class="hidden sm:inline"><i class="fa-solid fa-lock" aria-hidden="true"></i> Secure checkout</span>
             @if ($switchableLanguages->count() > 1)
                 <form method="POST" action="{{ route('locale.switch', ($currentLanguage ?? null)?->code ?? 'en') }}">
                     @csrf
@@ -61,7 +62,7 @@
 
         <details class="relative order-3 sm:order-none">
             <summary class="list-none cursor-pointer flex items-center gap-1 rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:border-indigo-400">
-                📍
+                <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
                 @if (($deliveryLocation['country'] ?? null))
                     <span>Delivering to: {{ ($deliveryLocation['city'] ?? $deliveryLocation['state'] ?? $deliveryLocation['country'])->name }}</span>
                     @if ($deliveryLocation['deliverable'] === false)
@@ -108,12 +109,12 @@
 
         <div class="flex items-center gap-4 text-sm text-gray-600 ml-auto sm:ml-0">
             @auth
-                <a href="{{ route('account.dashboard') }}" class="hover:text-gray-900" title="Account">👤</a>
+                <a href="{{ route('account.dashboard') }}" class="hover:text-gray-900" title="Account"><i class="fa-solid fa-user" aria-hidden="true"></i></a>
             @else
-                <a href="{{ route('login') }}" class="hover:text-gray-900" title="Log in">👤</a>
+                <a href="{{ route('login') }}" class="hover:text-gray-900" title="Log in"><i class="fa-solid fa-user" aria-hidden="true"></i></a>
             @endauth
-            <a href="{{ route('cart.index') }}" class="hover:text-gray-900">
-                🛒
+            <a href="{{ route('cart.index') }}" class="hover:text-gray-900" title="Cart">
+                <i class="fa-solid fa-cart-shopping" aria-hidden="true"></i>
                 @if (($cartItemCount ?? 0) > 0)
                     <span class="ml-1 inline-flex items-center justify-center rounded-full bg-indigo-600 px-1.5 py-0.5 text-xs font-medium text-white">{{ $cartItemCount }}</span>
                 @endif
@@ -124,7 +125,7 @@
     <div class="mx-auto max-w-6xl px-4 pb-3 flex flex-wrap items-center gap-4">
         <details class="relative">
             <summary class="list-none cursor-pointer flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500">
-                <span>☰ All Categories</span>
+                <span><i class="fa-solid fa-bars" aria-hidden="true"></i> All Categories</span>
                 <span class="text-xs bg-white/20 rounded px-1.5 py-0.5">{{ $totalProductCount }} products</span>
             </summary>
             <div class="absolute z-20 mt-2 w-64 rounded-md border border-gray-200 bg-white shadow-lg py-1">

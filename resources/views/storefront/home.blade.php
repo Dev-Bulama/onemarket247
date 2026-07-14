@@ -85,19 +85,19 @@
             {{-- Value props --}}
             <section class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
                 <div class="flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3">
-                    <span class="text-2xl">🏬</span>
+                    <span class="text-xl text-indigo-600"><i class="fa-solid fa-shop" aria-hidden="true"></i></span>
                     <span class="text-sm font-medium text-gray-700">Hundreds of independent stores</span>
                 </div>
                 <div class="flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3">
-                    <span class="text-2xl">🔒</span>
+                    <span class="text-xl text-indigo-600"><i class="fa-solid fa-lock" aria-hidden="true"></i></span>
                     <span class="text-sm font-medium text-gray-700">Secure checkout</span>
                 </div>
                 <div class="flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3">
-                    <span class="text-2xl">📦</span>
+                    <span class="text-xl text-indigo-600"><i class="fa-solid fa-truck-fast" aria-hidden="true"></i></span>
                     <span class="text-sm font-medium text-gray-700">Order tracking</span>
                 </div>
                 <div class="flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3">
-                    <span class="text-2xl">🛍️</span>
+                    <span class="text-xl text-indigo-600"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i></span>
                     <span class="text-sm font-medium text-gray-700">Shop thousands of products</span>
                 </div>
             </section>
