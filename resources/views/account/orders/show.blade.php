@@ -16,6 +16,7 @@
         </div>
         <div class="flex items-center gap-3">
             <span class="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700">{{ $order->status->getLabel() }}</span>
+            <a href="{{ route('account.orders.track', $order) }}" class="text-sm text-indigo-600 hover:underline">Track package</a>
             <a href="{{ route('orders.invoice', $order) }}" class="text-sm text-indigo-600 hover:underline">Download invoice</a>
         </div>
     </div>
@@ -101,6 +102,10 @@
                         <dd class="text-green-700">-${{ number_format($order->discount_amount / 100, 2) }}</dd>
                     </div>
                 @endif
+                <div class="flex justify-between">
+                    <dt class="text-gray-600">Shipping</dt>
+                    <dd class="text-gray-900">${{ number_format($order->shipping_amount / 100, 2) }}</dd>
+                </div>
                 <div class="flex justify-between font-semibold text-gray-900 border-t border-gray-100 pt-2">
                     <dt>Total</dt>
                     <dd>${{ number_format($order->total / 100, 2) }}</dd>

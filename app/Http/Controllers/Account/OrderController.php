@@ -38,6 +38,15 @@ class OrderController extends Controller
         return view('account.orders.show', ['order' => $order]);
     }
 
+    public function track(Order $order): View
+    {
+        Gate::authorize('view', $order);
+
+        $order->load(['vendorOrders.vendor', 'vendorOrders.shipments.carrier', 'vendorOrders.shipments.events', 'vendorOrders.shipments.pickupStation']);
+
+        return view('account.orders.track', ['order' => $order]);
+    }
+
     public function cancel(Request $request, Order $order, CancelOrderAction $action): RedirectResponse
     {
         Gate::authorize('view', $order);

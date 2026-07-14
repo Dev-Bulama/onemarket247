@@ -2,6 +2,7 @@
 
 use App\Actions\Inventory\AdjustStockAction;
 use App\Actions\Inventory\ReserveStockAction;
+use App\Enums\ShippingRateType;
 use App\Enums\StockStatus;
 use App\Enums\UserType;
 use App\Models\CheckoutSession;
@@ -9,8 +10,22 @@ use App\Models\Country;
 use App\Models\Currency;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\ShippingRate;
+use App\Models\ShippingZone;
+use App\Models\ShippingZoneLocation;
 use App\Models\User;
 use App\Models\Warehouse;
+
+/**
+ * A free flat rate for the given country keeps this file's existing total
+ * assertions (subtotal-only, no shipping) unchanged.
+ */
+function seedFreeShippingForStorefrontTest(Country $country): void
+{
+    $zone = ShippingZone::factory()->create();
+    ShippingZoneLocation::factory()->create(['shipping_zone_id' => $zone->id, 'country_id' => $country->id]);
+    ShippingRate::factory()->create(['shipping_zone_id' => $zone->id, 'rate_type' => ShippingRateType::Free, 'base_amount' => 0]);
+}
 
 test('an empty cart redirects away from checkout', function () {
     $this->get(route('checkout.index'))->assertRedirect(route('cart.index'));
@@ -19,6 +34,7 @@ test('an empty cart redirects away from checkout', function () {
 test('guest can complete checkout end to end and see the confirmation page', function () {
     Currency::factory()->create(['is_default' => true]);
     $country = Country::factory()->create();
+    seedFreeShippingForStorefrontTest($country);
     $product = Product::factory()->create(['price' => 1000, 'manage_stock' => true, 'stock_status' => StockStatus::InStock]);
     $warehouse = Warehouse::factory()->create(['vendor_id' => $product->vendor_id]);
     app(AdjustStockAction::class)->handle($warehouse, $product, 10, 'seed');
@@ -57,6 +73,7 @@ test('guest can complete checkout end to end and see the confirmation page', fun
 test('a registered customer checkout attaches to their account and is protected from other customers', function () {
     Currency::factory()->create(['is_default' => true]);
     $country = Country::factory()->create();
+    seedFreeShippingForStorefrontTest($country);
     $user = User::factory()->create(['user_type' => UserType::Customer]);
     $product = Product::factory()->create(['manage_stock' => true, 'stock_status' => StockStatus::InStock]);
     $warehouse = Warehouse::factory()->create(['vendor_id' => $product->vendor_id]);
@@ -89,6 +106,7 @@ test('a registered customer checkout attaches to their account and is protected 
 test('a guest checkout requires an email address', function () {
     Currency::factory()->create(['is_default' => true]);
     $country = Country::factory()->create();
+    seedFreeShippingForStorefrontTest($country);
     $product = Product::factory()->create();
 
     $addResponse = $this->post(route('cart.items.store'), ['product_id' => $product->id, 'quantity' => 1]);
@@ -107,6 +125,7 @@ test('a guest checkout requires an email address', function () {
 test('a price drift is rejected and sends the customer back to their cart', function () {
     Currency::factory()->create(['is_default' => true]);
     $country = Country::factory()->create();
+    seedFreeShippingForStorefrontTest($country);
     $product = Product::factory()->create(['price' => 1000]);
 
     $addResponse = $this->post(route('cart.items.store'), ['product_id' => $product->id, 'quantity' => 1]);
@@ -132,6 +151,7 @@ test('a price drift is rejected and sends the customer back to their cart', func
 test('checkout is rejected when stock runs out between add-to-cart and checkout', function () {
     Currency::factory()->create(['is_default' => true]);
     $country = Country::factory()->create();
+    seedFreeShippingForStorefrontTest($country);
     $product = Product::factory()->create(['manage_stock' => true, 'stock_status' => StockStatus::InStock]);
     $warehouse = Warehouse::factory()->create(['vendor_id' => $product->vendor_id]);
     app(AdjustStockAction::class)->handle($warehouse, $product, 1, 'seed');

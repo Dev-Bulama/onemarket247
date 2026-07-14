@@ -5,6 +5,7 @@ namespace App\Filament\Resources\VendorOrders;
 use App\Filament\Resources\VendorOrders\Pages\ListVendorOrders;
 use App\Filament\Resources\VendorOrders\Pages\ViewVendorOrder;
 use App\Filament\Resources\VendorOrders\RelationManagers\OrderItemsRelationManager;
+use App\Filament\Resources\VendorOrders\RelationManagers\ShipmentsRelationManager;
 use App\Filament\Resources\VendorOrders\RelationManagers\StatusHistoriesRelationManager;
 use App\Filament\Resources\VendorOrders\Tables\VendorOrdersTable;
 use App\Models\VendorOrder;
@@ -66,6 +67,7 @@ class VendorOrderResource extends Resource
     {
         return [
             OrderItemsRelationManager::class,
+            ShipmentsRelationManager::class,
             StatusHistoriesRelationManager::class,
         ];
     }

@@ -84,6 +84,16 @@ class VendorOrder extends Model
         return $this->hasMany(VendorWalletTransaction::class);
     }
 
+    public function shipments(): HasMany
+    {
+        return $this->hasMany(Shipment::class);
+    }
+
+    public function latestShipment(): ?Shipment
+    {
+        return $this->shipments()->latest('id')->first();
+    }
+
     /**
      * Sum of this vendor order's items' net-of-commission amounts — what
      * actually gets credited to the vendor's wallet. Relies on

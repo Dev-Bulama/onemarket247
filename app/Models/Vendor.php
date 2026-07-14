@@ -119,6 +119,11 @@ class Vendor extends Model
         return $this->hasMany(Withdrawal::class);
     }
 
+    public function pickupStations(): HasMany
+    {
+        return $this->hasMany(PickupStation::class);
+    }
+
     public function currentSubscription(): ?VendorSubscription
     {
         return $this->subscriptions()

@@ -85,6 +85,7 @@ Route::middleware('auth:web')->group(function () {
 
         Route::get('account/orders', [OrderController::class, 'index'])->name('account.orders.index');
         Route::get('account/orders/{order}', [OrderController::class, 'show'])->name('account.orders.show');
+        Route::get('account/orders/{order}/track', [OrderController::class, 'track'])->name('account.orders.track');
         Route::post('account/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('account.orders.cancel');
     });
 });

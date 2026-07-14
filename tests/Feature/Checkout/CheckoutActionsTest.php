@@ -6,6 +6,7 @@ use App\Actions\Checkout\InitiateCheckoutAction;
 use App\Actions\Inventory\AdjustStockAction;
 use App\Actions\Inventory\ReserveStockAction;
 use App\Enums\OrderStatus;
+use App\Enums\ShippingRateType;
 use App\Enums\StockStatus;
 use App\Enums\VendorOrderStatus;
 use App\Exceptions\CheckoutValidationException;
@@ -15,9 +16,24 @@ use App\Models\Country;
 use App\Models\Currency;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\ShippingRate;
+use App\Models\ShippingZone;
+use App\Models\ShippingZoneLocation;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Models\Warehouse;
+
+/**
+ * A free flat rate for the given country keeps this file's existing total
+ * assertions (subtotal-only, no shipping) unchanged while still exercising
+ * a real zone/rate lookup rather than the "rest of world" fallback.
+ */
+function seedFreeShippingFor(Country $country): void
+{
+    $zone = ShippingZone::factory()->create();
+    ShippingZoneLocation::factory()->create(['shipping_zone_id' => $zone->id, 'country_id' => $country->id]);
+    ShippingRate::factory()->create(['shipping_zone_id' => $zone->id, 'rate_type' => ShippingRateType::Free, 'base_amount' => 0]);
+}
 
 function shippingDataFor(Country $country): array
 {
@@ -52,6 +68,7 @@ test('initiating checkout twice for the same cart reuses the same session', func
 test('completing checkout creates one order split by vendor with reserved stock', function () {
     Currency::factory()->create(['is_default' => true]);
     $country = Country::factory()->create();
+    seedFreeShippingFor($country);
 
     $vendorA = Vendor::factory()->create();
     $warehouseA = Warehouse::factory()->create(['vendor_id' => $vendorA->id]);
@@ -93,6 +110,7 @@ test('completing checkout creates one order split by vendor with reserved stock'
 test('replaying the same checkout session returns the same order, never creating a second one', function () {
     Currency::factory()->create(['is_default' => true]);
     $country = Country::factory()->create();
+    seedFreeShippingFor($country);
     $product = Product::factory()->create(['manage_stock' => true, 'stock_status' => StockStatus::InStock]);
     $warehouse = Warehouse::factory()->create(['vendor_id' => $product->vendor_id]);
     app(AdjustStockAction::class)->handle($warehouse, $product, 10, 'seed');
@@ -112,6 +130,7 @@ test('replaying the same checkout session returns the same order, never creating
 test('a price drift since the cart was last touched is rejected without creating an order', function () {
     Currency::factory()->create(['is_default' => true]);
     $country = Country::factory()->create();
+    seedFreeShippingFor($country);
     $product = Product::factory()->create(['price' => 1000]);
 
     $cart = Cart::factory()->create();
@@ -129,6 +148,7 @@ test('a price drift since the cart was last touched is rejected without creating
 test('insufficient stock at completion time is rejected without creating an order', function () {
     Currency::factory()->create(['is_default' => true]);
     $country = Country::factory()->create();
+    seedFreeShippingFor($country);
     $product = Product::factory()->create(['manage_stock' => true, 'stock_status' => StockStatus::InStock]);
     $warehouse = Warehouse::factory()->create(['vendor_id' => $product->vendor_id]);
     app(AdjustStockAction::class)->handle($warehouse, $product, 1, 'seed');
@@ -149,6 +169,7 @@ test('insufficient stock at completion time is rejected without creating an orde
 test('an empty cart cannot be checked out', function () {
     Currency::factory()->create(['is_default' => true]);
     $country = Country::factory()->create();
+    seedFreeShippingFor($country);
     $cart = Cart::factory()->create();
     $session = app(InitiateCheckoutAction::class)->handle($cart);
 
@@ -159,6 +180,7 @@ test('an empty cart cannot be checked out', function () {
 test('a registered customer checkout attaches the order to their account, not as a guest', function () {
     Currency::factory()->create(['is_default' => true]);
     $country = Country::factory()->create();
+    seedFreeShippingFor($country);
     $user = User::factory()->create();
     $product = Product::factory()->create(['manage_stock' => false]);
 
@@ -181,6 +203,7 @@ test('a registered customer checkout attaches the order to their account, not as
 test('saved-for-later items are never included in checkout', function () {
     Currency::factory()->create(['is_default' => true]);
     $country = Country::factory()->create();
+    seedFreeShippingFor($country);
     $activeProduct = Product::factory()->create(['price' => 1000, 'manage_stock' => false]);
     $savedProduct = Product::factory()->create(['price' => 5000, 'manage_stock' => false]);
 

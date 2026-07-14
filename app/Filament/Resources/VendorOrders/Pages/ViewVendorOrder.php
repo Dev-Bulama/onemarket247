@@ -48,11 +48,25 @@ class ViewVendorOrder extends ViewRecord
     }
 
     /**
+     * Shipped/OutForDelivery/Delivered are deliberately excluded here —
+     * those now flow through the admin Shipments relation manager's
+     * shipment/tracking-event actions (App\Actions\Shipping\
+     * CreateShipmentAction / RecordShipmentEventAction), which carry real
+     * carrier/tracking data alongside the status change instead of a bare
+     * note.
+     *
      * @return array<int, Action>
      */
     private function transitionActions(): array
     {
         $record = $this->getRecord();
+
+        $shipmentManaged = [VendorOrderStatus::Shipped, VendorOrderStatus::OutForDelivery, VendorOrderStatus::Delivered];
+
+        $targets = array_values(array_filter(
+            UpdateVendorOrderStatusAction::nextStatusesFor($record->status),
+            fn (VendorOrderStatus $status) => ! in_array($status, $shipmentManaged, true)
+        ));
 
         return array_map(
             fn (VendorOrderStatus $target) => Action::make('transition-'.$target->value)
@@ -69,7 +83,7 @@ class ViewVendorOrder extends ViewRecord
                         Notification::make()->title($e->getMessage())->danger()->send();
                     }
                 }),
-            UpdateVendorOrderStatusAction::nextStatusesFor($record->status)
+            $targets
         );
     }
 }

@@ -5,12 +5,14 @@ namespace App\Actions\Checkout;
 use App\Actions\Cart\Concerns\ChecksAvailability;
 use App\Actions\Commission\RecordOrderItemCommissionAction;
 use App\Actions\Inventory\ReserveStockAction;
+use App\Actions\Shipping\CalculateShippingCostAction;
 use App\Enums\CartStatus;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Enums\VendorOrderStatus;
 use App\Exceptions\CheckoutValidationException;
 use App\Exceptions\InsufficientStockException;
+use App\Exceptions\ShippingUnavailableException;
 use App\Models\CartItem;
 use App\Models\CheckoutSession;
 use App\Models\Currency;
@@ -19,6 +21,7 @@ use App\Models\Product;
 use App\Models\ProductVariation;
 use App\Models\WarehouseStock;
 use App\Services\Order\OrderStatusAggregator;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -74,23 +77,47 @@ class CompleteCheckoutAction
                 throw new CheckoutValidationException('No currency is configured for this store yet.');
             }
 
+            $itemsByVendor = $items->groupBy(fn (CartItem $item) => $item->product->vendor_id);
+
+            $shippingCosts = $itemsByVendor->map(function (Collection $vendorItems) use ($shippingData) {
+                $lines = $vendorItems->map(fn (CartItem $item) => [
+                    'sellable' => $item->variation ?? $item->product,
+                    'quantity' => $item->quantity,
+                ]);
+
+                $vendorSubtotal = $vendorItems->sum(fn (CartItem $item) => $item->lineTotal());
+
+                try {
+                    return app(CalculateShippingCostAction::class)->handle(
+                        $lines,
+                        $vendorSubtotal,
+                        $shippingData['shipping_country_id'],
+                        $shippingData['shipping_state_id'] ?? null,
+                        $shippingData['shipping_city_id'] ?? null,
+                    );
+                } catch (ShippingUnavailableException $e) {
+                    throw new CheckoutValidationException($e->getMessage());
+                }
+            });
+
+            $totalShipping = $shippingCosts->sum();
+
             $order = Order::create([
                 ...$shippingData,
                 'currency_id' => $currency->id,
                 'subtotal' => $cart->subtotal(),
                 'discount_amount' => $cart->discount(),
-                'shipping_amount' => 0,
+                'shipping_amount' => $totalShipping,
                 'tax_amount' => 0,
-                'total' => $cart->total(),
+                'total' => $cart->total() + $totalShipping,
                 'coupon_code' => $cart->coupon?->code,
                 'status' => OrderStatus::PendingPayment,
                 'placed_at' => now(),
             ]);
 
-            $itemsByVendor = $items->groupBy(fn (CartItem $item) => $item->product->vendor_id);
-
             foreach ($itemsByVendor as $vendorId => $vendorItems) {
                 $vendorSubtotal = $vendorItems->sum(fn (CartItem $item) => $item->lineTotal());
+                $vendorShipping = $shippingCosts[$vendorId];
 
                 $vendorOrder = $order->vendorOrders()->create([
                     'vendor_id' => $vendorId,
@@ -101,9 +128,9 @@ class CompleteCheckoutAction
                     // needs it, so vendor_order totals are deliberately
                     // gross (pre-discount) for now.
                     'discount_amount' => 0,
-                    'shipping_amount' => 0,
+                    'shipping_amount' => $vendorShipping,
                     'tax_amount' => 0,
-                    'total' => $vendorSubtotal,
+                    'total' => $vendorSubtotal + $vendorShipping,
                     'status' => VendorOrderStatus::PendingPayment,
                 ]);
 
