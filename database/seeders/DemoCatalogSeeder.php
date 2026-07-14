@@ -2,10 +2,21 @@
 
 namespace Database\Seeders;
 
+use App\Enums\OrderStatus;
+use App\Enums\ProductStatus;
+use App\Enums\ProductType;
+use App\Enums\ReviewStatus;
+use App\Enums\StockStatus;
+use App\Enums\StoreStatus;
+use App\Enums\UserStatus;
 use App\Enums\UserType;
 use App\Enums\VendorOrderStatus;
+use App\Enums\VendorStatus;
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\Country;
+use App\Models\Currency;
+use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ProductReview;
@@ -15,6 +26,7 @@ use App\Models\Vendor;
 use App\Models\VendorOrder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
@@ -24,6 +36,12 @@ use Illuminate\Support\Str;
  * and real "sold" order items so Best Sellers isn't empty. Images are
  * generated locally with GD (a labelled solid-colour square) rather than
  * fetched from the network, so this seeder works offline and is fast.
+ *
+ * Deliberately builds every record with plain Model::create() instead of
+ * factories: factories call fake() internally (fakerphp/faker is a
+ * require-dev package), which is unavailable on a production
+ * `composer install --no-dev` install where this seeder is meant to run.
+ *
  * Safe to re-run: skips entirely if 25+ demo products already exist.
  */
 class DemoCatalogSeeder extends Seeder
@@ -58,6 +76,11 @@ class DemoCatalogSeeder extends Seeder
         'Wireless Phone Charging Pad',
     ];
 
+    private const VENDOR_NAMES = [
+        'Prime Trading Co.', 'Northstar Retail Ltd', 'Coastal Supplies Inc.',
+        'Urban Market Group', 'Golden Gate Traders',
+    ];
+
     private const PALETTE = [
         '#4f46e5', '#059669', '#d97706', '#dc2626', '#2563eb',
         '#7c3aed', '#db2777', '#0891b2', '#65a30d', '#ea580c',
@@ -72,9 +95,10 @@ class DemoCatalogSeeder extends Seeder
         }
 
         $categories = collect(self::CATEGORIES)->values()->map(function (string $name, int $i) {
-            $category = Category::factory()->create([
+            $category = Category::create([
                 'name' => $name,
                 'slug' => Str::slug($name),
+                'description' => "Explore our range of {$name} products.",
                 'is_active' => true,
                 'sort_order' => $i,
             ]);
@@ -85,9 +109,10 @@ class DemoCatalogSeeder extends Seeder
         });
 
         $brands = collect(self::BRANDS)->values()->map(function (string $name, int $i) {
-            $brand = Brand::factory()->create([
+            $brand = Brand::create([
                 'name' => $name,
                 'slug' => Str::slug($name),
+                'description' => "{$name} — quality products you can trust.",
                 'is_active' => true,
                 'sort_order' => $i,
             ]);
@@ -97,32 +122,79 @@ class DemoCatalogSeeder extends Seeder
             return $brand;
         });
 
-        $vendors = collect(range(1, 5))->map(function (int $i) {
-            $vendor = Vendor::factory()->create();
-            Store::factory()->create(['vendor_id' => $vendor->id, 'is_featured' => $i <= 2]);
+        $vendors = collect(self::VENDOR_NAMES)->values()->map(function (string $name, int $i) {
+            $owner = User::create([
+                'name' => $name.' Owner',
+                'email' => 'demo-vendor'.($i + 1).'@onemarket247-demo.test',
+                'email_verified_at' => now(),
+                'password' => Hash::make(Str::random(24)),
+                'user_type' => UserType::VendorOwner,
+                'status' => UserStatus::Active,
+            ]);
+
+            $vendor = Vendor::create([
+                'user_id' => $owner->id,
+                'business_name' => $name,
+                'registration_number' => 'REG-'.str_pad((string) ($i + 1), 6, '0', STR_PAD_LEFT),
+                'tax_identification_number' => 'TIN-'.str_pad((string) ($i + 1), 6, '0', STR_PAD_LEFT),
+                'status' => VendorStatus::Approved,
+                'commission_rate' => 10,
+                'is_verified' => true,
+                'is_featured' => $i < 2,
+                'bank_name' => 'Demo Trust Bank',
+                'bank_account_name' => $name,
+                'bank_account_number' => str_pad((string) ($i + 1), 10, '0', STR_PAD_LEFT),
+                'approved_at' => now(),
+            ]);
+
+            Store::create([
+                'vendor_id' => $vendor->id,
+                'name' => $name,
+                'slug' => Str::slug($name),
+                'description' => "{$name} is a trusted seller on ".config('app.name').'.',
+                'email' => 'store'.($i + 1).'@onemarket247-demo.test',
+                'phone' => '+1555000'.str_pad((string) ($i + 1), 4, '0', STR_PAD_LEFT),
+                'status' => StoreStatus::Active,
+                'is_verified' => true,
+                'is_featured' => $i < 2,
+            ]);
 
             return $vendor;
         });
 
-        $reviewer = User::factory()->create([
+        $reviewer = User::create([
             'name' => 'Demo Shopper',
-            'email' => 'demo-reviewer@onemarket247.test',
+            'email' => 'demo-reviewer@onemarket247-demo.test',
+            'email_verified_at' => now(),
+            'password' => Hash::make(Str::random(24)),
             'user_type' => UserType::Customer,
+            'status' => UserStatus::Active,
         ]);
 
-        collect(self::PRODUCTS)->values()->each(function (string $name, int $i) use ($categories, $brands, $vendors, $reviewer) {
+        $country = Country::first();
+        $currency = Currency::where('is_default', true)->first() ?? Currency::first();
+
+        collect(self::PRODUCTS)->values()->each(function (string $name, int $i) use ($categories, $brands, $vendors, $reviewer, $country, $currency) {
             $vendor = $vendors[$i % $vendors->count()];
             $price = random_int(1500, 45000);
             $hasDiscount = $i % 3 === 0;
 
-            $product = Product::factory()->create([
+            $product = Product::create([
                 'vendor_id' => $vendor->id,
                 'brand_id' => $brands[$i % $brands->count()]->id,
                 'name' => $name,
                 'slug' => Str::slug($name).'-'.($i + 1),
                 'sku' => 'DEMO-'.str_pad((string) ($i + 1), 4, '0', STR_PAD_LEFT),
+                'type' => ProductType::Simple,
+                'status' => ProductStatus::Published,
+                'short_description' => "A great {$name} at a great price.",
+                'description' => "This {$name} is one of our most popular items, chosen by shoppers for its quality and value.",
                 'price' => $price,
                 'compare_at_price' => $hasDiscount ? (int) round($price * 1.3) : null,
+                'manage_stock' => true,
+                'stock_quantity' => random_int(5, 200),
+                'stock_status' => StockStatus::InStock,
+                'published_at' => now(),
                 'is_featured' => $i % 3 === 0,
                 'view_count' => random_int(5, 2000),
             ]);
@@ -132,23 +204,59 @@ class DemoCatalogSeeder extends Seeder
             $this->attachPlaceholderImage($product, 'images', $name, self::PALETTE[$i % count(self::PALETTE)]);
 
             if ($i % 2 === 0) {
-                ProductReview::factory()->approved()->create([
+                ProductReview::create([
                     'product_id' => $product->id,
                     'customer_id' => $reviewer->id,
                     'rating' => random_int(3, 5),
+                    'title' => 'Happy with this purchase',
+                    'body' => "The {$name} met my expectations — good quality and arrived quickly.",
+                    'status' => ReviewStatus::Approved,
+                    'is_verified_purchase' => true,
                 ]);
             }
 
-            if ($i % 4 === 0) {
-                $vendorOrder = VendorOrder::factory()->create([
+            if ($i % 4 === 0 && $country && $currency) {
+                $order = Order::create([
+                    'customer_id' => null,
+                    'guest_name' => 'Demo Buyer',
+                    'guest_email' => 'demo-buyer@onemarket247-demo.test',
+                    'guest_phone' => null,
+                    'shipping_full_name' => 'Demo Buyer',
+                    'shipping_phone' => null,
+                    'shipping_address_line_1' => '123 Demo Street',
+                    'shipping_country_id' => $country->id,
+                    'currency_id' => $currency->id,
+                    'subtotal' => $price,
+                    'discount_amount' => 0,
+                    'shipping_amount' => 0,
+                    'tax_amount' => 0,
+                    'total' => $price,
+                    'status' => OrderStatus::Completed,
+                    'placed_at' => now(),
+                ]);
+
+                $vendorOrder = VendorOrder::create([
+                    'order_id' => $order->id,
                     'vendor_id' => $vendor->id,
+                    'subtotal' => $price,
+                    'discount_amount' => 0,
+                    'shipping_amount' => 0,
+                    'tax_amount' => 0,
+                    'total' => $price,
                     'status' => VendorOrderStatus::Completed,
                 ]);
 
-                OrderItem::factory()->create([
+                $quantity = random_int(1, 8);
+
+                OrderItem::create([
                     'vendor_order_id' => $vendorOrder->id,
                     'product_id' => $product->id,
-                    'quantity' => random_int(1, 8),
+                    'product_variation_id' => null,
+                    'product_name' => $name,
+                    'sku' => $product->sku,
+                    'unit_price' => $price,
+                    'quantity' => $quantity,
+                    'line_total' => $price * $quantity,
                 ]);
             }
         });
