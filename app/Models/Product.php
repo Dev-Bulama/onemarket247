@@ -232,9 +232,14 @@ class Product extends Model implements HasMedia
 
     public function registerMediaConversions(?Media $media = null): void
     {
+        // nonQueued(): generate synchronously. A queued conversion job needs
+        // to reach the queue backend at dispatch time — on shared hosting
+        // with no queue worker (or a flaky/absent Redis connection) that
+        // dispatch can throw and abort whatever request/seeder triggered it.
         $this->addMediaConversion('thumb')
             ->width(300)
             ->height(300)
-            ->performOnCollections('images');
+            ->performOnCollections('images')
+            ->nonQueued();
     }
 }

@@ -27,6 +27,7 @@ use App\Models\VendorOrder;
 use App\Support\StockImageDownloader;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -48,7 +49,7 @@ use Illuminate\Support\Str;
  */
 class DemoCatalogSeeder extends Seeder
 {
-    private const CATEGORIES = [
+    public const CATEGORIES = [
         'Electronics' => 'fa-solid fa-tv',
         'Mobile Phones' => 'fa-solid fa-mobile-screen',
         'Computers & Laptops' => 'fa-solid fa-laptop',
@@ -76,7 +77,7 @@ class DemoCatalogSeeder extends Seeder
         'Video Games' => 'fa-solid fa-gamepad',
     ];
 
-    private const BRANDS = [
+    public const BRANDS = [
         'Aurora', 'Bexley', 'Coral Peak', 'Driftwood', 'Everline', 'Falcon Ridge',
         'Glenmore', 'Harborlight', 'Ironclad', 'Juniper', 'Kestrel', 'Lumen',
         'Meridian', 'Northgate', 'Orbis', 'Pinewood', 'Quartz', 'Ravello',
@@ -114,6 +115,17 @@ class DemoCatalogSeeder extends Seeder
             return;
         }
 
+        // Wrapped in a transaction so a failure partway through (e.g. a
+        // network hiccup fetching a stock photo) rolls back cleanly instead
+        // of leaving partial rows that collide on unique slugs/SKUs the next
+        // time this seeder runs.
+        DB::transaction(function () {
+            $this->seed();
+        });
+    }
+
+    private function seed(): void
+    {
         $categories = collect(array_keys(self::CATEGORIES))->values()->map(function (string $name, int $i) {
             $icon = self::CATEGORIES[$name];
             $category = Category::create([
