@@ -19,7 +19,12 @@
                 @endif
             </nav>
 
-            <h1 class="text-2xl font-bold text-gray-900 mb-2">{{ ($subcategory ?? $category)->name }}</h1>
+            <h1 class="flex items-center gap-3 text-2xl font-bold text-gray-900 mb-2">
+                <span class="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 text-lg flex-none">
+                    <i class="{{ ($subcategory ?? $category)->displayIcon() }}" aria-hidden="true"></i>
+                </span>
+                {{ ($subcategory ?? $category)->name }}
+            </h1>
 
             @if (($subcategory ?? $category)->description)
                 <p class="text-sm text-gray-600 mb-6">{{ ($subcategory ?? $category)->description }}</p>

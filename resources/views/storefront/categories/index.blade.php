@@ -11,7 +11,10 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             @foreach ($categories as $category)
                 <div class="rounded-lg border border-gray-200 bg-white p-5">
-                    <a href="{{ route('categories.show', $category) }}" class="text-base font-semibold text-gray-900 hover:text-indigo-600">
+                    <a href="{{ route('categories.show', $category) }}" class="flex items-center gap-3 text-base font-semibold text-gray-900 hover:text-indigo-600">
+                        <span class="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 flex-none">
+                            <i class="{{ $category->displayIcon() }}" aria-hidden="true"></i>
+                        </span>
                         {{ $category->name }}
                     </a>
 

@@ -9,15 +9,15 @@
         : null;
 @endphp
 
-<a href="{{ route('products.show', $product) }}" class="group block bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-shadow relative">
+<a href="{{ route('products.show', $product) }}" class="group block bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 relative">
     @if ($discountPercent)
-        <span class="absolute top-2 left-2 z-10 rounded bg-amber-500 px-1.5 py-0.5 text-xs font-semibold text-white">-{{ $discountPercent }}%</span>
+        <span class="absolute top-2 left-2 z-10 rounded-full bg-amber-500 px-2 py-0.5 text-xs font-semibold text-white shadow-sm">-{{ $discountPercent }}%</span>
     @endif
     <div class="aspect-square bg-gray-100 flex items-center justify-center overflow-hidden">
         @if ($thumb)
             <img src="{{ $thumb }}" alt="{{ $product->name }}" class="h-full w-full object-cover group-hover:scale-105 transition-transform">
         @else
-            <span class="text-gray-300 text-sm">No image</span>
+            <span class="text-gray-300 text-3xl"><i class="fa-solid fa-image" aria-hidden="true"></i></span>
         @endif
     </div>
     <div class="p-3">

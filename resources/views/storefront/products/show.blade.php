@@ -28,11 +28,11 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
         <div>
-            <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
+            <div class="aspect-square bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center">
                 @if ($images->isNotEmpty())
                     <img src="{{ $images->first()->getUrl() }}" alt="{{ $product->name }}" class="h-full w-full object-cover">
                 @else
-                    <span class="text-gray-300 text-sm">No image</span>
+                    <span class="text-gray-300 text-5xl"><i class="fa-solid fa-image" aria-hidden="true"></i></span>
                 @endif
             </div>
 

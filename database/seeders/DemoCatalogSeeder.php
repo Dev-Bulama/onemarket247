@@ -24,6 +24,7 @@ use App\Models\Store;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Models\VendorOrder;
+use App\Support\StockImageDownloader;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -32,10 +33,11 @@ use Illuminate\Support\Str;
 /**
  * Populates the catalog with realistic-looking demo content (25 categories,
  * 25 brands, 25 products spread across 5 vendors) so the storefront has
- * something to actually show — real rows, real images, a few real reviews
- * and real "sold" order items so Best Sellers isn't empty. Images are
- * generated locally with GD (a labelled solid-colour square) rather than
- * fetched from the network, so this seeder works offline and is fast.
+ * something to actually show — real rows, real stock photos, a few real
+ * reviews and real "sold" order items so Best Sellers isn't empty. Each
+ * image is a deterministic real stock photo fetched over HTTP; if that
+ * fails (e.g. no outbound internet), a locally generated placeholder is
+ * used instead so this seeder never hard-fails offline.
  *
  * Deliberately builds every record with plain Model::create() instead of
  * factories: factories call fake() internally (fakerphp/faker is a
@@ -47,13 +49,31 @@ use Illuminate\Support\Str;
 class DemoCatalogSeeder extends Seeder
 {
     private const CATEGORIES = [
-        'Electronics', 'Mobile Phones', 'Computers & Laptops', 'Home Appliances',
-        'Furniture', 'Kitchenware', 'Men\'s Fashion', 'Women\'s Fashion',
-        'Kids & Baby', 'Shoes', 'Bags & Luggage', 'Watches & Jewelry',
-        'Beauty & Personal Care', 'Health & Wellness', 'Sports & Outdoors',
-        'Toys & Games', 'Books & Stationery', 'Automotive', 'Tools & Hardware',
-        'Pet Supplies', 'Groceries', 'Office Supplies', 'Musical Instruments',
-        'Garden & Outdoor', 'Video Games',
+        'Electronics' => 'fa-solid fa-tv',
+        'Mobile Phones' => 'fa-solid fa-mobile-screen',
+        'Computers & Laptops' => 'fa-solid fa-laptop',
+        'Home Appliances' => 'fa-solid fa-blender',
+        'Furniture' => 'fa-solid fa-couch',
+        'Kitchenware' => 'fa-solid fa-kitchen-set',
+        'Men\'s Fashion' => 'fa-solid fa-shirt',
+        'Women\'s Fashion' => 'fa-solid fa-vest',
+        'Kids & Baby' => 'fa-solid fa-baby',
+        'Shoes' => 'fa-solid fa-shoe-prints',
+        'Bags & Luggage' => 'fa-solid fa-suitcase',
+        'Watches & Jewelry' => 'fa-solid fa-gem',
+        'Beauty & Personal Care' => 'fa-solid fa-spa',
+        'Health & Wellness' => 'fa-solid fa-heart-pulse',
+        'Sports & Outdoors' => 'fa-solid fa-basketball',
+        'Toys & Games' => 'fa-solid fa-puzzle-piece',
+        'Books & Stationery' => 'fa-solid fa-book',
+        'Automotive' => 'fa-solid fa-car',
+        'Tools & Hardware' => 'fa-solid fa-toolbox',
+        'Pet Supplies' => 'fa-solid fa-paw',
+        'Groceries' => 'fa-solid fa-basket-shopping',
+        'Office Supplies' => 'fa-solid fa-briefcase',
+        'Musical Instruments' => 'fa-solid fa-music',
+        'Garden & Outdoor' => 'fa-solid fa-seedling',
+        'Video Games' => 'fa-solid fa-gamepad',
     ];
 
     private const BRANDS = [
@@ -94,10 +114,12 @@ class DemoCatalogSeeder extends Seeder
             return;
         }
 
-        $categories = collect(self::CATEGORIES)->values()->map(function (string $name, int $i) {
+        $categories = collect(array_keys(self::CATEGORIES))->values()->map(function (string $name, int $i) {
+            $icon = self::CATEGORIES[$name];
             $category = Category::create([
                 'name' => $name,
                 'slug' => Str::slug($name),
+                'icon' => $icon,
                 'description' => "Explore our range of {$name} products.",
                 'is_active' => true,
                 'sort_order' => $i,
@@ -266,7 +288,8 @@ class DemoCatalogSeeder extends Seeder
 
     private function attachPlaceholderImage(Model $model, string $collection, string $label, string $hexColor): void
     {
-        $path = $this->generatePlaceholderImage($label, $hexColor);
+        $seed = $collection.'-'.Str::slug($label);
+        $path = StockImageDownloader::download($seed) ?? $this->generatePlaceholderImage($label, $hexColor);
 
         $model->addMedia($path)->toMediaCollection($collection);
     }
@@ -276,8 +299,17 @@ class DemoCatalogSeeder extends Seeder
         [$r, $g, $b] = sscanf($hexColor, '#%02x%02x%02x');
 
         $image = imagecreatetruecolor($size, $size);
-        $background = imagecolorallocate($image, $r, $g, $b);
-        imagefill($image, 0, 0, $background);
+
+        for ($row = 0; $row < $size; $row++) {
+            $blend = $row / $size;
+            $rowColor = imagecolorallocate(
+                $image,
+                (int) ($r + (255 - $r) * $blend * 0.35),
+                (int) ($g + (255 - $g) * $blend * 0.35),
+                (int) ($b + (255 - $b) * $blend * 0.35),
+            );
+            imageline($image, 0, $row, $size, $row, $rowColor);
+        }
 
         $white = imagecolorallocate($image, 255, 255, 255);
         $font = 5;

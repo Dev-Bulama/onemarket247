@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Categories\Schemas;
 
+use App\Support\CategoryIcons;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -34,6 +35,11 @@ class CategoryForm
                     ->required()
                     ->maxLength(255)
                     ->unique(ignoreRecord: true),
+                Select::make('icon')
+                    ->label('Icon')
+                    ->options(CategoryIcons::options())
+                    ->searchable()
+                    ->helperText('Shown in the category menu and sidebar.'),
                 Textarea::make('description')
                     ->columnSpanFull(),
                 Toggle::make('is_active')

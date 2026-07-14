@@ -16,7 +16,7 @@
                         @if ($cover)
                             <img src="{{ $cover }}" alt="{{ $post->title }}" class="h-full w-full object-cover">
                         @else
-                            <span class="text-gray-300 text-sm">No image</span>
+                            <span class="text-gray-300 text-3xl"><i class="fa-solid fa-newspaper" aria-hidden="true"></i></span>
                         @endif
                     </div>
                     <div class="p-4">

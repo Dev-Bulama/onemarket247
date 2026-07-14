@@ -25,6 +25,9 @@ class CategoriesTable
                     ->circular(),
                 TextColumn::make('name')
                     ->searchable(),
+                TextColumn::make('icon')
+                    ->label('Icon class')
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('parent.name')
                     ->label('Parent')
                     ->placeholder('— root —'),

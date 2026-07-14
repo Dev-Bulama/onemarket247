@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\CategoryIcons;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,7 +18,7 @@ class Category extends Model implements HasMedia
     use HasFactory, InteractsWithMedia, SoftDeletes;
 
     protected $fillable = [
-        'parent_id', 'name', 'slug', 'description', 'path',
+        'parent_id', 'name', 'slug', 'icon', 'description', 'path',
         'is_active', 'sort_order', 'seo_title', 'seo_description',
     ];
 
@@ -45,6 +46,11 @@ class Category extends Model implements HasMedia
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('image')->singleFile();
+    }
+
+    public function displayIcon(): string
+    {
+        return $this->icon ?: CategoryIcons::default();
     }
 
     public function parent(): BelongsTo

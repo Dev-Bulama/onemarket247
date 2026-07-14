@@ -32,7 +32,7 @@
                                         @if ($thumb)
                                             <img src="{{ $thumb }}" alt="{{ $item->product->name }}" class="h-full w-full object-cover">
                                         @else
-                                            <span class="text-gray-300 text-xs">No image</span>
+                                            <span class="text-gray-300 text-lg"><i class="fa-solid fa-image" aria-hidden="true"></i></span>
                                         @endif
                                     </div>
 

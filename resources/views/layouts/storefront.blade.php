@@ -56,9 +56,9 @@
     </div>
 </div>
 
-<header class="bg-white border-b border-gray-200">
+<header class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-gray-200 shadow-sm">
     <div class="mx-auto max-w-6xl px-4 py-4 flex flex-wrap items-center gap-4">
-        <a href="{{ route('home') }}" class="text-xl font-bold text-gray-900 shrink-0">{{ config('app.name') }}</a>
+        <a href="{{ route('home') }}" class="text-2xl font-extrabold tracking-tight text-gray-900 shrink-0">{{ config('app.name') }}</a>
 
         <details class="relative order-3 sm:order-none">
             <summary class="list-none cursor-pointer flex items-center gap-1 rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:border-indigo-400">
@@ -130,7 +130,10 @@
             </summary>
             <div class="absolute z-20 mt-2 w-64 rounded-md border border-gray-200 bg-white shadow-lg py-1">
                 @forelse ($navCategories as $category)
-                    <a href="{{ route('categories.show', $category) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-indigo-600">{{ $category->name }}</a>
+                    <a href="{{ route('categories.show', $category) }}" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-indigo-600">
+                        <i class="{{ $category->displayIcon() }} text-indigo-500 w-4 text-center" aria-hidden="true"></i>
+                        <span>{{ $category->name }}</span>
+                    </a>
                 @empty
                     <p class="px-4 py-2 text-sm text-gray-400">No categories yet</p>
                 @endforelse
@@ -149,7 +152,7 @@
     </div>
 </header>
 
-<main class="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
+<main class="mx-auto w-full max-w-6xl flex-1 px-4 py-10">
     @if (session('status'))
         <div class="mb-6 rounded-md bg-green-50 px-4 py-3 text-sm text-green-700">
             {{ session('status') }}
@@ -169,18 +172,37 @@
     @yield('content')
 </main>
 
-<footer class="bg-white border-t border-gray-200">
-    <div class="mx-auto max-w-6xl px-4 py-8 flex flex-wrap items-center justify-between gap-4 text-sm text-gray-500">
-        <p>&copy; {{ now()->year }} {{ config('app.name') }}. All rights reserved.</p>
-        <nav class="flex items-center gap-4">
-            <a href="{{ route('pages.about-us') }}" class="hover:text-gray-700">About Us</a>
-            <a href="{{ route('blog.index') }}" class="hover:text-gray-700">Blog</a>
-            <a href="{{ route('pages.contact') }}" class="hover:text-gray-700">Contact</a>
-            <a href="{{ route('pages.partnership') }}" class="hover:text-gray-700">Partnership</a>
-            <a href="{{ route('pages.faq') }}" class="hover:text-gray-700">FAQ</a>
-            <a href="{{ route('pages.terms') }}" class="hover:text-gray-700">Terms</a>
-            <a href="{{ route('pages.privacy') }}" class="hover:text-gray-700">Privacy Policy</a>
-        </nav>
+<footer class="bg-gray-50 border-t border-gray-200 mt-auto">
+    <div class="mx-auto max-w-6xl px-4 py-12 grid grid-cols-1 sm:grid-cols-3 gap-8 text-sm text-gray-500">
+        <div>
+            <p class="text-lg font-extrabold tracking-tight text-gray-900">{{ config('app.name') }}</p>
+            <p class="mt-2 text-gray-500 max-w-xs">A multi-vendor marketplace connecting shoppers with hundreds of independent stores.</p>
+            <div class="mt-4 flex items-center gap-2 text-xs text-gray-400">
+                <i class="fa-solid fa-shield-halved text-indigo-500" aria-hidden="true"></i>
+                <span>Secure payments &amp; buyer protection</span>
+            </div>
+        </div>
+        <div>
+            <p class="text-xs font-semibold uppercase tracking-wide text-gray-400">Company</p>
+            <nav class="mt-3 flex flex-col gap-2">
+                <a href="{{ route('pages.about-us') }}" class="hover:text-indigo-600">About Us</a>
+                <a href="{{ route('blog.index') }}" class="hover:text-indigo-600">Blog</a>
+                <a href="{{ route('pages.partnership') }}" class="hover:text-indigo-600">Partnership</a>
+                <a href="{{ route('vendor.register') }}" class="hover:text-indigo-600">Become a Vendor</a>
+            </nav>
+        </div>
+        <div>
+            <p class="text-xs font-semibold uppercase tracking-wide text-gray-400">Support</p>
+            <nav class="mt-3 flex flex-col gap-2">
+                <a href="{{ route('pages.contact') }}" class="hover:text-indigo-600">Contact</a>
+                <a href="{{ route('pages.faq') }}" class="hover:text-indigo-600">FAQ</a>
+                <a href="{{ route('pages.terms') }}" class="hover:text-indigo-600">Terms</a>
+                <a href="{{ route('pages.privacy') }}" class="hover:text-indigo-600">Privacy Policy</a>
+            </nav>
+        </div>
+    </div>
+    <div class="border-t border-gray-200">
+        <p class="mx-auto max-w-6xl px-4 py-4 text-xs text-gray-400">&copy; {{ now()->year }} {{ config('app.name') }}. All rights reserved.</p>
     </div>
 </footer>
 
