@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -96,6 +97,26 @@ class Vendor extends Model
     public function addresses(): MorphMany
     {
         return $this->morphMany(Address::class, 'addressable');
+    }
+
+    public function wallet(): HasOne
+    {
+        return $this->hasOne(VendorWallet::class);
+    }
+
+    public function walletTransactions(): HasManyThrough
+    {
+        return $this->hasManyThrough(VendorWalletTransaction::class, VendorWallet::class);
+    }
+
+    public function withdrawalMethods(): HasMany
+    {
+        return $this->hasMany(WithdrawalMethod::class);
+    }
+
+    public function withdrawals(): HasMany
+    {
+        return $this->hasMany(Withdrawal::class);
     }
 
     public function currentSubscription(): ?VendorSubscription

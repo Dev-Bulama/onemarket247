@@ -78,4 +78,22 @@ class VendorOrder extends Model
     {
         return $this->hasOne(PackingSlip::class);
     }
+
+    public function walletTransactions(): HasMany
+    {
+        return $this->hasMany(VendorWalletTransaction::class);
+    }
+
+    /**
+     * Sum of this vendor order's items' net-of-commission amounts — what
+     * actually gets credited to the vendor's wallet. Relies on
+     * order_item_commissions already existing (written at checkout time
+     * by App\Actions\Commission\RecordOrderItemCommissionAction).
+     */
+    public function netCommissionAmount(): int
+    {
+        return $this->orderItems()
+            ->join('order_item_commissions', 'order_item_commissions.order_item_id', '=', 'order_items.id')
+            ->sum('order_item_commissions.net_amount');
+    }
 }

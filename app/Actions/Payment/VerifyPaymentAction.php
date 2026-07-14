@@ -4,6 +4,7 @@ namespace App\Actions\Payment;
 
 use App\Actions\Inventory\DeductStockAction;
 use App\Actions\Order\UpdateVendorOrderStatusAction;
+use App\Actions\Wallet\CreditVendorWalletAction;
 use App\Enums\PaymentLogDirection;
 use App\Enums\PaymentStatus;
 use App\Enums\VendorOrderStatus;
@@ -67,6 +68,7 @@ class VerifyPaymentAction
                 $payment->update(['status' => PaymentStatus::Paid, 'paid_at' => $result->paidAt ?? now(), 'meta' => $result->raw]);
                 $this->confirmVendorOrders($payment);
                 $this->deductReservedStock($payment);
+                $this->creditVendorWallets($payment);
             } else {
                 $payment->update(['status' => PaymentStatus::Failed, 'failed_at' => now(), 'meta' => $result->raw]);
             }
@@ -94,5 +96,10 @@ class VerifyPaymentAction
 
                 app(DeductStockAction::class)->handle($item->warehouse, $item->sellable(), $item->quantity, null, $item->vendorOrder);
             });
+    }
+
+    private function creditVendorWallets(Payment $payment): void
+    {
+        $payment->order->vendorOrders->each(fn ($vendorOrder) => app(CreditVendorWalletAction::class)->handle($vendorOrder));
     }
 }

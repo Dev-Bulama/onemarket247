@@ -2,6 +2,7 @@
 
 namespace App\Actions\Payment;
 
+use App\Actions\Wallet\ReverseVendorWalletCreditAction;
 use App\Enums\PaymentLogDirection;
 use App\Enums\PaymentStatus;
 use App\Exceptions\PaymentGatewayException;
@@ -22,6 +23,12 @@ use Illuminate\Support\Facades\DB;
  * refunds table for the same reason Phase 11 kept payments minimal:
  * nothing yet needs more than "how much of this payment has been given
  * back."
+ *
+ * The refund amount is attributed across the order's vendor orders
+ * proportionally to each one's own total (a multi-vendor order's refund
+ * isn't scoped to one vendor at this payment-level granularity), and each
+ * vendor's wallet credit is reversed by that same proportion of its own
+ * net-of-commission amount — see App\Actions\Wallet\ReverseVendorWalletCreditAction.
  */
 class RefundPaymentAction
 {
@@ -64,7 +71,24 @@ class RefundPaymentAction
                 'status' => $refundedAmount >= $payment->amount ? PaymentStatus::Refunded : PaymentStatus::PartiallyRefunded,
             ]);
 
+            $this->reverseVendorWalletCredits($payment, $amount);
+
             return $payment->fresh();
+        });
+    }
+
+    private function reverseVendorWalletCredits(Payment $payment, int $refundedAmount): void
+    {
+        $order = $payment->order;
+
+        if ($order->total <= 0) {
+            return;
+        }
+
+        $order->vendorOrders->each(function ($vendorOrder) use ($order, $refundedAmount) {
+            $share = (int) round($refundedAmount * $vendorOrder->netCommissionAmount() / $order->total);
+
+            app(ReverseVendorWalletCreditAction::class)->handle($vendorOrder, $share);
         });
     }
 }

@@ -4,6 +4,8 @@ namespace App\Filament\Resources\Vendors;
 
 use App\Filament\Resources\Vendors\Pages\EditVendor;
 use App\Filament\Resources\Vendors\Pages\ListVendors;
+use App\Filament\Resources\Vendors\RelationManagers\WalletTransactionsRelationManager;
+use App\Filament\Resources\Vendors\RelationManagers\WithdrawalsRelationManager;
 use App\Filament\Resources\Vendors\Schemas\VendorForm;
 use App\Filament\Resources\Vendors\Tables\VendorsTable;
 use App\Models\Vendor;
@@ -42,6 +44,14 @@ class VendorResource extends Resource
     public static function table(Table $table): Table
     {
         return VendorsTable::configure($table);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            WithdrawalsRelationManager::class,
+            WalletTransactionsRelationManager::class,
+        ];
     }
 
     public static function getPages(): array

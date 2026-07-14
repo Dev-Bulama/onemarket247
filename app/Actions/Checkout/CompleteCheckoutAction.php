@@ -3,6 +3,7 @@
 namespace App\Actions\Checkout;
 
 use App\Actions\Cart\Concerns\ChecksAvailability;
+use App\Actions\Commission\RecordOrderItemCommissionAction;
 use App\Actions\Inventory\ReserveStockAction;
 use App\Enums\CartStatus;
 use App\Enums\OrderStatus;
@@ -110,7 +111,7 @@ class CompleteCheckoutAction
                     $sellable = $item->variation ?? $item->product;
                     $stock = $sellable->manage_stock ? $this->selectWarehouseStock($sellable, $item->quantity) : null;
 
-                    $vendorOrder->orderItems()->create([
+                    $orderItem = $vendorOrder->orderItems()->create([
                         'product_id' => $item->product_id,
                         'product_variation_id' => $item->product_variation_id,
                         'warehouse_id' => $stock?->warehouse_id,
@@ -120,6 +121,8 @@ class CompleteCheckoutAction
                         'quantity' => $item->quantity,
                         'line_total' => $item->lineTotal(),
                     ]);
+
+                    app(RecordOrderItemCommissionAction::class)->handle($orderItem);
 
                     if ($stock) {
                         app(ReserveStockAction::class)->handle($stock->warehouse, $sellable, $item->quantity, $order->customer, $order);

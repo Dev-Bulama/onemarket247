@@ -2,6 +2,7 @@
 
 namespace App\Actions\Order;
 
+use App\Actions\Wallet\SettleVendorWalletCreditAction;
 use App\Enums\VendorOrderStatus;
 use App\Exceptions\InvalidOrderTransitionException;
 use App\Models\User;
@@ -63,6 +64,10 @@ class UpdateVendorOrderStatusAction
             ]);
 
             $this->aggregator->recompute($vendorOrder->order);
+
+            if ($newStatus === VendorOrderStatus::Completed) {
+                app(SettleVendorWalletCreditAction::class)->handle($vendorOrder);
+            }
 
             return $vendorOrder->fresh();
         });

@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             SettingsSeeder::class,
             VendorSubscriptionPlanSeeder::class,
             PaymentGatewaySeeder::class,
+            CommissionRuleSeeder::class,
         ]);
 
         User::factory()->create([

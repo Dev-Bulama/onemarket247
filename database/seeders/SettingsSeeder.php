@@ -21,6 +21,7 @@ class SettingsSeeder extends Seeder
             ['key' => 'vendor.approval_mode', 'value' => 'manual', 'type' => 'string', 'group' => 'vendor'],
             ['key' => 'vendor.require_document_verification', 'value' => '1', 'type' => 'boolean', 'group' => 'vendor'],
             ['key' => 'products.approval_mode', 'value' => 'manual', 'type' => 'string', 'group' => 'products'],
+            ['key' => 'finance.minimum_withdrawal', 'value' => '5000', 'type' => 'integer', 'group' => 'finance'],
         ];
 
         foreach ($settings as $data) {
