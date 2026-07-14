@@ -6,6 +6,7 @@ use App\Enums\CartStatus;
 use App\Enums\StoreStaffStatus;
 use App\Enums\UserStatus;
 use App\Enums\UserType;
+use App\Notifications\VendorResetPasswordNotification;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
@@ -192,5 +193,16 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         return $staff
             && $staff->status === StoreStaffStatus::Active
             && ($staff->store?->vendor?->canAccessDashboard() ?? false);
+    }
+
+    public function sendPasswordResetNotification($token): void
+    {
+        if (in_array($this->user_type, [UserType::VendorOwner, UserType::VendorStaff], true)) {
+            $this->notify(new VendorResetPasswordNotification($token));
+
+            return;
+        }
+
+        parent::sendPasswordResetNotification($token);
     }
 }
