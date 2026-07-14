@@ -22,6 +22,7 @@ class SettingsSeeder extends Seeder
             ['key' => 'vendor.require_document_verification', 'value' => '1', 'type' => 'boolean', 'group' => 'vendor'],
             ['key' => 'products.approval_mode', 'value' => 'manual', 'type' => 'string', 'group' => 'products'],
             ['key' => 'finance.minimum_withdrawal', 'value' => '5000', 'type' => 'integer', 'group' => 'finance'],
+            ['key' => 'storefront.announcement_text', 'value' => 'Welcome to OneMarket247 — shop from hundreds of vendors today!', 'type' => 'string', 'group' => 'storefront'],
         ];
 
         foreach ($settings as $data) {

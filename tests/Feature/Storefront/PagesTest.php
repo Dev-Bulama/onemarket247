@@ -39,3 +39,8 @@ test('faq, terms, and privacy pages load', function () {
     $this->get('/terms')->assertOk();
     $this->get('/privacy-policy')->assertOk();
 });
+
+test('about-us and partnership pages load', function () {
+    $this->get('/about-us')->assertOk();
+    $this->get('/partnership')->assertOk();
+});

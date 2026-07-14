@@ -2,23 +2,24 @@
 
 namespace App\Http\Controllers\Storefront;
 
+use App\Actions\Product\BestSellingProductsAction;
 use App\Enums\ProductStatus;
 use App\Enums\StoreStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Brand;
-use App\Models\Category;
 use App\Models\Product;
 use App\Models\Store;
 use Illuminate\View\View;
 
 class HomeController extends Controller
 {
-    public function index(): View
+    public function index(BestSellingProductsAction $bestSellingProducts): View
     {
         $featuredProducts = Product::query()
             ->where('status', ProductStatus::Published)
             ->where('is_featured', true)
             ->with(['brand', 'media'])
+            ->withCount('approvedReviews')
             ->latest('published_at')
             ->take(12)
             ->get();
@@ -26,15 +27,19 @@ class HomeController extends Controller
         $newArrivals = Product::query()
             ->where('status', ProductStatus::Published)
             ->with(['brand', 'media'])
+            ->withCount('approvedReviews')
             ->latest('published_at')
             ->take(12)
             ->get();
 
-        $categories = Category::query()
-            ->whereNull('parent_id')
-            ->where('is_active', true)
-            ->orderBy('sort_order')
-            ->take(10)
+        $bestSellers = $bestSellingProducts->handle(12);
+
+        $trending = Product::query()
+            ->where('status', ProductStatus::Published)
+            ->with(['brand', 'media'])
+            ->withCount('approvedReviews')
+            ->orderByDesc('view_count')
+            ->take(8)
             ->get();
 
         $brands = Brand::query()
@@ -53,7 +58,8 @@ class HomeController extends Controller
         return view('storefront.home', [
             'featuredProducts' => $featuredProducts,
             'newArrivals' => $newArrivals,
-            'categories' => $categories,
+            'bestSellers' => $bestSellers,
+            'trending' => $trending,
             'brands' => $brands,
             'stores' => $stores,
         ]);

@@ -39,7 +39,7 @@
                         <select name="country_id" id="country_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                             <option value="">—</option>
                             @foreach ($countries as $country)
-                                <option value="{{ $country->id }}" @selected(old('country_id', $defaultAddress?->country_id) == $country->id)>{{ $country->name }}</option>
+                                <option value="{{ $country->id }}" @selected(old('country_id', $defaultAddress?->country_id ?? $deliveryLocation['country']->id ?? null) == $country->id)>{{ $country->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -152,8 +152,8 @@
 
         const initialCountry = document.getElementById('country_id').value;
         if (initialCountry) {
-            populateStates(initialCountry, '{{ old('state_id', $defaultAddress?->state_id) }}');
-            populateCities('{{ old('state_id', $defaultAddress?->state_id) }}', '{{ old('city_id', $defaultAddress?->city_id) }}');
+            populateStates(initialCountry, '{{ old('state_id', $defaultAddress?->state_id ?? $deliveryLocation['state']->id ?? null) }}');
+            populateCities('{{ old('state_id', $defaultAddress?->state_id ?? $deliveryLocation['state']->id ?? null) }}', '{{ old('city_id', $defaultAddress?->city_id ?? $deliveryLocation['city']->id ?? null) }}');
         }
     </script>
 @endsection

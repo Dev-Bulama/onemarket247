@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Storefront\BlogController;
 use App\Http\Controllers\Storefront\BrandController;
 use App\Http\Controllers\Storefront\CartController;
 use App\Http\Controllers\Storefront\CartCouponController;
@@ -7,6 +8,7 @@ use App\Http\Controllers\Storefront\CartItemController;
 use App\Http\Controllers\Storefront\CategoryController;
 use App\Http\Controllers\Storefront\CheckoutController;
 use App\Http\Controllers\Storefront\CollectionController;
+use App\Http\Controllers\Storefront\LocationController;
 use App\Http\Controllers\Storefront\PageController;
 use App\Http\Controllers\Storefront\PaymentController;
 use App\Http\Controllers\Storefront\ProductController;
@@ -70,3 +72,10 @@ Route::post('contact', [PageController::class, 'submitContact'])->middleware('th
 Route::get('faq', [PageController::class, 'faq'])->name('pages.faq');
 Route::get('terms', [PageController::class, 'terms'])->name('pages.terms');
 Route::get('privacy-policy', [PageController::class, 'privacy'])->name('pages.privacy');
+Route::get('about-us', [PageController::class, 'aboutUs'])->name('pages.about-us');
+Route::get('partnership', [PageController::class, 'partnership'])->name('pages.partnership');
+
+Route::get('blog', [BlogController::class, 'index'])->name('blog.index');
+Route::get('blog/{post:slug}', [BlogController::class, 'show'])->name('blog.show');
+
+Route::post('delivery-location', [LocationController::class, 'switch'])->name('location.switch');

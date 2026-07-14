@@ -50,4 +50,14 @@ class PageController extends Controller
     {
         return view('storefront.pages.privacy');
     }
+
+    public function aboutUs(): View
+    {
+        return view('storefront.pages.about-us');
+    }
+
+    public function partnership(): View
+    {
+        return view('storefront.pages.partnership');
+    }
 }
