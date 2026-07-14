@@ -28,6 +28,16 @@ class ProductForm
                     ->label('Brand')
                     ->relationship('brand', 'name')
                     ->searchable(),
+                Select::make('shipping_class_id')
+                    ->label('Shipping class')
+                    ->relationship('shippingClass', 'name')
+                    ->searchable()
+                    ->preload(),
+                Select::make('tax_class_id')
+                    ->label('Tax class')
+                    ->relationship('taxClass', 'name')
+                    ->searchable()
+                    ->preload(),
                 TextInput::make('name')
                     ->required()
                     ->maxLength(255)

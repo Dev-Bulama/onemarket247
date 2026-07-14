@@ -21,13 +21,14 @@ class Order extends Model
         'guest_name', 'guest_email', 'guest_phone',
         'shipping_full_name', 'shipping_phone', 'shipping_address_line_1', 'shipping_address_line_2',
         'shipping_country_id', 'shipping_state_id', 'shipping_city_id', 'shipping_postal_code',
-        'currency_id', 'subtotal', 'discount_amount', 'shipping_amount', 'tax_amount', 'total',
+        'currency_id', 'exchange_rate_snapshot', 'subtotal', 'discount_amount', 'shipping_amount', 'tax_amount', 'total',
         'coupon_code', 'status', 'placed_at',
     ];
 
     protected function casts(): array
     {
         return [
+            'exchange_rate_snapshot' => 'decimal:10',
             'subtotal' => 'integer',
             'discount_amount' => 'integer',
             'shipping_amount' => 'integer',

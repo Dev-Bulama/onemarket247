@@ -20,9 +20,9 @@
         <div class="mt-1 flex items-center justify-between">
             <p class="text-sm font-semibold text-gray-900">
                 @if ($range)
-                    From ${{ number_format($range['min'] / 100, 2) }}
+                    From @price($range['min'])
                 @elseif ($price !== null)
-                    ${{ number_format($price / 100, 2) }}
+                    @price($price)
                 @else
                     &nbsp;
                 @endif

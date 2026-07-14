@@ -22,7 +22,7 @@ class Product extends Model implements HasMedia
     use HasFactory, InteractsWithMedia, SoftDeletes;
 
     protected $fillable = [
-        'vendor_id', 'brand_id', 'shipping_class_id', 'name', 'slug', 'sku', 'type', 'status',
+        'vendor_id', 'brand_id', 'shipping_class_id', 'tax_class_id', 'name', 'slug', 'sku', 'type', 'status',
         'short_description', 'description', 'price', 'compare_at_price', 'cost_price',
         'manage_stock', 'stock_quantity', 'stock_status', 'low_stock_threshold',
         'weight', 'length', 'width', 'height', 'is_featured',
@@ -75,6 +75,40 @@ class Product extends Model implements HasMedia
     public function shippingClass(): BelongsTo
     {
         return $this->belongsTo(ShippingClass::class);
+    }
+
+    public function taxClass(): BelongsTo
+    {
+        return $this->belongsTo(TaxClass::class);
+    }
+
+    public function translations(): HasMany
+    {
+        return $this->hasMany(ProductTranslation::class);
+    }
+
+    public function translationFor(?string $languageCode = null): ?ProductTranslation
+    {
+        $languageCode ??= app()->getLocale();
+
+        return $this->translations()
+            ->whereHas('language', fn ($query) => $query->where('code', $languageCode))
+            ->first();
+    }
+
+    public function translatedName(?string $languageCode = null): string
+    {
+        return $this->translationFor($languageCode)?->name ?: $this->name;
+    }
+
+    public function translatedShortDescription(?string $languageCode = null): ?string
+    {
+        return $this->translationFor($languageCode)?->short_description ?: $this->short_description;
+    }
+
+    public function translatedDescription(?string $languageCode = null): ?string
+    {
+        return $this->translationFor($languageCode)?->description ?: $this->description;
     }
 
     public function reviewer(): BelongsTo

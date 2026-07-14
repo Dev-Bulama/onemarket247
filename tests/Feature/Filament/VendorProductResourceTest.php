@@ -5,10 +5,12 @@ use App\Enums\ProductType;
 use App\Filament\Vendor\Resources\Products\Pages\CreateProduct;
 use App\Filament\Vendor\Resources\Products\Pages\EditProduct;
 use App\Filament\Vendor\Resources\Products\Pages\ListProducts;
+use App\Filament\Vendor\Resources\Products\RelationManagers\TranslationsRelationManager;
 use App\Filament\Vendor\Resources\Products\RelationManagers\VariationsRelationManager;
 use App\Models\Attribute;
 use App\Models\AttributeValue;
 use App\Models\Category;
+use App\Models\Language;
 use App\Models\Product;
 use App\Models\ProductTag;
 use App\Models\Store;
@@ -130,4 +132,26 @@ test('a vendor can add a variation with attribute values through the relation ma
     expect($product->variations()->count())->toBe(1)
         ->and($product->variations()->first()->attributeValues()->pluck('attribute_values.id')->all())
         ->toEqual([$value->id]);
+});
+
+test('a vendor can add a translation for their product through the relation manager', function () {
+    $vendor = Vendor::factory()->create();
+    Store::factory()->for($vendor)->create();
+    $product = Product::factory()->for($vendor)->create();
+
+    $language = Language::factory()->create(['code' => 'fr']);
+
+    Livewire::actingAs($vendor->user, 'vendor')
+        ->test(TranslationsRelationManager::class, [
+            'ownerRecord' => $product,
+            'pageClass' => EditProduct::class,
+        ])
+        ->callTableAction('create', data: [
+            'language_id' => $language->id,
+            'name' => 'Nom Français',
+            'short_description' => 'Courte description',
+        ]);
+
+    expect($product->translations()->count())->toBe(1)
+        ->and($product->translatedName('fr'))->toBe('Nom Français');
 });

@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Middleware\SetDisplayCurrency;
+use App\Http\Middleware\SetLocale;
 use App\Support\Api\ApiResponse;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -16,6 +18,10 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->authenticateSessions();
+        $middleware->web(append: [
+            SetLocale::class,
+            SetDisplayCurrency::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

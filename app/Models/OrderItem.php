@@ -54,4 +54,9 @@ class OrderItem extends Model
     {
         return $this->hasOne(OrderItemCommission::class);
     }
+
+    public function taxSnapshot(): HasOne
+    {
+        return $this->hasOne(OrderItemTaxSnapshot::class);
+    }
 }

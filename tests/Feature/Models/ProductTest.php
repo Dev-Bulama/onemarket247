@@ -3,10 +3,40 @@
 use App\Enums\StockStatus;
 use App\Models\AttributeValue;
 use App\Models\Category;
+use App\Models\Language;
 use App\Models\Product;
 use App\Models\ProductDigitalFile;
+use App\Models\ProductTranslation;
 use App\Models\ProductVariation;
 use Illuminate\Support\Facades\Storage;
+
+test('translated name returns the translation for the requested language when one exists', function () {
+    $product = Product::factory()->create(['name' => 'Widget']);
+    $french = Language::factory()->create(['code' => 'fr']);
+    ProductTranslation::factory()->for($product)->for($french, 'language')->create(['name' => 'Gadget']);
+
+    expect($product->translatedName('fr'))->toBe('Gadget')
+        ->and($product->translatedName('en'))->toBe('Widget');
+});
+
+test('translated name falls back to the base name when no translation exists for that language', function () {
+    $product = Product::factory()->create(['name' => 'Widget']);
+    $german = Language::factory()->create(['code' => 'de']);
+
+    expect($product->translatedName('de'))->toBe('Widget');
+});
+
+test('translated short description and description fall back to the base columns', function () {
+    $product = Product::factory()->create(['short_description' => 'Short', 'description' => 'Long']);
+    $french = Language::factory()->create(['code' => 'fr']);
+    ProductTranslation::factory()->for($product)->for($french, 'language')->create([
+        'short_description' => 'Court',
+        'description' => null,
+    ]);
+
+    expect($product->translatedShortDescription('fr'))->toBe('Court')
+        ->and($product->translatedDescription('fr'))->toBe('Long');
+});
 
 test('primary category falls back to the first attached category when none is marked primary', function () {
     $product = Product::factory()->create();

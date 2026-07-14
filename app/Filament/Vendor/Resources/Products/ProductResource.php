@@ -6,6 +6,7 @@ use App\Filament\Vendor\Resources\Products\Pages\CreateProduct;
 use App\Filament\Vendor\Resources\Products\Pages\EditProduct;
 use App\Filament\Vendor\Resources\Products\Pages\ListProducts;
 use App\Filament\Vendor\Resources\Products\RelationManagers\DigitalFilesRelationManager;
+use App\Filament\Vendor\Resources\Products\RelationManagers\TranslationsRelationManager;
 use App\Filament\Vendor\Resources\Products\RelationManagers\VariationsRelationManager;
 use App\Filament\Vendor\Resources\Products\Schemas\ProductForm;
 use App\Filament\Vendor\Resources\Products\Tables\ProductsTable;
@@ -41,6 +42,7 @@ class ProductResource extends Resource
         return [
             VariationsRelationManager::class,
             DigitalFilesRelationManager::class,
+            TranslationsRelationManager::class,
         ];
     }
 

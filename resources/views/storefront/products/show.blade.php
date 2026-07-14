@@ -66,9 +66,9 @@
             <div class="mt-3 flex items-center gap-3">
                 <p class="text-2xl font-semibold text-gray-900">
                     @if ($range)
-                        ${{ number_format($range['min'] / 100, 2) }} – ${{ number_format($range['max'] / 100, 2) }}
+                        @price($range['min']) – @price($range['max'])
                     @elseif ($price !== null)
-                        ${{ number_format($price / 100, 2) }}
+                        @price($price)
                     @endif
                 </p>
 
@@ -98,7 +98,7 @@
                             <div class="flex items-center justify-between px-3 py-2 text-sm">
                                 <span class="text-gray-700">{{ $variation->attributeValues->pluck('value')->implode(' / ') }}</span>
                                 <span class="flex items-center gap-3">
-                                    <span class="font-medium text-gray-900">${{ number_format($variation->price / 100, 2) }}</span>
+                                    <span class="font-medium text-gray-900">@price($variation->price)</span>
                                     <span class="text-xs {{ $variation->isInStock() ? 'text-green-600' : 'text-red-600' }}">
                                         {{ $variation->isInStock() ? 'In stock' : 'Out of stock' }}
                                     </span>
@@ -123,7 +123,7 @@
                                 @foreach ($product->variations->where('is_active', true) as $variation)
                                     <option value="{{ $variation->id }}" @disabled(! $variation->isInStock())>
                                         {{ $variation->attributeValues->pluck('value')->implode(' / ') }}
-                                        (${{ number_format($variation->price / 100, 2) }})
+                                        (@price($variation->price))
                                         @if (! $variation->isInStock()) — out of stock @endif
                                     </option>
                                 @endforeach

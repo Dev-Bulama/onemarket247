@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ app()->isLocale('ar') ? 'rtl' : 'ltr' }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ ($currentLanguage ?? null)?->isRtl() ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -78,6 +78,28 @@
             <a href="{{ route('pages.terms') }}" class="hover:text-gray-700">Terms</a>
             <a href="{{ route('pages.privacy') }}" class="hover:text-gray-700">Privacy Policy</a>
         </nav>
+        <div class="flex items-center gap-3">
+            @if ($switchableLanguages->count() > 1)
+                <form method="POST" action="{{ route('locale.switch', ($currentLanguage ?? null)?->code ?? 'en') }}">
+                    @csrf
+                    <select name="code" onchange="this.form.action = this.form.action.replace(/[^\/]+$/, this.value); this.form.submit()" class="rounded-md border-gray-300 text-xs">
+                        @foreach ($switchableLanguages as $language)
+                            <option value="{{ $language->code }}" @selected(($currentLanguage ?? null)?->code === $language->code)>{{ $language->native_name ?? $language->name }}</option>
+                        @endforeach
+                    </select>
+                </form>
+            @endif
+            @if ($switchableCurrencies->count() > 1)
+                <form method="POST" action="{{ route('currency.switch', ($displayCurrency ?? null)?->code ?? 'USD') }}">
+                    @csrf
+                    <select name="code" onchange="this.form.action = this.form.action.replace(/[^\/]+$/, this.value); this.form.submit()" class="rounded-md border-gray-300 text-xs">
+                        @foreach ($switchableCurrencies as $currency)
+                            <option value="{{ $currency->code }}" @selected(($displayCurrency ?? null)?->code === $currency->code)>{{ $currency->code }}</option>
+                        @endforeach
+                    </select>
+                </form>
+            @endif
+        </div>
     </div>
 </footer>
 </body>

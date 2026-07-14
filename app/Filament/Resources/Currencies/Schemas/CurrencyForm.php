@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Currencies\Schemas;
 
 use App\Enums\CurrencySymbolPosition;
+use App\Models\Currency;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -49,6 +50,25 @@ class CurrencyForm
                 Toggle::make('is_active')
                     ->default(true)
                     ->required(),
+                TextInput::make('exchange_rate')
+                    ->label('Exchange rate')
+                    ->numeric()
+                    ->required()
+                    ->default(1)
+                    ->helperText('Units of this currency per 1 unit of the default currency.')
+                    ->afterStateHydrated(function (TextInput $component, ?Currency $record) {
+                        if ($record) {
+                            $component->state((float) ($record->exchangeRate?->rate ?? 1));
+                        }
+                    }),
+                Toggle::make('exchange_rate_is_manual')
+                    ->label('Manually set')
+                    ->default(true)
+                    ->afterStateHydrated(function (Toggle $component, ?Currency $record) {
+                        if ($record) {
+                            $component->state($record->exchangeRate?->is_manual ?? true);
+                        }
+                    }),
             ]);
     }
 }

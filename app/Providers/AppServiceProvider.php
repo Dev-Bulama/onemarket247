@@ -5,9 +5,12 @@ namespace App\Providers;
 use App\Auth\ScopedEloquentUserProvider;
 use App\Enums\UserType;
 use App\Listeners\MergeGuestCartOnLogin;
+use App\Models\Currency;
+use App\Models\Language;
 use App\Support\Cart\CartResolver;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -42,6 +45,10 @@ class AppServiceProvider extends ServiceProvider
 
         View::composer('layouts.storefront', function ($view) {
             $view->with('cartItemCount', app(CartResolver::class)->peek()?->activeItems()->sum('quantity') ?? 0);
+            $view->with('switchableLanguages', Language::where('is_active', true)->orderBy('name')->get());
+            $view->with('switchableCurrencies', Currency::where('is_active', true)->orderBy('code')->get());
         });
+
+        Blade::directive('price', fn ($expression) => "<?php echo \App\Support\PriceDisplay::format({$expression}); ?>");
     }
 }

@@ -6,6 +6,7 @@ use App\Actions\Cart\Concerns\ChecksAvailability;
 use App\Actions\Commission\RecordOrderItemCommissionAction;
 use App\Actions\Inventory\ReserveStockAction;
 use App\Actions\Shipping\CalculateShippingCostAction;
+use App\Actions\Tax\CalculateTaxAction;
 use App\Enums\CartStatus;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
@@ -17,6 +18,7 @@ use App\Models\CartItem;
 use App\Models\CheckoutSession;
 use App\Models\Currency;
 use App\Models\Order;
+use App\Models\OrderItemTaxSnapshot;
 use App\Models\Product;
 use App\Models\ProductVariation;
 use App\Models\WarehouseStock;
@@ -102,14 +104,28 @@ class CompleteCheckoutAction
 
             $totalShipping = $shippingCosts->sum();
 
+            $itemTaxes = $items->mapWithKeys(fn (CartItem $item) => [
+                $item->id => app(CalculateTaxAction::class)->handle(
+                    $item->lineTotal(),
+                    $item->product->tax_class_id,
+                    $shippingData['shipping_country_id'],
+                    $shippingData['shipping_state_id'] ?? null,
+                    $shippingData['shipping_city_id'] ?? null,
+                    $shippingData['shipping_postal_code'] ?? null,
+                ),
+            ]);
+
+            $totalTax = $itemTaxes->sum('taxAmount');
+
             $order = Order::create([
                 ...$shippingData,
                 'currency_id' => $currency->id,
+                'exchange_rate_snapshot' => (float) ($currency->exchangeRate?->rate ?? 1),
                 'subtotal' => $cart->subtotal(),
                 'discount_amount' => $cart->discount(),
                 'shipping_amount' => $totalShipping,
-                'tax_amount' => 0,
-                'total' => $cart->total() + $totalShipping,
+                'tax_amount' => $totalTax,
+                'total' => $cart->total() + $totalShipping + $totalTax,
                 'coupon_code' => $cart->coupon?->code,
                 'status' => OrderStatus::PendingPayment,
                 'placed_at' => now(),
@@ -118,6 +134,7 @@ class CompleteCheckoutAction
             foreach ($itemsByVendor as $vendorId => $vendorItems) {
                 $vendorSubtotal = $vendorItems->sum(fn (CartItem $item) => $item->lineTotal());
                 $vendorShipping = $shippingCosts[$vendorId];
+                $vendorTax = $vendorItems->sum(fn (CartItem $item) => $itemTaxes[$item->id]['taxAmount']);
 
                 $vendorOrder = $order->vendorOrders()->create([
                     'vendor_id' => $vendorId,
@@ -129,8 +146,8 @@ class CompleteCheckoutAction
                     // gross (pre-discount) for now.
                     'discount_amount' => 0,
                     'shipping_amount' => $vendorShipping,
-                    'tax_amount' => 0,
-                    'total' => $vendorSubtotal + $vendorShipping,
+                    'tax_amount' => $vendorTax,
+                    'total' => $vendorSubtotal + $vendorShipping + $vendorTax,
                     'status' => VendorOrderStatus::PendingPayment,
                 ]);
 
@@ -150,6 +167,15 @@ class CompleteCheckoutAction
                     ]);
 
                     app(RecordOrderItemCommissionAction::class)->handle($orderItem);
+
+                    $itemTax = $itemTaxes[$item->id];
+                    OrderItemTaxSnapshot::create([
+                        'order_item_id' => $orderItem->id,
+                        'tax_rate_id' => $itemTax['rate']?->id,
+                        'rate_percent' => $itemTax['rate']?->rate_percent ?? 0,
+                        'taxable_amount' => $item->lineTotal(),
+                        'tax_amount' => $itemTax['taxAmount'],
+                    ]);
 
                     if ($stock) {
                         app(ReserveStockAction::class)->handle($stock->warehouse, $sellable, $item->quantity, $order->customer, $order);
