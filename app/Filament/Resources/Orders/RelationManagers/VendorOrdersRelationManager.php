@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Orders\RelationManagers;
 
 use App\Filament\Resources\VendorOrders\VendorOrderResource;
 use App\Models\VendorOrder;
+use App\Support\PriceDisplay;
 use Filament\Actions\Action;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
@@ -37,7 +38,7 @@ class VendorOrdersRelationManager extends RelationManager
                     ->label('Items')
                     ->counts('orderItems'),
                 TextColumn::make('total')
-                    ->money('USD', divideBy: 100),
+                    ->money(PriceDisplay::baseCurrencyCode(), divideBy: 100),
                 TextColumn::make('status')
                     ->badge(),
             ])

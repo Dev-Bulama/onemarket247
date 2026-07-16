@@ -7,6 +7,7 @@ use App\Filament\Resources\Payments\Pages\ViewPayment;
 use App\Filament\Resources\Payments\RelationManagers\LogsRelationManager;
 use App\Filament\Resources\Payments\Tables\PaymentsTable;
 use App\Models\Payment;
+use App\Support\PriceDisplay;
 use BackedEnum;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
@@ -55,8 +56,8 @@ class PaymentResource extends Resource
             Section::make('Amounts')
                 ->columns(2)
                 ->schema([
-                    TextEntry::make('amount')->money('USD', divideBy: 100),
-                    TextEntry::make('refunded_amount')->label('Refunded')->money('USD', divideBy: 100),
+                    TextEntry::make('amount')->money(PriceDisplay::baseCurrencyCode(), divideBy: 100),
+                    TextEntry::make('refunded_amount')->label('Refunded')->money(PriceDisplay::baseCurrencyCode(), divideBy: 100),
                 ]),
         ]);
     }

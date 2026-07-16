@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Orders\Tables;
 
 use App\Enums\OrderStatus;
 use App\Models\Order;
+use App\Support\PriceDisplay;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -25,7 +26,7 @@ class OrdersTable
                     ->label('Sellers')
                     ->counts('vendorOrders'),
                 TextColumn::make('total')
-                    ->money('USD', divideBy: 100)
+                    ->money(PriceDisplay::baseCurrencyCode(), divideBy: 100)
                     ->sortable(),
                 TextColumn::make('status')
                     ->badge()

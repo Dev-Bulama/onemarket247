@@ -6,6 +6,7 @@ use App\Filament\Resources\Withdrawals\Pages\ListWithdrawals;
 use App\Filament\Resources\Withdrawals\Pages\ViewWithdrawal;
 use App\Filament\Resources\Withdrawals\Tables\WithdrawalsTable;
 use App\Models\Withdrawal;
+use App\Support\PriceDisplay;
 use BackedEnum;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
@@ -41,7 +42,7 @@ class WithdrawalResource extends Resource
                 ->columns(3)
                 ->schema([
                     TextEntry::make('vendor.business_name')->label('Vendor'),
-                    TextEntry::make('amount')->money('USD', divideBy: 100),
+                    TextEntry::make('amount')->money(PriceDisplay::baseCurrencyCode(), divideBy: 100),
                     TextEntry::make('status')->badge(),
                     TextEntry::make('withdrawalMethod.bank_name')->label('Bank')->placeholder('—'),
                     TextEntry::make('reviewer.name')->label('Reviewed by')->placeholder('—'),

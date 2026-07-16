@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\VendorOrders\RelationManagers;
 
+use App\Support\PriceDisplay;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
@@ -31,11 +32,11 @@ class OrderItemsRelationManager extends RelationManager
                 TextColumn::make('warehouse.name')
                     ->placeholder('—'),
                 TextColumn::make('unit_price')
-                    ->money('USD', divideBy: 100),
+                    ->money(PriceDisplay::baseCurrencyCode(), divideBy: 100),
                 TextColumn::make('quantity')
                     ->numeric(),
                 TextColumn::make('line_total')
-                    ->money('USD', divideBy: 100),
+                    ->money(PriceDisplay::baseCurrencyCode(), divideBy: 100),
             ])
             ->headerActions([])
             ->recordActions([])

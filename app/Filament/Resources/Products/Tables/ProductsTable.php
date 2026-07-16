@@ -6,6 +6,7 @@ use App\Actions\Product\ApproveProductAction;
 use App\Actions\Product\RejectProductAction;
 use App\Enums\ProductStatus;
 use App\Models\Product;
+use App\Support\PriceDisplay;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -40,7 +41,7 @@ class ProductsTable
                     ->badge()
                     ->sortable(),
                 TextColumn::make('price')
-                    ->money('USD')
+                    ->money(PriceDisplay::baseCurrencyCode())
                     ->placeholder('Varies')
                     ->sortable(),
                 TextColumn::make('stock_status')

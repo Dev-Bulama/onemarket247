@@ -23,6 +23,17 @@ class PriceDisplay
         App::instance('display.currency', $currency);
     }
 
+    /**
+     * The ISO code every monetary column (Product.price, Order totals,
+     * VendorWallet balances, etc.) is actually stored in — used by admin/
+     * vendor panel money columns so their currency symbol follows whichever
+     * currency is flagged default instead of being hardcoded.
+     */
+    public static function baseCurrencyCode(): string
+    {
+        return static::baseCurrency()?->code ?? 'USD';
+    }
+
     public static function format(int $minorAmount): string
     {
         $base = static::baseCurrency();

@@ -49,7 +49,8 @@ test('currency seeder creates exactly one default currency', function () {
     (new CurrencySeeder)->run();
 
     expect(Currency::where('is_default', true)->count())->toBe(1)
-        ->and((float) Currency::where('code', 'USD')->first()->exchangeRate->rate)->toBe(1.0);
+        ->and(Currency::where('is_default', true)->value('code'))->toBe('NGN')
+        ->and((float) Currency::where('code', 'NGN')->first()->exchangeRate->rate)->toBe(1.0);
 });
 
 test('language seeder creates exactly one default language and at least one RTL language', function () {
@@ -62,5 +63,5 @@ test('language seeder creates exactly one default language and at least one RTL 
 test('settings seeder seeds the baseline platform settings', function () {
     (new SettingsSeeder)->run();
 
-    expect(Setting::where('key', 'app.default_currency')->value('value'))->toBe('USD');
+    expect(Setting::where('key', 'app.default_currency')->value('value'))->toBe('NGN');
 });

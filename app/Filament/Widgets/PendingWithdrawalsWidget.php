@@ -4,6 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Enums\WithdrawalStatus;
 use App\Models\Withdrawal;
+use App\Support\PriceDisplay;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget;
@@ -26,7 +27,7 @@ class PendingWithdrawalsWidget extends TableWidget
                 TextColumn::make('vendor.business_name')
                     ->label('Vendor'),
                 TextColumn::make('amount')
-                    ->money('USD', divideBy: 100),
+                    ->money(PriceDisplay::baseCurrencyCode(), divideBy: 100),
                 TextColumn::make('created_at')
                     ->label('Requested')
                     ->dateTime(),

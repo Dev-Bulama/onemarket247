@@ -16,7 +16,7 @@ class SettingsSeeder extends Seeder
     {
         $settings = [
             ['key' => 'app.name', 'value' => 'OneMarket247', 'type' => 'string', 'group' => 'general'],
-            ['key' => 'app.default_currency', 'value' => 'USD', 'type' => 'string', 'group' => 'general'],
+            ['key' => 'app.default_currency', 'value' => 'NGN', 'type' => 'string', 'group' => 'general'],
             ['key' => 'app.default_language', 'value' => 'en', 'type' => 'string', 'group' => 'general'],
             ['key' => 'vendor.approval_mode', 'value' => 'manual', 'type' => 'string', 'group' => 'vendor'],
             ['key' => 'vendor.require_document_verification', 'value' => '1', 'type' => 'boolean', 'group' => 'vendor'],

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\VendorSubscriptionPlans\Tables;
 
+use App\Support\PriceDisplay;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -19,7 +20,7 @@ class VendorSubscriptionPlansTable
                 TextColumn::make('name')
                     ->searchable(),
                 TextColumn::make('price')
-                    ->money('USD')
+                    ->money(PriceDisplay::baseCurrencyCode())
                     ->sortable(),
                 TextColumn::make('billing_period')
                     ->badge(),

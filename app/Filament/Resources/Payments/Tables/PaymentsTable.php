@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Payments\Tables;
 
 use App\Enums\PaymentStatus;
+use App\Support\PriceDisplay;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -20,11 +21,11 @@ class PaymentsTable
                 TextColumn::make('gateway')
                     ->placeholder('—'),
                 TextColumn::make('amount')
-                    ->money('USD', divideBy: 100)
+                    ->money(PriceDisplay::baseCurrencyCode(), divideBy: 100)
                     ->sortable(),
                 TextColumn::make('refunded_amount')
                     ->label('Refunded')
-                    ->money('USD', divideBy: 100),
+                    ->money(PriceDisplay::baseCurrencyCode(), divideBy: 100),
                 TextColumn::make('status')
                     ->badge()
                     ->sortable(),

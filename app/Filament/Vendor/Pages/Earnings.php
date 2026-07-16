@@ -4,6 +4,7 @@ namespace App\Filament\Vendor\Pages;
 
 use App\Models\VendorWallet;
 use App\Models\VendorWalletTransaction;
+use App\Support\PriceDisplay;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
@@ -51,7 +52,7 @@ class Earnings extends Page implements HasTable
                 TextColumn::make('balance_bucket')
                     ->badge(),
                 TextColumn::make('amount')
-                    ->money('USD', divideBy: 100)
+                    ->money(PriceDisplay::baseCurrencyCode(), divideBy: 100)
                     ->color(fn (int $state) => $state >= 0 ? 'success' : 'danger'),
                 TextColumn::make('vendorOrder.vendor_order_number')
                     ->label('Order')

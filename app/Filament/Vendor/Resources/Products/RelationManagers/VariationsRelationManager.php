@@ -2,6 +2,7 @@
 
 namespace App\Filament\Vendor\Resources\Products\RelationManagers;
 
+use App\Support\PriceDisplay;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
@@ -59,7 +60,7 @@ class VariationsRelationManager extends RelationManager
                     ->badge()
                     ->label('Attributes'),
                 TextColumn::make('price')
-                    ->money('USD'),
+                    ->money(PriceDisplay::baseCurrencyCode()),
                 TextColumn::make('stock_quantity')
                     ->numeric(),
                 IconColumn::make('is_active')

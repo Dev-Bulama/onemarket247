@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\ShippingZones\RelationManagers;
 
 use App\Enums\ShippingRateType;
+use App\Support\PriceDisplay;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
@@ -71,12 +72,12 @@ class RatesRelationManager extends RelationManager
                 TextColumn::make('rate_type')
                     ->badge(),
                 TextColumn::make('base_amount')
-                    ->money('USD', divideBy: 100),
+                    ->money(PriceDisplay::baseCurrencyCode(), divideBy: 100),
                 TextColumn::make('per_kg_amount')
-                    ->money('USD', divideBy: 100)
+                    ->money(PriceDisplay::baseCurrencyCode(), divideBy: 100)
                     ->placeholder('—'),
                 TextColumn::make('free_shipping_min_amount')
-                    ->money('USD', divideBy: 100)
+                    ->money(PriceDisplay::baseCurrencyCode(), divideBy: 100)
                     ->placeholder('—'),
                 IconColumn::make('is_active')
                     ->boolean(),

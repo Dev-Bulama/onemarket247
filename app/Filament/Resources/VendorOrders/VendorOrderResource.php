@@ -9,6 +9,7 @@ use App\Filament\Resources\VendorOrders\RelationManagers\ShipmentsRelationManage
 use App\Filament\Resources\VendorOrders\RelationManagers\StatusHistoriesRelationManager;
 use App\Filament\Resources\VendorOrders\Tables\VendorOrdersTable;
 use App\Models\VendorOrder;
+use App\Support\PriceDisplay;
 use BackedEnum;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
@@ -55,10 +56,10 @@ class VendorOrderResource extends Resource
             Section::make('Totals')
                 ->columns(4)
                 ->schema([
-                    TextEntry::make('subtotal')->money('USD', divideBy: 100),
-                    TextEntry::make('discount_amount')->label('Discount')->money('USD', divideBy: 100),
-                    TextEntry::make('shipping_amount')->label('Shipping')->money('USD', divideBy: 100),
-                    TextEntry::make('total')->money('USD', divideBy: 100),
+                    TextEntry::make('subtotal')->money(PriceDisplay::baseCurrencyCode(), divideBy: 100),
+                    TextEntry::make('discount_amount')->label('Discount')->money(PriceDisplay::baseCurrencyCode(), divideBy: 100),
+                    TextEntry::make('shipping_amount')->label('Shipping')->money(PriceDisplay::baseCurrencyCode(), divideBy: 100),
+                    TextEntry::make('total')->money(PriceDisplay::baseCurrencyCode(), divideBy: 100),
                 ]),
         ]);
     }

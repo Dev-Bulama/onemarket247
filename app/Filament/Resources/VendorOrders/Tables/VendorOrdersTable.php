@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\VendorOrders\Tables;
 
 use App\Enums\VendorOrderStatus;
+use App\Support\PriceDisplay;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -24,7 +25,7 @@ class VendorOrdersTable
                     ->label('Vendor')
                     ->searchable(),
                 TextColumn::make('total')
-                    ->money('USD', divideBy: 100)
+                    ->money(PriceDisplay::baseCurrencyCode(), divideBy: 100)
                     ->sortable(),
                 TextColumn::make('status')
                     ->badge()

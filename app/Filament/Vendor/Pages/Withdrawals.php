@@ -9,6 +9,7 @@ use App\Exceptions\InsufficientWalletBalanceException;
 use App\Models\Vendor;
 use App\Models\Withdrawal;
 use App\Models\WithdrawalMethod;
+use App\Support\PriceDisplay;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -101,7 +102,7 @@ class Withdrawals extends Page implements HasTable
             ->query(Withdrawal::where('vendor_id', $this->vendorId()))
             ->columns([
                 TextColumn::make('amount')
-                    ->money('USD', divideBy: 100),
+                    ->money(PriceDisplay::baseCurrencyCode(), divideBy: 100),
                 TextColumn::make('withdrawalMethod.bank_name')
                     ->label('Bank'),
                 TextColumn::make('status')

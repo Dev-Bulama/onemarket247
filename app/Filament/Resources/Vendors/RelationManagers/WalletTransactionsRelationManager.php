@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Vendors\RelationManagers;
 
+use App\Support\PriceDisplay;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
@@ -32,7 +33,7 @@ class WalletTransactionsRelationManager extends RelationManager
                 TextColumn::make('balance_bucket')
                     ->badge(),
                 TextColumn::make('amount')
-                    ->money('USD', divideBy: 100)
+                    ->money(PriceDisplay::baseCurrencyCode(), divideBy: 100)
                     ->color(fn (int $state) => $state >= 0 ? 'success' : 'danger'),
                 TextColumn::make('vendorOrder.vendor_order_number')
                     ->label('Order')

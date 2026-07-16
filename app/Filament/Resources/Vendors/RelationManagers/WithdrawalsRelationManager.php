@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Vendors\RelationManagers;
 
 use App\Filament\Resources\Withdrawals\WithdrawalResource;
 use App\Models\Withdrawal;
+use App\Support\PriceDisplay;
 use Filament\Actions\Action;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
@@ -29,7 +30,7 @@ class WithdrawalsRelationManager extends RelationManager
             ->recordTitleAttribute('reference')
             ->columns([
                 TextColumn::make('amount')
-                    ->money('USD', divideBy: 100),
+                    ->money(PriceDisplay::baseCurrencyCode(), divideBy: 100),
                 TextColumn::make('status')
                     ->badge(),
                 TextColumn::make('created_at')
