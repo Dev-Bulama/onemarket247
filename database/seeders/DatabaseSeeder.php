@@ -28,8 +28,16 @@ class DatabaseSeeder extends Seeder
             PaymentGatewaySeeder::class,
             CommissionRuleSeeder::class,
             ShippingSeeder::class,
-            HeroImageSeeder::class,
         ]);
+
+        // HeroImageSeeder is intentionally NOT in this list: it pulls a
+        // random photo from a public stock-photo service keyed by a text
+        // seed, which has no real control over the photo's actual content
+        // (it returned an unrelated wolf photo in production) — wrong for
+        // the single most prominent brand image on the site. The hero
+        // photo should be a real image the site owner uploads directly to
+        // storage/app/public/hero/slide-1.jpg; nothing overwrites that
+        // file automatically once it exists (see HeroImageSeeder::run()).
 
         // Plain create() rather than User::factory() — factories call fake()
         // (fakerphp/faker is require-dev only) which is unavailable when this
