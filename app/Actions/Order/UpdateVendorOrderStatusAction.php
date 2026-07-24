@@ -10,6 +10,7 @@ use App\Models\VendorOrder;
 use App\Notifications\VendorOrderStatusUpdatedNotification;
 use App\Services\Order\OrderStatusAggregator;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 /**
  * Moves a vendor order forward through its own fulfilment lifecycle (see
@@ -72,7 +73,13 @@ class UpdateVendorOrderStatusAction
             return $vendorOrder->fresh();
         });
 
-        $vendorOrder->order->notifiable()->notify(new VendorOrderStatusUpdatedNotification($vendorOrder));
+        // The status change already committed above — a mail transport
+        // failure here must not turn a successful update into a 500.
+        try {
+            $vendorOrder->order->notifiable()->notify(new VendorOrderStatusUpdatedNotification($vendorOrder));
+        } catch (Throwable $exception) {
+            report($exception);
+        }
 
         return $vendorOrder;
     }

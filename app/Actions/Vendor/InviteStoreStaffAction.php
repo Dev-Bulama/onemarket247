@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Permission;
+use Throwable;
 
 /**
  * Invites a staff member to a vendor's store: finds-or-creates the User
@@ -28,7 +29,7 @@ class InviteStoreStaffAction
      */
     public function handle(Store $store, string $name, string $email, array $permissions): StoreStaff
     {
-        return DB::transaction(function () use ($store, $name, $email, $permissions) {
+        $staff = DB::transaction(function () use ($store, $name, $email, $permissions) {
             $user = User::where('email', $email)->first();
 
             if (! $user) {
@@ -52,9 +53,17 @@ class InviteStoreStaffAction
                 Permission::where('guard_name', 'vendor')->whereIn('name', $permissions)->get()
             );
 
-            Password::broker('vendors')->sendResetLink(['email' => $user->email]);
-
             return $staff;
         });
+
+        // See ApproveVendorApplicationAction::sendCredentialsEmail() — the
+        // invite itself must persist even if the mail transport is down.
+        try {
+            Password::broker('vendors')->sendResetLink(['email' => $email]);
+        } catch (Throwable $exception) {
+            report($exception);
+        }
+
+        return $staff;
     }
 }

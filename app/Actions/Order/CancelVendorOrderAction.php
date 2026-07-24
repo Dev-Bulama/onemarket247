@@ -10,6 +10,7 @@ use App\Models\VendorOrder;
 use App\Notifications\VendorOrderCancelledNotification;
 use App\Services\Order\OrderStatusAggregator;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 /**
  * "Customer/vendor/admin cancellation before fulfilment" from
@@ -58,7 +59,13 @@ class CancelVendorOrderAction
             return $vendorOrder->fresh();
         });
 
-        $vendorOrder->order->notifiable()->notify(new VendorOrderCancelledNotification($vendorOrder, $reason));
+        // The cancellation already committed above — a mail transport
+        // failure here must not turn a successful cancellation into a 500.
+        try {
+            $vendorOrder->order->notifiable()->notify(new VendorOrderCancelledNotification($vendorOrder, $reason));
+        } catch (Throwable $exception) {
+            report($exception);
+        }
 
         return $vendorOrder;
     }

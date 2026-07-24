@@ -6,6 +6,7 @@ use App\Enums\ProductStatus;
 use App\Models\Product;
 use App\Models\User;
 use App\Notifications\ProductRejectedNotification;
+use Throwable;
 
 class RejectProductAction
 {
@@ -18,7 +19,13 @@ class RejectProductAction
             'reviewed_at' => now(),
         ]);
 
-        $product->vendor->user->notify(new ProductRejectedNotification($product));
+        // The rejection already persisted above — a mail transport failure
+        // here must not turn a successful moderation action into a 500.
+        try {
+            $product->vendor->user->notify(new ProductRejectedNotification($product));
+        } catch (Throwable $exception) {
+            report($exception);
+        }
 
         return $product->fresh();
     }

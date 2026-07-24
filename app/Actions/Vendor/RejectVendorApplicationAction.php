@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\VendorApplication;
 use App\Notifications\VendorApplicationRejectedNotification;
 use Illuminate\Support\Facades\Notification;
+use Throwable;
 
 class RejectVendorApplicationAction
 {
@@ -19,8 +20,14 @@ class RejectVendorApplicationAction
             'reviewed_at' => now(),
         ]);
 
-        Notification::route('mail', $application->email)
-            ->notify(new VendorApplicationRejectedNotification($application));
+        // The rejection itself already persisted above — a mail transport
+        // failure here must not turn a successful rejection into a 500.
+        try {
+            Notification::route('mail', $application->email)
+                ->notify(new VendorApplicationRejectedNotification($application));
+        } catch (Throwable $exception) {
+            report($exception);
+        }
 
         return $application;
     }

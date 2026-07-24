@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
+use Throwable;
 
 /**
  * Provisions the User + Vendor + Store + VendorSubscription that an
@@ -34,7 +35,7 @@ class ApproveVendorApplicationAction
 {
     public function handle(VendorApplication $application, ?User $reviewer = null): Vendor
     {
-        return DB::transaction(function () use ($application, $reviewer) {
+        $vendor = DB::transaction(function () use ($application, $reviewer) {
             $user = User::create([
                 'name' => $application->full_name,
                 'email' => $application->email,
@@ -113,10 +114,31 @@ class ApproveVendorApplicationAction
                 'reviewed_at' => now(),
             ]);
 
-            Password::broker('vendors')->sendResetLink(['email' => $user->email]);
-
             return $vendor;
         });
+
+        $this->sendCredentialsEmail($vendor);
+
+        return $vendor;
+    }
+
+    /**
+     * Sending the "set your password" email deliberately happens after the
+     * transaction commits and can never roll it back: approving a vendor
+     * (creating their User/Vendor/Store/Subscription) must succeed even if
+     * the mail transport is down or misconfigured — that's an operational
+     * problem to fix separately, not a reason to silently undo a real
+     * approval and 500 the admin who clicked the button.
+     */
+    private function sendCredentialsEmail(Vendor $vendor): Vendor
+    {
+        try {
+            Password::broker('vendors')->sendResetLink(['email' => $vendor->user->email]);
+        } catch (Throwable $exception) {
+            report($exception);
+        }
+
+        return $vendor;
     }
 
     private function uniqueSlug(string $slug): string
