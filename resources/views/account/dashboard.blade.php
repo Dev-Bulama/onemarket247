@@ -49,6 +49,6 @@
     </div>
 
     <div class="mt-6">
-        <a href="{{ route('account.security') }}" class="text-indigo-600 hover:underline text-sm">Manage password, two-factor authentication, and active sessions &rarr;</a>
+        <a href="{{ route('account.security') }}" class="text-brand-orange hover:underline text-sm">Manage password, two-factor authentication, and active sessions &rarr;</a>
     </div>
 @endsection

@@ -15,19 +15,19 @@
                 <div>
                     <label for="current_password" class="block text-sm font-medium text-gray-700">Current password</label>
                     <input id="current_password" type="password" name="current_password" required
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-orange focus:ring-brand-orange">
                 </div>
                 <div>
                     <label for="password" class="block text-sm font-medium text-gray-700">New password</label>
                     <input id="password" type="password" name="password" required
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-orange focus:ring-brand-orange">
                 </div>
                 <div>
                     <label for="password_confirmation" class="block text-sm font-medium text-gray-700">Confirm new password</label>
                     <input id="password_confirmation" type="password" name="password_confirmation" required
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-orange focus:ring-brand-orange">
                 </div>
-                <button type="submit" class="rounded-md bg-indigo-600 px-4 py-2 text-white font-medium hover:bg-indigo-700">
+                <button type="submit" class="rounded-md bg-brand-orange px-4 py-2 text-white font-medium hover:bg-brand-orange2">
                     Update password
                 </button>
             </form>
@@ -43,7 +43,7 @@
                     <span class="text-gray-500">Not enabled</span>
                 @endif
             </p>
-            <a href="{{ route('two-factor.show') }}" class="text-indigo-600 hover:underline text-sm">Manage two-factor authentication &rarr;</a>
+            <a href="{{ route('two-factor.show') }}" class="text-brand-orange hover:underline text-sm">Manage two-factor authentication &rarr;</a>
         </section>
 
         <section class="bg-white shadow rounded-lg p-6">

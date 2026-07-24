@@ -12,20 +12,20 @@
         <div>
             <label for="name" class="block text-sm font-medium text-gray-700">Full name</label>
             <input id="name" type="text" name="name" value="{{ old('name', auth()->user()->name) }}" required
-                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-orange focus:ring-brand-orange">
         </div>
 
         <div>
             <label for="phone" class="block text-sm font-medium text-gray-700">Phone</label>
             <input id="phone" type="text" name="phone" value="{{ old('phone', auth()->user()->phone) }}"
-                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-orange focus:ring-brand-orange">
         </div>
 
         <div>
             <label for="date_of_birth" class="block text-sm font-medium text-gray-700">Date of birth</label>
             <input id="date_of_birth" type="date" name="date_of_birth"
                    value="{{ old('date_of_birth', $customerProfile?->date_of_birth?->format('Y-m-d')) }}"
-                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-orange focus:ring-brand-orange">
         </div>
 
         <div>
@@ -70,7 +70,7 @@
             Send me marketing emails and offers
         </label>
 
-        <button type="submit" class="rounded-md bg-indigo-600 px-4 py-2 text-white font-medium hover:bg-indigo-700">
+        <button type="submit" class="rounded-md bg-brand-orange px-4 py-2 text-white font-medium hover:bg-brand-orange2">
             Save changes
         </button>
     </form>

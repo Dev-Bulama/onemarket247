@@ -4,23 +4,27 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title') — {{ config('app.name') }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    @include('partials.tailwind-brand-config')
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
-<body class="min-h-screen bg-gray-50">
-    <nav class="bg-white border-b border-gray-200">
+<body class="font-sans min-h-screen bg-warm">
+    <nav class="bg-white border-b border-line">
         <div class="max-w-4xl mx-auto px-4 flex items-center justify-between h-14">
-            <a href="{{ route('home') }}" class="font-bold text-gray-900">OneMarket247</a>
+            @include('storefront.partials.logo')
             <div class="flex items-center gap-4 text-sm">
-                <a href="{{ route('account.dashboard') }}" class="text-gray-600 hover:text-gray-900">Account</a>
-                <a href="{{ route('account.profile.edit') }}" class="text-gray-600 hover:text-gray-900">Profile</a>
-                <a href="{{ route('account.orders.index') }}" class="text-gray-600 hover:text-gray-900">Orders</a>
-                <a href="{{ route('account.addresses.index') }}" class="text-gray-600 hover:text-gray-900">Addresses</a>
-                <a href="{{ route('account.wishlist.index') }}" class="text-gray-600 hover:text-gray-900">Wishlist</a>
-                <a href="{{ route('account.compare.index') }}" class="text-gray-600 hover:text-gray-900">Compare</a>
-                <a href="{{ route('account.security') }}" class="text-gray-600 hover:text-gray-900">Security</a>
+                <a href="{{ route('account.dashboard') }}" class="text-body hover:text-brand-orange">Account</a>
+                <a href="{{ route('account.profile.edit') }}" class="text-body hover:text-brand-orange">Profile</a>
+                <a href="{{ route('account.orders.index') }}" class="text-body hover:text-brand-orange">Orders</a>
+                <a href="{{ route('account.addresses.index') }}" class="text-body hover:text-brand-orange">Addresses</a>
+                <a href="{{ route('account.wishlist.index') }}" class="text-body hover:text-brand-orange">Wishlist</a>
+                <a href="{{ route('account.compare.index') }}" class="text-body hover:text-brand-orange">Compare</a>
+                <a href="{{ route('account.security') }}" class="text-body hover:text-brand-orange">Security</a>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button type="submit" class="text-gray-600 hover:text-gray-900">Log out</button>
+                    <button type="submit" class="text-body hover:text-brand-orange">Log out</button>
                 </form>
             </div>
         </div>

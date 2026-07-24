@@ -7,7 +7,7 @@
 
     @if ($products->isEmpty())
         <div class="bg-white shadow rounded-lg p-6 text-sm text-gray-500">
-            You haven't added any products to compare yet. Browse the <a href="{{ route('shop.index') }}" class="text-indigo-600 hover:underline">shop</a> to add some.
+            You haven't added any products to compare yet. Browse the <a href="{{ route('shop.index') }}" class="text-brand-orange hover:underline">shop</a> to add some.
         </div>
     @else
         <div class="bg-white shadow rounded-lg overflow-x-auto">
@@ -25,7 +25,7 @@
                                         <img src="{{ $thumb }}" alt="{{ $product->name }}" class="h-full w-full object-cover">
                                     @endif
                                 </div>
-                                <a href="{{ route('products.show', $product) }}" class="font-medium text-gray-900 hover:text-indigo-600">
+                                <a href="{{ route('products.show', $product) }}" class="font-medium text-gray-900 hover:text-brand-orange">
                                     {{ $product->name }}
                                 </a>
                                 <form method="POST" action="{{ route('account.compare.destroy', $product) }}" class="mt-2">

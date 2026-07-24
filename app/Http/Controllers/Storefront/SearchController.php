@@ -23,7 +23,9 @@ class SearchController extends Controller
             $query->where(function (Builder $q) use ($term) {
                 $q->where('name', 'like', "%{$term}%")
                     ->orWhere('description', 'like', "%{$term}%")
-                    ->orWhere('sku', 'like', "%{$term}%");
+                    ->orWhere('sku', 'like', "%{$term}%")
+                    ->orWhereHas('brand', fn (Builder $b) => $b->where('name', 'like', "%{$term}%"))
+                    ->orWhereHas('categories', fn (Builder $c) => $c->where('name', 'like', "%{$term}%"));
             });
         }
 

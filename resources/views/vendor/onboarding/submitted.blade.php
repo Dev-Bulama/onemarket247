@@ -8,5 +8,5 @@
         Thanks for applying to sell on OneMarket247. We'll review your application and email you
         at the address you provided. If approved, you'll receive a link to set your store password.
     </p>
-    <a href="{{ route('home') }}" class="text-indigo-600 font-medium text-sm">Return to homepage</a>
+    <a href="{{ route('home') }}" class="text-brand-orange font-medium text-sm">Return to homepage</a>
 @endsection

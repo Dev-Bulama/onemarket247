@@ -7,7 +7,7 @@
 
     @if ($products->isEmpty())
         <div class="bg-white shadow rounded-lg p-6 text-sm text-gray-500">
-            Your wishlist is empty. Browse the <a href="{{ route('shop.index') }}" class="text-indigo-600 hover:underline">shop</a> to add products.
+            Your wishlist is empty. Browse the <a href="{{ route('shop.index') }}" class="text-brand-orange hover:underline">shop</a> to add products.
         </div>
     @else
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">

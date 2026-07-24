@@ -14,7 +14,7 @@
             value="{{ request('q') }}"
             placeholder="Search stores…"
             onchange="this.form.submit()"
-            class="w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            class="w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:border-brand-orange focus:outline-none focus:ring-1 focus:ring-brand-orange"
         >
     </form>
 

@@ -24,7 +24,7 @@
                     <p>Your last payment attempt didn't go through.</p>
                     <form method="POST" action="{{ route('checkout.payment.initialize', $order) }}" class="mt-2">
                         @csrf
-                        <button type="submit" class="rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-500">
+                        <button type="submit" class="rounded-md bg-brand-orange px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-orange">
                             Try again
                         </button>
                     </form>
@@ -34,7 +34,7 @@
                     <p>Your items are reserved. Complete payment to confirm your order.</p>
                     <form method="POST" action="{{ route('checkout.payment.initialize', $order) }}" class="mt-2">
                         @csrf
-                        <button type="submit" class="rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-500">
+                        <button type="submit" class="rounded-md bg-brand-orange px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-orange">
                             Pay now
                         </button>
                     </form>
@@ -68,9 +68,9 @@
                                 <div class="px-4 py-3 flex items-center justify-between text-sm">
                                     <div>
                                         <p class="text-gray-900">{{ $item->product_name }}</p>
-                                        <p class="text-xs text-gray-500">Qty {{ $item->quantity }} &middot; ${{ number_format($item->unit_price / 100, 2) }}</p>
+                                        <p class="text-xs text-gray-500">Qty {{ $item->quantity }} &middot; @price($item->unit_price)</p>
                                     </div>
-                                    <p class="text-gray-900">${{ number_format($item->line_total / 100, 2) }}</p>
+                                    <p class="text-gray-900">@price($item->line_total)</p>
                                 </div>
                             @endforeach
                         </div>
@@ -81,23 +81,23 @@
             <dl class="mt-6 space-y-2 text-sm border-t border-gray-100 pt-4">
                 <div class="flex justify-between">
                     <dt class="text-gray-600">Subtotal</dt>
-                    <dd class="text-gray-900">${{ number_format($order->subtotal / 100, 2) }}</dd>
+                    <dd class="text-gray-900">@price($order->subtotal)</dd>
                 </div>
                 @if ($order->discount_amount > 0)
                     <div class="flex justify-between">
                         <dt class="text-gray-600">Discount ({{ $order->coupon_code }})</dt>
-                        <dd class="text-green-700">-${{ number_format($order->discount_amount / 100, 2) }}</dd>
+                        <dd class="text-green-700">-@price($order->discount_amount)</dd>
                     </div>
                 @endif
                 <div class="flex justify-between font-semibold text-gray-900 border-t border-gray-100 pt-2">
                     <dt>Total</dt>
-                    <dd>${{ number_format($order->total / 100, 2) }}</dd>
+                    <dd>@price($order->total)</dd>
                 </div>
             </dl>
         </div>
 
         <p class="mt-6 text-center text-sm text-gray-500">
-            <a href="{{ route('shop.index') }}" class="text-indigo-600 hover:underline">Continue shopping</a>
+            <a href="{{ route('shop.index') }}" class="text-brand-orange hover:underline">Continue shopping</a>
         </p>
     </div>
 @endsection

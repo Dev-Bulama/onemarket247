@@ -26,6 +26,6 @@
         <p class="mt-2 text-sm text-gray-700">We use cookies and similar technologies to keep you signed in, remember your preferences, and understand how the platform is used.</p>
 
         <h2 class="mt-6 text-lg font-semibold text-gray-900">7. Contact</h2>
-        <p class="mt-2 text-sm text-gray-700">Questions about this policy can be sent through our <a href="{{ route('pages.contact') }}" class="text-indigo-600 hover:underline">contact page</a>.</p>
+        <p class="mt-2 text-sm text-gray-700">Questions about this policy can be sent through our <a href="{{ route('pages.contact') }}" class="text-brand-orange hover:underline">contact page</a>.</p>
     </div>
 @endsection

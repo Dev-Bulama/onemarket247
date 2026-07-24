@@ -11,13 +11,13 @@
         <div>
             <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
             <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus
-                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-orange focus:ring-brand-orange">
         </div>
 
         <div>
             <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
             <input id="password" type="password" name="password" required
-                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-orange focus:ring-brand-orange">
         </div>
 
         <div class="flex items-center justify-between">
@@ -25,10 +25,10 @@
                 <input type="checkbox" name="remember" class="rounded border-gray-300">
                 Remember me
             </label>
-            <a href="{{ route('password.request') }}" class="text-sm text-indigo-600 hover:underline">Forgot password?</a>
+            <a href="{{ route('password.request') }}" class="text-sm text-brand-orange hover:underline">Forgot password?</a>
         </div>
 
-        <button type="submit" class="w-full rounded-md bg-indigo-600 px-4 py-2 text-white font-medium hover:bg-indigo-700">
+        <button type="submit" class="w-full rounded-md bg-brand-orange px-4 py-2 text-white font-medium hover:bg-brand-orange2">
             Log in
         </button>
     </form>
@@ -52,6 +52,6 @@
 
     <p class="mt-6 text-center text-sm text-gray-600">
         Don't have an account?
-        <a href="{{ route('register') }}" class="text-indigo-600 hover:underline">Register</a>
+        <a href="{{ route('register') }}" class="text-brand-orange hover:underline">Register</a>
     </p>
 @endsection

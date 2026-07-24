@@ -8,7 +8,7 @@
             <h1 class="text-lg font-semibold text-gray-900">Tracking for {{ $order->order_number }}</h1>
             <p class="text-sm text-gray-500">Placed {{ $order->placed_at->format('M j, Y') }}</p>
         </div>
-        <a href="{{ route('account.orders.show', $order) }}" class="text-sm text-indigo-600 hover:underline">Back to order</a>
+        <a href="{{ route('account.orders.show', $order) }}" class="text-sm text-brand-orange hover:underline">Back to order</a>
     </div>
 
     <div class="space-y-6">
@@ -36,7 +36,7 @@
                                         &middot;
                                         @php $trackingUrl = $shipment->carrier?->trackingUrlFor($shipment->tracking_number); @endphp
                                         @if ($trackingUrl)
-                                            <a href="{{ $trackingUrl }}" target="_blank" rel="noopener" class="text-indigo-600 hover:underline">{{ $shipment->tracking_number }}</a>
+                                            <a href="{{ $trackingUrl }}" target="_blank" rel="noopener" class="text-brand-orange hover:underline">{{ $shipment->tracking_number }}</a>
                                         @else
                                             <span>{{ $shipment->tracking_number }}</span>
                                         @endif
@@ -53,7 +53,7 @@
                             <ol class="space-y-3">
                                 @foreach ($shipment->events->sortByDesc('occurred_at') as $event)
                                     <li class="flex gap-3 text-sm">
-                                        <span class="mt-1 h-2 w-2 flex-shrink-0 rounded-full {{ $loop->first ? 'bg-indigo-600' : 'bg-gray-300' }}"></span>
+                                        <span class="mt-1 h-2 w-2 flex-shrink-0 rounded-full {{ $loop->first ? 'bg-brand-orange' : 'bg-gray-300' }}"></span>
                                         <div>
                                             <p class="text-gray-900">{{ $event->status->getLabel() }}</p>
                                             @if ($event->location || $event->description)

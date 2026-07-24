@@ -7,6 +7,7 @@ use App\Enums\ProductType;
 use App\Enums\ReviewStatus;
 use App\Enums\StockStatus;
 use App\Models\Scopes\BelongsToVendorScope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -24,6 +25,7 @@ class Product extends Model implements HasMedia
     protected $fillable = [
         'vendor_id', 'brand_id', 'shipping_class_id', 'tax_class_id', 'name', 'slug', 'sku', 'type', 'status',
         'short_description', 'description', 'price', 'compare_at_price', 'cost_price',
+        'flash_sale_starts_at', 'flash_sale_ends_at',
         'manage_stock', 'stock_quantity', 'stock_status', 'low_stock_threshold',
         'weight', 'length', 'width', 'height', 'is_featured',
         'rejection_reason', 'reviewed_by', 'reviewed_at', 'published_at',
@@ -47,6 +49,8 @@ class Product extends Model implements HasMedia
             'view_count' => 'integer',
             'reviewed_at' => 'datetime',
             'published_at' => 'datetime',
+            'flash_sale_starts_at' => 'datetime',
+            'flash_sale_ends_at' => 'datetime',
         ];
     }
 
@@ -182,6 +186,41 @@ class Product extends Model implements HasMedia
     {
         return $this->categories()->wherePivot('is_primary', true)->first()
             ?? $this->categories()->first();
+    }
+
+    /**
+     * A product is on flash sale only while now() falls inside its window
+     * AND it actually has a discount to show — a window with no discount
+     * (or a discount with no window) doesn't qualify, so admins can't
+     * accidentally surface a non-discounted product in the flash-sale rail.
+     */
+    public function scopeOnFlashSale(Builder $query): Builder
+    {
+        return $query->whereNotNull('flash_sale_starts_at')
+            ->whereNotNull('flash_sale_ends_at')
+            ->where('flash_sale_starts_at', '<=', now())
+            ->where('flash_sale_ends_at', '>=', now())
+            ->whereNotNull('compare_at_price')
+            ->whereColumn('compare_at_price', '>', 'price');
+    }
+
+    public function isOnFlashSale(): bool
+    {
+        return $this->flash_sale_starts_at !== null
+            && $this->flash_sale_ends_at !== null
+            && $this->flash_sale_starts_at->isPast()
+            && $this->flash_sale_ends_at->isFuture()
+            && $this->compare_at_price !== null
+            && $this->compare_at_price > $this->price;
+    }
+
+    public function discountPercent(): ?int
+    {
+        if (! $this->compare_at_price || $this->compare_at_price <= $this->price) {
+            return null;
+        }
+
+        return (int) round((($this->compare_at_price - $this->price) / $this->compare_at_price) * 100);
     }
 
     public function isInStock(): bool

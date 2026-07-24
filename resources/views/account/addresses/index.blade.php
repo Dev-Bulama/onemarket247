@@ -5,7 +5,7 @@
 @section('content')
     <div class="flex items-center justify-between mb-6">
         <h1 class="text-lg font-semibold text-gray-900">Addresses</h1>
-        <a href="{{ route('account.addresses.create') }}" class="rounded-md bg-indigo-600 px-4 py-2 text-white text-sm font-medium hover:bg-indigo-700">
+        <a href="{{ route('account.addresses.create') }}" class="rounded-md bg-brand-orange px-4 py-2 text-white text-sm font-medium hover:bg-brand-orange2">
             Add address
         </a>
     </div>
@@ -42,7 +42,7 @@
                     @endif
 
                     <div class="mt-4 flex items-center gap-4 text-sm">
-                        <a href="{{ route('account.addresses.edit', $address) }}" class="text-indigo-600 hover:underline">Edit</a>
+                        <a href="{{ route('account.addresses.edit', $address) }}" class="text-brand-orange hover:underline">Edit</a>
                         <form method="POST" action="{{ route('account.addresses.destroy', $address) }}" onsubmit="return confirm('Delete this address?')">
                             @csrf
                             @method('DELETE')

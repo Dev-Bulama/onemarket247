@@ -4,13 +4,17 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Become a vendor — {{ config('app.name') }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    @include('partials.tailwind-brand-config')
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
-<body class="min-h-screen bg-gray-50 px-4 py-12">
+<body class="font-sans min-h-screen bg-warm px-4 py-12">
 <div class="mx-auto max-w-3xl">
-    <div class="text-center mb-6">
-        <a href="{{ route('home') }}" class="text-2xl font-bold text-gray-900">OneMarket247</a>
-        <p class="text-gray-600 mt-1">Sell on OneMarket247 — apply to become a vendor</p>
+    <div class="text-center mb-6 flex flex-col items-center">
+        @include('storefront.partials.logo')
+        <p class="text-body mt-1">Sell on {{ config('app.name') }} — apply to become a vendor</p>
     </div>
 
     <div class="bg-white shadow rounded-lg p-8">
@@ -25,7 +29,7 @@
         @endif
 
         <nav class="mb-8 flex justify-between text-sm font-medium text-gray-400" id="step-nav">
-            <button type="button" data-step="1" class="step-tab text-indigo-600">1. Business</button>
+            <button type="button" data-step="1" class="step-tab text-brand-orange">1. Business</button>
             <button type="button" data-step="2" class="step-tab">2. Store</button>
             <button type="button" data-step="3" class="step-tab">3. Banking</button>
             <button type="button" data-step="4" class="step-tab">4. Documents &amp; terms</button>
@@ -65,7 +69,7 @@
                     <input type="text" name="tax_identification_number" value="{{ old('tax_identification_number') }}"
                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                 </div>
-                <button type="button" class="step-next rounded-md bg-indigo-600 px-4 py-2 text-white font-medium hover:bg-indigo-700" data-next="2">Next: Store</button>
+                <button type="button" class="step-next rounded-md bg-brand-orange px-4 py-2 text-white font-medium hover:bg-brand-orange2" data-next="2">Next: Store</button>
             </section>
 
             <section data-step-panel="2" class="space-y-4 hidden">
@@ -130,7 +134,7 @@
                 @endif
                 <div class="flex justify-between">
                     <button type="button" class="step-prev rounded-md border border-gray-300 px-4 py-2 text-gray-700" data-prev="1">Back</button>
-                    <button type="button" class="step-next rounded-md bg-indigo-600 px-4 py-2 text-white font-medium hover:bg-indigo-700" data-next="3">Next: Banking</button>
+                    <button type="button" class="step-next rounded-md bg-brand-orange px-4 py-2 text-white font-medium hover:bg-brand-orange2" data-next="3">Next: Banking</button>
                 </div>
             </section>
 
@@ -152,7 +156,7 @@
                 </div>
                 <div class="flex justify-between">
                     <button type="button" class="step-prev rounded-md border border-gray-300 px-4 py-2 text-gray-700" data-prev="2">Back</button>
-                    <button type="button" class="step-next rounded-md bg-indigo-600 px-4 py-2 text-white font-medium hover:bg-indigo-700" data-next="4">Next: Documents</button>
+                    <button type="button" class="step-next rounded-md bg-brand-orange px-4 py-2 text-white font-medium hover:bg-brand-orange2" data-next="4">Next: Documents</button>
                 </div>
             </section>
 
@@ -175,14 +179,14 @@
                 </label>
                 <div class="flex justify-between">
                     <button type="button" class="step-prev rounded-md border border-gray-300 px-4 py-2 text-gray-700" data-prev="3">Back</button>
-                    <button type="submit" class="rounded-md bg-indigo-600 px-6 py-2 text-white font-medium hover:bg-indigo-700">Submit application</button>
+                    <button type="submit" class="rounded-md bg-brand-orange px-6 py-2 text-white font-medium hover:bg-brand-orange2">Submit application</button>
                 </div>
             </section>
         </form>
     </div>
 
     <p class="mt-6 text-center text-sm text-gray-600">
-        Already have a store? <a href="{{ route('vendor.login') }}" class="text-indigo-600 font-medium">Sign in</a>
+        Already have a store? <a href="{{ route('vendor.login') }}" class="text-brand-orange font-medium">Sign in</a>
     </p>
 </div>
 
@@ -228,8 +232,8 @@
             const target = btn.dataset.next || btn.dataset.prev;
             document.querySelectorAll('[data-step-panel]').forEach(p => p.classList.add('hidden'));
             document.querySelector(`[data-step-panel="${target}"]`).classList.remove('hidden');
-            document.querySelectorAll('.step-tab').forEach(t => t.classList.remove('text-indigo-600'));
-            document.querySelector(`.step-tab[data-step="${target}"]`).classList.add('text-indigo-600');
+            document.querySelectorAll('.step-tab').forEach(t => t.classList.remove('text-brand-orange'));
+            document.querySelector(`.step-tab[data-step="${target}"]`).classList.add('text-brand-orange');
         });
     });
 
@@ -238,8 +242,8 @@
             const target = tab.dataset.step;
             document.querySelectorAll('[data-step-panel]').forEach(p => p.classList.add('hidden'));
             document.querySelector(`[data-step-panel="${target}"]`).classList.remove('hidden');
-            document.querySelectorAll('.step-tab').forEach(t => t.classList.remove('text-indigo-600'));
-            tab.classList.add('text-indigo-600');
+            document.querySelectorAll('.step-tab').forEach(t => t.classList.remove('text-brand-orange'));
+            tab.classList.add('text-brand-orange');
         });
     });
 </script>

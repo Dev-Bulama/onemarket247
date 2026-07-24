@@ -17,7 +17,7 @@
             </div>
             <div>
                 <dt class="font-semibold text-gray-900">How do I become a vendor?</dt>
-                <dd class="mt-1 text-sm text-gray-700">Apply from the <a href="{{ route('vendor.register') }}" class="text-indigo-600 hover:underline">vendor registration page</a>. Most applications are reviewed within a few business days.</dd>
+                <dd class="mt-1 text-sm text-gray-700">Apply from the <a href="{{ route('vendor.register') }}" class="text-brand-orange hover:underline">vendor registration page</a>. Most applications are reviewed within a few business days.</dd>
             </div>
             <div>
                 <dt class="font-semibold text-gray-900">What payment methods are accepted?</dt>
@@ -29,7 +29,7 @@
             </div>
             <div>
                 <dt class="font-semibold text-gray-900">I still need help — who do I contact?</dt>
-                <dd class="mt-1 text-sm text-gray-700">Reach out through our <a href="{{ route('pages.contact') }}" class="text-indigo-600 hover:underline">contact page</a> and we'll get back to you.</dd>
+                <dd class="mt-1 text-sm text-gray-700">Reach out through our <a href="{{ route('pages.contact') }}" class="text-brand-orange hover:underline">contact page</a> and we'll get back to you.</dd>
             </div>
         </dl>
     </div>

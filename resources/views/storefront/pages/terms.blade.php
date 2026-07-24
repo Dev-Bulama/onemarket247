@@ -29,6 +29,6 @@
         <p class="mt-2 text-sm text-gray-700">We may update these terms from time to time. Continued use of the platform after a change constitutes acceptance of the updated terms.</p>
 
         <h2 class="mt-6 text-lg font-semibold text-gray-900">8. Contact</h2>
-        <p class="mt-2 text-sm text-gray-700">Questions about these terms can be sent through our <a href="{{ route('pages.contact') }}" class="text-indigo-600 hover:underline">contact page</a>.</p>
+        <p class="mt-2 text-sm text-gray-700">Questions about these terms can be sent through our <a href="{{ route('pages.contact') }}" class="text-brand-orange hover:underline">contact page</a>.</p>
     </div>
 @endsection

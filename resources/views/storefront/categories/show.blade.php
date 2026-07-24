@@ -20,7 +20,7 @@
             </nav>
 
             <h1 class="flex items-center gap-3 text-2xl font-bold text-gray-900 mb-2">
-                <span class="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 text-lg flex-none">
+                <span class="flex h-10 w-10 items-center justify-center rounded-full bg-orange-50 text-brand-orange text-lg flex-none">
                     <i class="{{ ($subcategory ?? $category)->displayIcon() }}" aria-hidden="true"></i>
                 </span>
                 {{ ($subcategory ?? $category)->name }}
@@ -33,7 +33,7 @@
             @if (! $subcategory && $subcategories->isNotEmpty())
                 <div class="flex flex-wrap gap-2 mb-6">
                     @foreach ($subcategories as $child)
-                        <a href="{{ route('categories.show-subcategory', [$category, $child]) }}" class="inline-flex items-center rounded-full border border-gray-300 bg-white px-3 py-1 text-sm text-gray-700 hover:border-indigo-500 hover:text-indigo-600">
+                        <a href="{{ route('categories.show-subcategory', [$category, $child]) }}" class="inline-flex items-center rounded-full border border-gray-300 bg-white px-3 py-1 text-sm text-gray-700 hover:border-brand-orange hover:text-brand-orange">
                             {{ $child->name }}
                         </a>
                     @endforeach

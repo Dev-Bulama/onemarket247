@@ -54,7 +54,7 @@
             <h1 class="text-2xl font-bold text-gray-900">{{ $product->name }}</h1>
 
             @php $averageRating = $product->averageRating(); @endphp
-            <a href="#reviews" class="mt-1 inline-flex items-center gap-1 text-sm text-gray-600 hover:text-indigo-600">
+            <a href="#reviews" class="mt-1 inline-flex items-center gap-1 text-sm text-gray-600 hover:text-brand-orange">
                 @if ($averageRating !== null)
                     <span class="text-amber-500">★</span> {{ $averageRating }} / 5
                     <span class="text-gray-400">({{ $product->approvedReviews->count() }} {{ Str::plural('review', $product->approvedReviews->count()) }})</span>
@@ -86,7 +86,7 @@
             @if ($product->vendor?->store)
                 <p class="mt-4 text-sm text-gray-600">
                     Sold by
-                    <a href="{{ route('stores.show', $product->vendor->store->slug) }}" class="font-medium text-indigo-600 hover:underline">{{ $product->vendor->store->name }}</a>
+                    <a href="{{ route('stores.show', $product->vendor->store->slug) }}" class="font-medium text-brand-orange hover:underline">{{ $product->vendor->store->name }}</a>
                 </p>
             @endif
 
@@ -136,7 +136,7 @@
                         <input id="quantity" type="number" name="quantity" value="1" min="1" class="mt-1 block w-20 rounded-md border-gray-300 shadow-sm">
                     </div>
 
-                    <button type="submit" class="rounded-md bg-indigo-600 px-4 py-2 text-white text-sm font-medium hover:bg-indigo-700">
+                    <button type="submit" class="rounded-md bg-brand-orange px-4 py-2 text-white text-sm font-medium hover:bg-brand-orange2">
                         Add to cart
                     </button>
                 </form>
@@ -150,27 +150,27 @@
                 <div class="mt-4 flex items-center gap-3">
                     <form method="POST" action="{{ route('account.wishlist.store', $product) }}">
                         @csrf
-                        <button type="submit" class="inline-flex items-center gap-1.5 rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:border-indigo-500 hover:text-indigo-600">
+                        <button type="submit" class="inline-flex items-center gap-1.5 rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:border-brand-orange hover:text-brand-orange">
                             Add to wishlist
                         </button>
                     </form>
                     <form method="POST" action="{{ route('account.compare.store', $product) }}">
                         @csrf
-                        <button type="submit" class="inline-flex items-center gap-1.5 rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:border-indigo-500 hover:text-indigo-600">
+                        <button type="submit" class="inline-flex items-center gap-1.5 rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:border-brand-orange hover:text-brand-orange">
                             Add to compare
                         </button>
                     </form>
                 </div>
             @else
                 <p class="mt-4 text-sm text-gray-500">
-                    <a href="{{ route('login') }}" class="text-indigo-600 hover:underline">Log in</a> to save this product to your wishlist or compare list.
+                    <a href="{{ route('login') }}" class="text-brand-orange hover:underline">Log in</a> to save this product to your wishlist or compare list.
                 </p>
             @endauth
 
             @if ($product->categories->isNotEmpty())
                 <div class="mt-6 flex flex-wrap gap-2">
                     @foreach ($product->categories as $category)
-                        <a href="{{ route('categories.show', $category) }}" class="inline-flex items-center rounded-full border border-gray-300 bg-white px-3 py-1 text-xs text-gray-700 hover:border-indigo-500 hover:text-indigo-600">
+                        <a href="{{ route('categories.show', $category) }}" class="inline-flex items-center rounded-full border border-gray-300 bg-white px-3 py-1 text-xs text-gray-700 hover:border-brand-orange hover:text-brand-orange">
                             {{ $category->name }}
                         </a>
                     @endforeach
@@ -220,7 +220,7 @@
                                 @if (! $review->votes->firstWhere('customer_id', auth()->id()))
                                     <form method="POST" action="{{ route('reviews.vote', $review) }}">
                                         @csrf
-                                        <button type="submit" class="text-indigo-600 hover:underline">Helpful?</button>
+                                        <button type="submit" class="text-brand-orange hover:underline">Helpful?</button>
                                     </form>
                                 @endif
                             @endauth
@@ -264,7 +264,7 @@
                         <textarea id="body" name="body" rows="3" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">{{ old('body') }}</textarea>
                     </div>
 
-                    <button type="submit" class="rounded-md bg-indigo-600 px-4 py-2 text-white text-sm font-medium hover:bg-indigo-700">
+                    <button type="submit" class="rounded-md bg-brand-orange px-4 py-2 text-white text-sm font-medium hover:bg-brand-orange2">
                         Submit review
                     </button>
 
@@ -273,7 +273,7 @@
             @endif
         @else
             <p class="mt-6 text-sm text-gray-500">
-                <a href="{{ route('login') }}" class="text-indigo-600 hover:underline">Log in</a> to write a review.
+                <a href="{{ route('login') }}" class="text-brand-orange hover:underline">Log in</a> to write a review.
             </p>
         @endauth
     </div>
@@ -311,7 +311,7 @@
                     <textarea id="question" name="question" rows="3" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">{{ old('question') }}</textarea>
                 </div>
 
-                <button type="submit" class="rounded-md bg-indigo-600 px-4 py-2 text-white text-sm font-medium hover:bg-indigo-700">
+                <button type="submit" class="rounded-md bg-brand-orange px-4 py-2 text-white text-sm font-medium hover:bg-brand-orange2">
                     Ask question
                 </button>
 
@@ -319,7 +319,7 @@
             </form>
         @else
             <p class="mt-6 text-sm text-gray-500">
-                <a href="{{ route('login') }}" class="text-indigo-600 hover:underline">Log in</a> to ask a question.
+                <a href="{{ route('login') }}" class="text-brand-orange hover:underline">Log in</a> to ask a question.
             </p>
         @endauth
     </div>

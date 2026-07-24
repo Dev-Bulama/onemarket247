@@ -4,12 +4,16 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title') — {{ config('app.name') }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    @include('partials.tailwind-brand-config')
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
-<body class="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
+<body class="font-sans min-h-screen bg-warm flex items-center justify-center px-4 py-12">
     <div class="w-full max-w-md">
-        <div class="text-center mb-6">
-            <a href="{{ route('home') }}" class="text-2xl font-bold text-gray-900">OneMarket247</a>
+        <div class="text-center mb-6 flex justify-center">
+            @include('storefront.partials.logo')
         </div>
 
         <div class="bg-white shadow rounded-lg p-8">

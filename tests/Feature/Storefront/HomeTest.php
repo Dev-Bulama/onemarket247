@@ -4,9 +4,11 @@ use App\Actions\Product\BestSellingProductsAction;
 use App\Enums\VendorOrderStatus;
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\City;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\Store;
+use App\Models\Vendor;
 use App\Models\VendorOrder;
 
 test('the homepage loads with real featured content', function () {
@@ -77,4 +79,56 @@ test('trending products are ordered by view count', function () {
     $obscure = Product::factory()->create(['name' => 'Obscure Widget', 'view_count' => 1]);
 
     $this->get('/')->assertOk()->assertSeeInOrder([$popular->name, $obscure->name]);
+});
+
+test('an active flash sale product renders in the flash sales rail', function () {
+    $onSale = Product::factory()->create([
+        'name' => 'Flash Deal Widget',
+        'price' => 5000,
+        'compare_at_price' => 10000,
+        'flash_sale_starts_at' => now()->subHour(),
+        'flash_sale_ends_at' => now()->addHours(3),
+    ]);
+
+    $this->get('/')->assertOk()->assertSeeInOrder(['Flash Sales', $onSale->name]);
+});
+
+test('an expired flash sale product does not render in the flash sales rail', function () {
+    $expired = Product::factory()->create([
+        'name' => 'Expired Deal Widget',
+        'price' => 5000,
+        'compare_at_price' => 10000,
+        'flash_sale_starts_at' => now()->subHours(5),
+        'flash_sale_ends_at' => now()->subHour(),
+    ]);
+
+    expect(Product::onFlashSale()->pluck('id'))->not->toContain($expired->id);
+});
+
+test('a flash sale window with no discount does not qualify', function () {
+    $noDiscount = Product::factory()->create([
+        'price' => 5000,
+        'compare_at_price' => null,
+        'flash_sale_starts_at' => now()->subHour(),
+        'flash_sale_ends_at' => now()->addHours(3),
+    ]);
+
+    expect(Product::onFlashSale()->pluck('id'))->not->toContain($noDiscount->id);
+});
+
+test('recommended near you prioritizes products from the customer\'s delivery city', function () {
+    $nearCity = City::factory()->create();
+    $nearVendor = Vendor::factory()->create();
+    Store::factory()->create(['vendor_id' => $nearVendor->id, 'city_id' => $nearCity->id]);
+    $nearProduct = Product::factory()->create(['vendor_id' => $nearVendor->id, 'name' => 'Nearby Widget']);
+
+    $farCity = City::factory()->create();
+    $farVendor = Vendor::factory()->create();
+    Store::factory()->create(['vendor_id' => $farVendor->id, 'city_id' => $farCity->id]);
+    Product::factory()->create(['vendor_id' => $farVendor->id, 'name' => 'Far Away Widget']);
+
+    $this->withSession(['delivery_location' => ['city_id' => $nearCity->id, 'state_id' => null, 'country_id' => null]])
+        ->get('/')
+        ->assertOk()
+        ->assertSeeInOrder(['Recommended Near You', $nearProduct->name]);
 });

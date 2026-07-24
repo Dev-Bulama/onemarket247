@@ -10,7 +10,7 @@
 
         @include('account.addresses._form')
 
-        <button type="submit" class="rounded-md bg-indigo-600 px-4 py-2 text-white font-medium hover:bg-indigo-700">
+        <button type="submit" class="rounded-md bg-brand-orange px-4 py-2 text-white font-medium hover:bg-brand-orange2">
             Save address
         </button>
     </form>

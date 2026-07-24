@@ -53,7 +53,7 @@
                 </select>
             </div>
 
-            <button type="submit" class="w-full inline-flex justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500">
+            <button type="submit" class="w-full inline-flex justify-center rounded-md bg-brand-orange px-4 py-2 text-sm font-medium text-white hover:bg-brand-orange">
                 Apply filters
             </button>
         </form>

@@ -5,19 +5,19 @@
 <div>
     <label for="label" class="block text-sm font-medium text-gray-700">Label</label>
     <input id="label" type="text" name="label" value="{{ old('label', $address?->label) }}" placeholder="Home, Office, ..." required
-           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-orange focus:ring-brand-orange">
 </div>
 
 <div>
     <label for="full_name" class="block text-sm font-medium text-gray-700">Full name</label>
     <input id="full_name" type="text" name="full_name" value="{{ old('full_name', $address?->full_name) }}" required
-           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-orange focus:ring-brand-orange">
 </div>
 
 <div>
     <label for="phone" class="block text-sm font-medium text-gray-700">Phone</label>
     <input id="phone" type="text" name="phone" value="{{ old('phone', $address?->phone) }}"
-           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-orange focus:ring-brand-orange">
 </div>
 
 <div class="grid grid-cols-3 gap-4">
@@ -43,19 +43,19 @@
 <div>
     <label for="postal_code" class="block text-sm font-medium text-gray-700">Postal code</label>
     <input id="postal_code" type="text" name="postal_code" value="{{ old('postal_code', $address?->postal_code) }}"
-           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-orange focus:ring-brand-orange">
 </div>
 
 <div>
     <label for="address_line_1" class="block text-sm font-medium text-gray-700">Address line 1</label>
     <input id="address_line_1" type="text" name="address_line_1" value="{{ old('address_line_1', $address?->address_line_1) }}" required
-           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-orange focus:ring-brand-orange">
 </div>
 
 <div>
     <label for="address_line_2" class="block text-sm font-medium text-gray-700">Address line 2</label>
     <input id="address_line_2" type="text" name="address_line_2" value="{{ old('address_line_2', $address?->address_line_2) }}"
-           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-orange focus:ring-brand-orange">
 </div>
 
 <label class="flex items-center gap-2 text-sm text-gray-600">

@@ -210,8 +210,18 @@ class DemoCatalogSeeder extends Seeder
 
         collect(self::PRODUCTS)->values()->each(function (string $name, int $i) use ($categories, $brands, $vendors, $reviewer, $country, $currency) {
             $vendor = $vendors[$i % $vendors->count()];
-            $price = random_int(1500, 45000);
+            // Naira-scale minor units (kobo) — realistic ₦1,500-₦450,000 range,
+            // not the old USD-cents-scale numbers left over from before NGN
+            // became the default/settlement currency.
+            $price = random_int(150_000, 45_000_000);
             $hasDiscount = $i % 3 === 0;
+
+            // Every other product goes on flash sale so the homepage rail has
+            // real, DB-driven data; the last one is deliberately expired to
+            // prove expired campaigns are excluded (see Product::onFlashSale()).
+            $isFlashSale = $i % 2 === 0;
+            $isExpiredFlashSale = $i === (count(self::PRODUCTS) - 1);
+            $flashSalePrice = $isFlashSale ? (int) round($price * 0.75) : $price;
 
             $product = Product::create([
                 'vendor_id' => $vendor->id,
@@ -223,8 +233,14 @@ class DemoCatalogSeeder extends Seeder
                 'status' => ProductStatus::Published,
                 'short_description' => "A great {$name} at a great price.",
                 'description' => "This {$name} is one of our most popular items, chosen by shoppers for its quality and value.",
-                'price' => $price,
-                'compare_at_price' => $hasDiscount ? (int) round($price * 1.3) : null,
+                'price' => $isFlashSale ? $flashSalePrice : $price,
+                'compare_at_price' => ($hasDiscount || $isFlashSale) ? (int) round($price * 1.3) : null,
+                'flash_sale_starts_at' => $isFlashSale ? now()->subHours(3) : null,
+                'flash_sale_ends_at' => match (true) {
+                    $isExpiredFlashSale => now()->subHours(2),
+                    $isFlashSale => now()->addHours(random_int(4, 30)),
+                    default => null,
+                },
                 'manage_stock' => true,
                 'stock_quantity' => random_int(5, 200),
                 'stock_status' => StockStatus::InStock,

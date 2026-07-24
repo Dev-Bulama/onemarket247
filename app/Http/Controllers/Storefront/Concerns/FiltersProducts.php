@@ -53,6 +53,10 @@ trait FiltersProducts
             $query->where('stock_status', StockStatus::InStock);
         }
 
+        if ($request->boolean('flash_sale')) {
+            $query->onFlashSale();
+        }
+
         match ($request->string('sort')->value()) {
             'price_asc' => $query->orderBy('price'),
             'price_desc' => $query->orderByDesc('price'),

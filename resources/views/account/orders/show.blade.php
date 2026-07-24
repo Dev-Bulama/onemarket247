@@ -16,8 +16,8 @@
         </div>
         <div class="flex items-center gap-3">
             <span class="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700">{{ $order->status->getLabel() }}</span>
-            <a href="{{ route('account.orders.track', $order) }}" class="text-sm text-indigo-600 hover:underline">Track package</a>
-            <a href="{{ route('orders.invoice', $order) }}" class="text-sm text-indigo-600 hover:underline">Download invoice</a>
+            <a href="{{ route('account.orders.track', $order) }}" class="text-sm text-brand-orange hover:underline">Track package</a>
+            <a href="{{ route('orders.invoice', $order) }}" class="text-sm text-brand-orange hover:underline">Download invoice</a>
         </div>
     </div>
 

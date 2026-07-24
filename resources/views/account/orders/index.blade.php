@@ -7,7 +7,7 @@
 
     @if ($orders->isEmpty())
         <div class="bg-white shadow rounded-lg p-6 text-sm text-gray-500">
-            You haven't placed any orders yet. Browse the <a href="{{ route('shop.index') }}" class="text-indigo-600 hover:underline">shop</a> to get started.
+            You haven't placed any orders yet. Browse the <a href="{{ route('shop.index') }}" class="text-brand-orange hover:underline">shop</a> to get started.
         </div>
     @else
         <div class="bg-white shadow rounded-lg overflow-hidden divide-y divide-gray-100">

@@ -76,7 +76,7 @@
                     payment instructions by email.
                 </div>
 
-                <button type="submit" class="rounded-md bg-indigo-600 px-4 py-2 text-white text-sm font-medium hover:bg-indigo-700">
+                <button type="submit" class="rounded-md bg-brand-orange px-4 py-2 text-white text-sm font-medium hover:bg-brand-orange2">
                     Place order
                 </button>
             </form>
@@ -92,7 +92,7 @@
                             <p class="text-gray-900">{{ $item->product->name }}</p>
                             <p class="text-xs text-gray-500">Qty {{ $item->quantity }}</p>
                         </div>
-                        <p class="text-gray-900">${{ number_format($item->lineTotal() / 100, 2) }}</p>
+                        <p class="text-gray-900">@price($item->lineTotal())</p>
                     </div>
                 @endforeach
             </div>
@@ -100,17 +100,17 @@
             <dl class="space-y-2 text-sm border-t border-gray-100 pt-4">
                 <div class="flex justify-between">
                     <dt class="text-gray-600">Subtotal</dt>
-                    <dd class="text-gray-900">${{ number_format($cart->subtotal() / 100, 2) }}</dd>
+                    <dd class="text-gray-900">@price($cart->subtotal())</dd>
                 </div>
                 @if ($cart->discount() > 0)
                     <div class="flex justify-between">
                         <dt class="text-gray-600">Discount</dt>
-                        <dd class="text-green-700">-${{ number_format($cart->discount() / 100, 2) }}</dd>
+                        <dd class="text-green-700">-@price($cart->discount())</dd>
                     </div>
                 @endif
                 <div class="flex justify-between font-semibold text-gray-900 border-t border-gray-100 pt-2">
                     <dt>Estimated total</dt>
-                    <dd>${{ number_format($cart->total() / 100, 2) }}</dd>
+                    <dd>@price($cart->total())</dd>
                 </div>
             </dl>
 
