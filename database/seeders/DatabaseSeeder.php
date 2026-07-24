@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class DatabaseSeeder extends Seeder
 {
@@ -42,15 +43,26 @@ class DatabaseSeeder extends Seeder
         // Plain create() rather than User::factory() — factories call fake()
         // (fakerphp/faker is require-dev only) which is unavailable when this
         // seeder runs on a production `composer install --no-dev` install.
-        if (! User::where('email', 'admin@onemarket247.test')->exists()) {
-            User::create([
+        $admin = User::firstOrCreate(
+            ['email' => 'admin@onemarket247.test'],
+            [
                 'name' => 'Test Super Admin',
-                'email' => 'admin@onemarket247.test',
                 'email_verified_at' => now(),
                 'password' => Hash::make('password'),
                 'user_type' => UserType::SuperAdmin,
                 'status' => UserStatus::Active,
-            ]);
+            ],
+        );
+
+        // Every Filament resource's canViewAny() checks a Spatie permission
+        // (see App\Filament\Concerns\GatedByPermission) — user_type alone
+        // only grants access to the panel itself, not to what's inside it.
+        // Re-running this seeder on an admin created before this role
+        // assignment existed (e.g. via a manual tinker User::create()) will
+        // backfill it, which is exactly what fixes an admin who can log in
+        // but sees nothing but the Dashboard.
+        if (! $admin->hasRole('Super Admin', 'admin')) {
+            $admin->assignRole(Role::findOrCreate('Super Admin', 'admin'));
         }
     }
 }
