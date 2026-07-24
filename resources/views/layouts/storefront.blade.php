@@ -13,6 +13,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     @include('partials.tailwind-brand-config')
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        .scrollbar-hide { scrollbar-width: none; -ms-overflow-style: none; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+    </style>
 </head>
 <body class="font-sans min-h-screen bg-warm flex flex-col pb-14 md:pb-0">
 
@@ -130,7 +134,7 @@
     </div>
 
     <div class="border-t border-line bg-white">
-        <div class="mx-auto max-w-6xl px-4 flex items-stretch gap-1 overflow-x-auto scrollbar-hide">
+        <div id="category-nav-row" class="mx-auto max-w-6xl px-4 flex items-stretch gap-1 overflow-x-auto scrollbar-hide scroll-smooth">
             <details class="relative flex-none">
                 <summary class="list-none cursor-pointer flex h-full items-center gap-2 px-3 py-2.5 text-sm font-medium text-ink hover:text-brand-orange whitespace-nowrap">
                     <i class="fa-solid fa-bars text-brand-green" aria-hidden="true"></i>
@@ -163,6 +167,20 @@
         </div>
     </div>
 </header>
+
+<script>
+    (function () {
+        const row = document.getElementById('category-nav-row');
+        if (! row || row.scrollWidth <= row.clientWidth) return;
+
+        setTimeout(function () {
+            row.scrollTo({left: 48, behavior: 'smooth'});
+            setTimeout(function () {
+                row.scrollTo({left: 0, behavior: 'smooth'});
+            }, 500);
+        }, 700);
+    })();
+</script>
 
 <main class="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
     @if (session('status'))
