@@ -4,7 +4,7 @@
 
 @php
     $heroImage = \Illuminate\Support\Facades\Storage::disk('public')->exists('hero/slide-1.jpg')
-        ? \Illuminate\Support\Facades\Storage::disk('public')->url('hero/slide-1.jpg')
+        ? \Illuminate\Support\Facades\Storage::disk('public')->url('hero/slide-1.jpg').'?v='.\Illuminate\Support\Facades\Storage::disk('public')->lastModified('hero/slide-1.jpg')
         : null;
     $deliveryLocationName = ($deliveryLocation['city'] ?? $deliveryLocation['state'] ?? $deliveryLocation['country'] ?? null)?->name;
 @endphp
