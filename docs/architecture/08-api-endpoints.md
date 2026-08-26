@@ -7,58 +7,64 @@ in [01-system-architecture.md](01-system-architecture.md) §6. Rate limiting
 via Redis-backed throttles, tiered by endpoint sensitivity (auth: strict,
 catalog read: generous, payments: strict + idempotency-key required).
 
-This endpoint map is designed and built incrementally across Phases 8–22 (as
-each web feature ships, its API is built alongside it — see per-phase notes)
-and is **finalized and hardened in Phase 28** before any mobile work starts.
+This endpoint map is designed and built incrementally (as each web feature
+ships, its API is built alongside it — see per-phase notes) and is hardened
+before mobile screens are built against it. ✅ marks what's actually
+implemented as of the mobile-readiness audit (26 Aug 2026); everything else
+here is still spec, not code.
 
 ## 1. Auth & Session
 
 ```
-POST   /api/v1/auth/register
-POST   /api/v1/auth/login
-POST   /api/v1/auth/logout
-POST   /api/v1/auth/forgot-password
-POST   /api/v1/auth/reset-password
+POST   /api/v1/auth/register               ✅
+POST   /api/v1/auth/login                  ✅
+POST   /api/v1/auth/logout                 ✅
+POST   /api/v1/auth/forgot-password        ✅
+POST   /api/v1/auth/reset-password         ✅
 POST   /api/v1/auth/verify-email
 POST   /api/v1/auth/resend-verification
 POST   /api/v1/auth/2fa/challenge
 POST   /api/v1/auth/social/{provider}
-GET    /api/v1/auth/sessions
-DELETE /api/v1/auth/sessions/{id}
+GET    /api/v1/auth/sessions               ✅
+DELETE /api/v1/auth/sessions/{id}          ✅
 POST   /api/v1/auth/device-tokens          (push notification registration)
 ```
 
 ## 2. Config / Reference Data
 
 ```
-GET /api/v1/config                 (feature flags, min app version, gateway list)
-GET /api/v1/languages
-GET /api/v1/currencies
-GET /api/v1/countries
-GET /api/v1/countries/{id}/states
-GET /api/v1/states/{id}/cities
+GET /api/v1/config                 ✅ (default currency/language, live payment methods)
+GET /api/v1/languages              ✅
+GET /api/v1/currencies             ✅
+GET /api/v1/countries              ✅
+GET /api/v1/countries/{id}/states  ✅
+GET /api/v1/states/{id}/cities     ✅
 ```
 
 ## 3. Storefront / Catalog
 
 ```
-GET /api/v1/home                   (homepage sections, resolved & ready to render)
-GET /api/v1/categories
-GET /api/v1/categories/{slug}
-GET /api/v1/brands
-GET /api/v1/brands/{slug}
-GET /api/v1/products
-GET /api/v1/products/{slug}
+GET /api/v1/home                   ✅ (mirrors Storefront\HomeController's sections exactly)
+GET /api/v1/categories             ✅
+GET /api/v1/categories/{slug}      ✅
+GET /api/v1/brands                 ✅
+GET /api/v1/brands/{slug}          ✅
+GET /api/v1/products               ✅
+GET /api/v1/products/{slug}        ✅
 GET /api/v1/products/{slug}/reviews
 GET /api/v1/products/{slug}/questions
-GET /api/v1/vendors
-GET /api/v1/vendors/{slug}
-GET /api/v1/stores/{slug}
-GET /api/v1/stores/{slug}/products
-GET /api/v1/search
+GET /api/v1/stores                 ✅
+GET /api/v1/stores/{slug}          ✅
+GET /api/v1/stores/{slug}/products ✅
+GET /api/v1/search                 ✅
 GET /api/v1/search/suggestions
 ```
-All list endpoints support `page`, `per_page`, `sort`, `filter[...]`, `q`.
+All list endpoints support `page`, `per_page`, `sort`, `filter[...]`, `q`
+(same params as the corresponding storefront web page — see
+`App\Http\Controllers\Storefront\Concerns\FiltersProducts`, reused as-is by
+every `Api\V1\*` controller above so web and mobile filter identically).
+The `/vendors` alias from the original spec was dropped — `Store` is the
+real public-facing entity, "vendor" isn't a separate storefront concept.
 
 ## 4. Cart & Checkout
 

@@ -6,6 +6,7 @@ use App\Auth\ScopedEloquentUserProvider;
 use App\Enums\UserType;
 use App\Listeners\MergeGuestCartOnLogin;
 use Illuminate\Auth\Events\Login;
+use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Event;
@@ -40,5 +41,13 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(Login::class, MergeGuestCartOnLogin::class);
 
         Blade::directive('price', fn ($expression) => "<?php echo \App\Support\PriceDisplay::format({$expression}); ?>");
+
+        // Every /api/v1/* response is already wrapped in ApiResponse's own
+        // {data, meta, message} envelope — a Resource collection's default
+        // {data: [...]} wrapper would double-nest ('data.products.data.0'
+        // instead of 'data.products.0') wherever a resource collection sits
+        // inside that envelope, so it's disabled globally instead of on
+        // every resource class individually.
+        JsonResource::withoutWrapping();
     }
 }
