@@ -35,10 +35,10 @@ class DatabaseSeeder extends Seeder
         // random photo from a public stock-photo service keyed by a text
         // seed, which has no real control over the photo's actual content
         // (it returned an unrelated wolf photo in production) — wrong for
-        // the single most prominent brand image on the site. The hero
-        // photo should be a real image the site owner uploads directly to
-        // storage/app/public/hero/slide-1.jpg; nothing overwrites that
-        // file automatically once it exists (see HeroImageSeeder::run()).
+        // the single most prominent brand image on the site. Hero photos
+        // should be real images the site owner uploads through the admin
+        // "Hero Slides" resource; HeroImageSeeder only fills in stock
+        // photos when no HeroSlide rows exist at all (see its run()).
 
         // Plain create() rather than User::factory() — factories call fake()
         // (fakerphp/faker is require-dev only) which is unavailable when this

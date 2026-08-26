@@ -5,11 +5,13 @@ use App\Enums\VendorOrderStatus;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\City;
+use App\Models\HeroSlide;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\Store;
 use App\Models\Vendor;
 use App\Models\VendorOrder;
+use Illuminate\Support\Facades\Storage;
 
 test('the homepage loads with real featured content', function () {
     $category = Category::factory()->create(['is_active' => true]);
@@ -131,4 +133,43 @@ test('recommended near you prioritizes products from the customer\'s delivery ci
         ->get('/')
         ->assertOk()
         ->assertSeeInOrder(['Recommended Near You', $nearProduct->name]);
+});
+
+test('the homepage hero carousel renders every active slide with dots to navigate them', function () {
+    Storage::fake('public');
+    $first = HeroSlide::factory()->create(['sort_order' => 0]);
+    $second = HeroSlide::factory()->create(['sort_order' => 1]);
+    Storage::disk('public')->put($first->image_path, 'fake-bytes-1');
+    Storage::disk('public')->put($second->image_path, 'fake-bytes-2');
+
+    $content = $this->get('/')->assertOk()->getContent();
+
+    expect($content)
+        ->toContain($first->image_path)
+        ->toContain($second->image_path)
+        ->toContain('hero-slide-dot')
+        ->toContain('id="hero-slider"');
+});
+
+test('an inactive hero slide never appears on the homepage', function () {
+    Storage::fake('public');
+    $inactive = HeroSlide::factory()->inactive()->create();
+    Storage::disk('public')->put($inactive->image_path, 'fake-bytes');
+
+    $this->get('/')->assertOk()->assertDontSee($inactive->image_path, false);
+});
+
+test('a single hero slide renders without carousel dots', function () {
+    Storage::fake('public');
+    $only = HeroSlide::factory()->create(['sort_order' => 0]);
+    Storage::disk('public')->put($only->image_path, 'fake-bytes');
+
+    $content = $this->get('/')->assertOk()->getContent();
+
+    expect($content)->toContain($only->image_path)
+        ->not->toContain('hero-slide-dot');
+});
+
+test('the homepage falls back to a placeholder icon when there are no hero slides', function () {
+    $this->get('/')->assertOk()->assertSee('fa-bag-shopping', false);
 });

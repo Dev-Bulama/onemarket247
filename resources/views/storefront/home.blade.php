@@ -3,9 +3,7 @@
 @section('title', 'Home')
 
 @php
-    $heroImage = \Illuminate\Support\Facades\Storage::disk('public')->exists('hero/slide-1.jpg')
-        ? \Illuminate\Support\Facades\Storage::disk('public')->url('hero/slide-1.jpg').'?v='.\Illuminate\Support\Facades\Storage::disk('public')->lastModified('hero/slide-1.jpg')
-        : null;
+    $heroSlides = \App\Models\HeroSlide::query()->active()->orderBy('sort_order')->get()->filter(fn ($slide) => $slide->imageUrl())->values();
     $deliveryLocationName = ($deliveryLocation['city'] ?? $deliveryLocation['state'] ?? $deliveryLocation['country'] ?? null)?->name;
 @endphp
 
@@ -53,17 +51,97 @@
                         </a>
                     </div>
 
-                    <div class="relative aspect-[4/3] rounded-xl overflow-hidden bg-brand-green/10">
-                        @if ($heroImage)
-                            <img src="{{ $heroImage }}" alt="A happy shopper with groceries and everyday essentials from OneMarket 24/7 vendors" class="h-full w-full object-cover" loading="eager">
-                        @else
+                    <div id="hero-slider" class="relative aspect-[4/3] rounded-xl overflow-hidden bg-brand-green/10" data-interval="5000">
+                        @forelse ($heroSlides as $index => $slide)
+                            <img
+                                src="{{ $slide->imageUrl() }}"
+                                alt="OneMarket 24/7 hero photo {{ $index + 1 }}"
+                                loading="{{ $index === 0 ? 'eager' : 'lazy' }}"
+                                data-slide-index="{{ $index }}"
+                                class="hero-slide absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out {{ $index === 0 ? 'opacity-100' : 'opacity-0' }}"
+                            >
+                        @empty
                             <div class="h-full w-full flex items-center justify-center text-brand-green">
                                 <i class="fa-solid fa-bag-shopping text-6xl" aria-hidden="true"></i>
+                            </div>
+                        @endforelse
+
+                        @if ($heroSlides->count() > 1)
+                            <div class="absolute inset-x-0 bottom-3 z-10 flex items-center justify-center gap-1.5" role="tablist" aria-label="Hero photo slides">
+                                @foreach ($heroSlides as $index => $slide)
+                                    <button
+                                        type="button"
+                                        class="hero-slide-dot h-2 w-2 rounded-full transition-colors {{ $index === 0 ? 'bg-white' : 'bg-white/50' }}"
+                                        data-slide-index="{{ $index }}"
+                                        role="tab"
+                                        aria-label="Show hero photo {{ $index + 1 }}"
+                                        aria-selected="{{ $index === 0 ? 'true' : 'false' }}"
+                                    ></button>
+                                @endforeach
                             </div>
                         @endif
                     </div>
                 </div>
             </section>
+
+            @if ($heroSlides->count() > 1)
+                <script>
+                    (function () {
+                        const root = document.getElementById('hero-slider');
+                        if (! root) return;
+
+                        const slides = Array.from(root.querySelectorAll('.hero-slide'));
+                        const dots = Array.from(root.querySelectorAll('.hero-slide-dot'));
+                        if (slides.length < 2) return;
+
+                        const intervalMs = parseInt(root.dataset.interval, 10) || 5000;
+                        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                        let current = 0;
+                        let timer = null;
+
+                        function show(index) {
+                            slides[current].classList.replace('opacity-100', 'opacity-0');
+                            dots[current]?.classList.replace('bg-white', 'bg-white/50');
+                            dots[current]?.setAttribute('aria-selected', 'false');
+
+                            current = (index + slides.length) % slides.length;
+
+                            slides[current].classList.replace('opacity-0', 'opacity-100');
+                            dots[current]?.classList.replace('bg-white/50', 'bg-white');
+                            dots[current]?.setAttribute('aria-selected', 'true');
+                        }
+
+                        function next() {
+                            show(current + 1);
+                        }
+
+                        function start() {
+                            if (prefersReducedMotion) return;
+                            stop();
+                            timer = setInterval(next, intervalMs);
+                        }
+
+                        function stop() {
+                            if (timer) clearInterval(timer);
+                            timer = null;
+                        }
+
+                        dots.forEach((dot) => {
+                            dot.addEventListener('click', () => {
+                                show(parseInt(dot.dataset.slideIndex, 10));
+                                start();
+                            });
+                        });
+
+                        root.addEventListener('mouseenter', stop);
+                        root.addEventListener('mouseleave', start);
+                        root.addEventListener('focusin', stop);
+                        root.addEventListener('focusout', start);
+
+                        start();
+                    })();
+                </script>
+            @endif
 
             {{-- Trust benefits --}}
             <section class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
