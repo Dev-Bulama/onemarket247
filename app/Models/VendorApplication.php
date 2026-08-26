@@ -16,6 +16,7 @@ class VendorApplication extends Model
         'user_id', 'vendor_id', 'vendor_subscription_plan_id', 'full_name', 'email', 'phone',
         'business_name', 'store_name', 'store_slug', 'country_id', 'state_id', 'city_id',
         'postal_code', 'address', 'registration_number', 'tax_identification_number',
+        'agent_id_number', 'agent_full_name', 'agent_phone',
         'identity_type', 'identity_number', 'store_category', 'store_description', 'website',
         'social_links', 'bank_name', 'bank_account_name', 'bank_account_number',
         'status', 'rejection_reason', 'reviewed_by', 'reviewed_at',

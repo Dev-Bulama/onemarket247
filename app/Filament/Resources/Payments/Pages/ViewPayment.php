@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\Payments\Pages;
 
+use App\Actions\Payment\ConfirmBankTransferPaymentAction;
 use App\Actions\Payment\RefundPaymentAction;
+use App\Enums\PaymentStatus;
 use App\Exceptions\PaymentGatewayException;
 use App\Filament\Resources\Payments\PaymentResource;
 use App\Models\Payment;
@@ -19,6 +21,18 @@ class ViewPayment extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('confirmBankTransfer')
+                ->label('Confirm bank transfer')
+                ->color('success')
+                ->icon(Heroicon::OutlinedBanknotes)
+                ->requiresConfirmation()
+                ->visible(fn (Payment $record) => auth()->user()?->can('payments.manage')
+                    && $record->gateway === 'bank_transfer'
+                    && $record->status === PaymentStatus::Pending)
+                ->action(function (Payment $record) {
+                    app(ConfirmBankTransferPaymentAction::class)->handle($record, auth()->user());
+                    Notification::make()->title('Bank transfer confirmed — order marked paid')->success()->send();
+                }),
             Action::make('refund')
                 ->color('danger')
                 ->icon(Heroicon::OutlinedArrowUturnLeft)

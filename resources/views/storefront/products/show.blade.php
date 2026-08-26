@@ -1,9 +1,9 @@
 @extends('layouts.storefront')
 
-@section('title', $product->seo_title ?: $product->name)
+@section('title', $product->seo_title ?: $product->translatedName())
 
 @section('meta_description')
-    {{ $product->seo_description ?: $product->short_description }}
+    {{ $product->seo_description ?: $product->translatedShortDescription() }}
 @endsection
 
 @php
@@ -23,14 +23,14 @@
             <a href="{{ route('categories.show', $product->primaryCategory()) }}" class="hover:text-gray-700">{{ $product->primaryCategory()->name }}</a>
         @endif
         <span class="mx-1">/</span>
-        <span class="text-gray-700">{{ $product->name }}</span>
+        <span class="text-gray-700">{{ $product->translatedName() }}</span>
     </nav>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
         <div>
             <div class="aspect-square bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center">
                 @if ($images->isNotEmpty())
-                    <img src="{{ $images->first()->getUrl() }}" alt="{{ $product->name }}" class="h-full w-full object-cover">
+                    <img src="{{ $images->first()->getUrl() }}" alt="{{ $product->translatedName() }}" class="h-full w-full object-cover">
                 @else
                     <span class="text-gray-300 text-5xl"><i class="fa-solid fa-image" aria-hidden="true"></i></span>
                 @endif
@@ -40,7 +40,7 @@
                 <div class="mt-3 grid grid-cols-5 gap-2">
                     @foreach ($images as $image)
                         <div class="aspect-square bg-gray-100 rounded overflow-hidden">
-                            <img src="{{ $image->getUrl('thumb') ?: $image->getUrl() }}" alt="{{ $product->name }}" class="h-full w-full object-cover">
+                            <img src="{{ $image->getUrl('thumb') ?: $image->getUrl() }}" alt="{{ $product->translatedName() }}" class="h-full w-full object-cover">
                         </div>
                     @endforeach
                 </div>
@@ -51,7 +51,7 @@
             @if ($product->brand)
                 <p class="text-sm text-gray-500">{{ $product->brand->name }}</p>
             @endif
-            <h1 class="text-2xl font-bold text-gray-900">{{ $product->name }}</h1>
+            <h1 class="text-2xl font-bold text-gray-900">{{ $product->translatedName() }}</h1>
 
             @php $averageRating = $product->averageRating(); @endphp
             <a href="#reviews" class="mt-1 inline-flex items-center gap-1 text-sm text-gray-600 hover:text-brand-orange">
@@ -79,8 +79,8 @@
                 @endif
             </div>
 
-            @if ($product->short_description)
-                <p class="mt-4 text-gray-700">{{ $product->short_description }}</p>
+            @if ($product->translatedShortDescription())
+                <p class="mt-4 text-gray-700">{{ $product->translatedShortDescription() }}</p>
             @endif
 
             @if ($product->vendor?->store)
@@ -179,10 +179,10 @@
         </div>
     </div>
 
-    @if ($product->description)
+    @if ($product->translatedDescription())
         <div class="mt-12 border-t border-gray-200 pt-8">
             <h2 class="text-lg font-semibold text-gray-900">Description</h2>
-            <div class="mt-3 text-sm text-gray-700 whitespace-pre-line">{{ $product->description }}</div>
+            <div class="mt-3 text-sm text-gray-700 whitespace-pre-line">{{ $product->translatedDescription() }}</div>
         </div>
     @endif
 

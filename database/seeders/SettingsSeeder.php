@@ -23,6 +23,9 @@ class SettingsSeeder extends Seeder
             ['key' => 'products.approval_mode', 'value' => 'manual', 'type' => 'string', 'group' => 'products'],
             ['key' => 'finance.minimum_withdrawal', 'value' => '5000', 'type' => 'integer', 'group' => 'finance'],
             ['key' => 'storefront.announcement_text', 'value' => 'Free delivery on orders ₦15,000+ in Lagos.', 'type' => 'string', 'group' => 'storefront'],
+            ['key' => 'payment.bank_transfer.bank_name', 'value' => 'MoniePoint', 'type' => 'string', 'group' => 'payment'],
+            ['key' => 'payment.bank_transfer.account_name', 'value' => 'OneMarket Global Services', 'type' => 'string', 'group' => 'payment'],
+            ['key' => 'payment.bank_transfer.account_number', 'value' => '1234567890', 'type' => 'string', 'group' => 'payment'],
         ];
 
         foreach ($settings as $data) {

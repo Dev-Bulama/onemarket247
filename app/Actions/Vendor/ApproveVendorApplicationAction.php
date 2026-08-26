@@ -16,6 +16,7 @@ use App\Models\VendorApplication;
 use App\Models\VendorDocument;
 use App\Models\VendorSubscription;
 use App\Models\VendorSubscriptionPlan;
+use App\Notifications\VendorApplicationApprovedNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
@@ -123,17 +124,26 @@ class ApproveVendorApplicationAction
     }
 
     /**
-     * Sending the "set your password" email deliberately happens after the
+     * Sending the approval email deliberately happens after the
      * transaction commits and can never roll it back: approving a vendor
      * (creating their User/Vendor/Store/Subscription) must succeed even if
      * the mail transport is down or misconfigured — that's an operational
      * problem to fix separately, not a reason to silently undo a real
      * approval and 500 the admin who clicked the button.
+     *
+     * A plain Password::broker()->sendResetLink() would fire Laravel's
+     * stock "click here to reset your password" email, which never
+     * mentions the application was approved or that a store now exists —
+     * confusing for someone who never asked for a password reset. Instead
+     * we mint the same broker token ourselves and hand it to a notification
+     * that actually explains what happened.
      */
     private function sendCredentialsEmail(Vendor $vendor): Vendor
     {
         try {
-            Password::broker('vendors')->sendResetLink(['email' => $vendor->user->email]);
+            $user = $vendor->user;
+            $token = Password::broker('vendors')->createToken($user);
+            $user->notify(new VendorApplicationApprovedNotification($vendor, $token));
         } catch (Throwable $exception) {
             report($exception);
         }

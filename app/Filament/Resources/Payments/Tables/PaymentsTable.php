@@ -2,9 +2,14 @@
 
 namespace App\Filament\Resources\Payments\Tables;
 
+use App\Actions\Payment\ConfirmBankTransferPaymentAction;
 use App\Enums\PaymentStatus;
+use App\Models\Payment;
 use App\Support\PriceDisplay;
+use Filament\Actions\Action;
 use Filament\Actions\ViewAction;
+use Filament\Notifications\Notification;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -40,6 +45,18 @@ class PaymentsTable
             ])
             ->recordActions([
                 ViewAction::make(),
+                Action::make('confirmBankTransfer')
+                    ->label('Confirm bank transfer')
+                    ->icon(Heroicon::OutlinedBanknotes)
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->visible(fn (Payment $record) => auth()->user()?->can('payments.manage')
+                        && $record->gateway === 'bank_transfer'
+                        && $record->status === PaymentStatus::Pending)
+                    ->action(function (Payment $record) {
+                        app(ConfirmBankTransferPaymentAction::class)->handle($record, auth()->user());
+                        Notification::make()->title('Bank transfer confirmed — order marked paid')->success()->send();
+                    }),
             ]);
     }
 }

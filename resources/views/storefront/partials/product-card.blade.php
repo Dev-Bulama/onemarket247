@@ -30,7 +30,7 @@
     <a href="{{ route('products.show', $product) }}" class="block">
         <div class="aspect-square bg-gray-100 flex items-center justify-center overflow-hidden">
             @if ($thumb)
-                <img src="{{ $thumb }}" alt="{{ $product->name }}" class="h-full w-full object-cover group-hover:scale-105 transition-transform" loading="lazy">
+                <img src="{{ $thumb }}" alt="{{ $product->translatedName() }}" class="h-full w-full object-cover group-hover:scale-105 transition-transform" loading="lazy">
             @else
                 <span class="text-gray-300 text-3xl"><i class="fa-solid fa-image" aria-hidden="true"></i></span>
             @endif
@@ -39,7 +39,7 @@
             @if ($product->brand)
                 <p class="text-xs text-gray-500">{{ $product->brand->name }}</p>
             @endif
-            <h3 class="text-sm font-medium text-gray-900 line-clamp-2">{{ $product->name }}</h3>
+            <h3 class="text-sm font-medium text-gray-900 line-clamp-2">{{ $product->translatedName() }}</h3>
 
             @if ($rating !== null)
                 <div class="mt-1 flex items-center gap-1">

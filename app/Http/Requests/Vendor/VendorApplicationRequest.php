@@ -25,6 +25,12 @@ class VendorApplicationRequest extends FormRequest
             'registration_number' => ['nullable', 'string', 'max:100'],
             'tax_identification_number' => ['nullable', 'string', 'max:100'],
 
+            // Agent info — filled in when a OneMarket247 field agent assisted
+            // with this application; optional for self-service sign-ups.
+            'agent_id_number' => ['nullable', 'string', 'max:100'],
+            'agent_full_name' => ['nullable', 'string', 'max:255'],
+            'agent_phone' => ['nullable', 'string', 'max:30'],
+
             // Step 2 — store
             'store_name' => ['required', 'string', 'max:255'],
             'store_category' => ['nullable', 'string', 'max:100'],

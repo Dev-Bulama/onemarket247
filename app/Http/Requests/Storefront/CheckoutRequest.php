@@ -25,6 +25,7 @@ class CheckoutRequest extends FormRequest
             'state_id' => ['nullable', 'exists:states,id'],
             'city_id' => ['nullable', 'exists:cities,id'],
             'postal_code' => ['nullable', 'string', 'max:20'],
+            'payment_method' => ['nullable', Rule::in(['paystack', 'bank_transfer'])],
         ];
     }
 }

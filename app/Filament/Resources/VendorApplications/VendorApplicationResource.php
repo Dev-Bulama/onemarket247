@@ -6,7 +6,9 @@ use App\Filament\Resources\VendorApplications\Pages\ListVendorApplications;
 use App\Filament\Resources\VendorApplications\Pages\ViewVendorApplication;
 use App\Filament\Resources\VendorApplications\Tables\VendorApplicationsTable;
 use App\Models\VendorApplication;
+use App\Models\VendorDocument;
 use BackedEnum;
+use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
@@ -44,6 +46,13 @@ class VendorApplicationResource extends Resource
                     TextEntry::make('email'),
                     TextEntry::make('phone')->placeholder('—'),
                 ]),
+            Section::make('Agent info')
+                ->columns(3)
+                ->schema([
+                    TextEntry::make('agent_id_number')->label('Agent ID No.')->placeholder('— no agent —'),
+                    TextEntry::make('agent_full_name')->label('Agent full name')->placeholder('—'),
+                    TextEntry::make('agent_phone')->label('Agent phone no.')->placeholder('—'),
+                ]),
             Section::make('Business')
                 ->columns(3)
                 ->schema([
@@ -68,9 +77,19 @@ class VendorApplicationResource extends Resource
                 ]),
             Section::make('Documents')
                 ->schema([
-                    TextEntry::make('documents.type')
-                        ->badge()
-                        ->listWithLineBreaks()
+                    RepeatableEntry::make('documents')
+                        ->label('')
+                        ->schema([
+                            TextEntry::make('type')->badge(),
+                            TextEntry::make('status')->badge(),
+                            TextEntry::make('file_path')
+                                ->label('')
+                                ->formatStateUsing(fn () => 'Open document')
+                                ->icon(Heroicon::OutlinedArrowTopRightOnSquare)
+                                ->url(fn (VendorDocument $record) => route('vendor-documents.download', $record))
+                                ->openUrlInNewTab(),
+                        ])
+                        ->columns(3)
                         ->placeholder('No documents uploaded'),
                 ]),
             Section::make('Review')

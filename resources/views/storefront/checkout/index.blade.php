@@ -71,9 +71,25 @@
                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                 </div>
 
-                <div class="rounded-md bg-gray-50 px-4 py-3 text-sm text-gray-600">
-                    Payment collection isn't live yet — placing your order reserves your items and we'll follow up with
-                    payment instructions by email.
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Payment method</label>
+                    <div class="mt-2 space-y-2">
+                        @if ($paystackAvailable)
+                            <label class="flex items-center gap-2 text-sm text-gray-700">
+                                <input type="radio" name="payment_method" value="paystack" checked
+                                       class="border-gray-300 text-brand-orange focus:ring-brand-orange">
+                                Pay with card (Paystack)
+                            </label>
+                        @endif
+                        <label class="flex items-center gap-2 text-sm text-gray-700">
+                            <input type="radio" name="payment_method" value="bank_transfer" {{ $paystackAvailable ? '' : 'checked' }}
+                                   class="border-gray-300 text-brand-orange focus:ring-brand-orange">
+                            Direct bank transfer
+                        </label>
+                    </div>
+                    @unless ($paystackAvailable)
+                        <p class="mt-2 text-xs text-gray-500">Card payments aren't available yet — please pay by bank transfer for now.</p>
+                    @endunless
                 </div>
 
                 <button type="submit" class="rounded-md bg-brand-orange px-4 py-2 text-white text-sm font-medium hover:bg-brand-orange2">

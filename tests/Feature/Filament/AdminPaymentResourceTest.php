@@ -113,3 +113,38 @@ test('an admin without refunds.manage does not see the refund action even on a p
         ->test(ViewPayment::class, ['record' => $payment->getRouteKey()])
         ->assertActionHidden('refund');
 });
+
+test('finance staff can confirm a pending bank transfer payment from its view page', function () {
+    $admin = financeStaffAdmin();
+    $order = Order::factory()->create();
+    $payment = Payment::factory()->create(['order_id' => $order->id, 'status' => PaymentStatus::Pending, 'gateway' => 'bank_transfer']);
+
+    Livewire::actingAs($admin, 'admin')
+        ->test(ViewPayment::class, ['record' => $payment->getRouteKey()])
+        ->callAction('confirmBankTransfer');
+
+    expect($payment->fresh()->status)->toBe(PaymentStatus::Paid);
+});
+
+test('the confirm bank transfer action is hidden for a paystack payment', function () {
+    $admin = financeStaffAdmin();
+    $order = Order::factory()->create();
+    $payment = Payment::factory()->create(['order_id' => $order->id, 'status' => PaymentStatus::Pending, 'gateway' => 'paystack']);
+
+    Livewire::actingAs($admin, 'admin')
+        ->test(ViewPayment::class, ['record' => $payment->getRouteKey()])
+        ->assertActionHidden('confirmBankTransfer');
+});
+
+test('an admin without payments.manage does not see the confirm bank transfer action', function () {
+    $staff = User::factory()->admin()->create();
+    $staff->assignRole(Role::where('name', 'Support Staff')->where('guard_name', 'admin')->first());
+    $staff->givePermissionTo(Permission::findOrCreate('payments.view', 'admin'));
+
+    $order = Order::factory()->create();
+    $payment = Payment::factory()->create(['order_id' => $order->id, 'status' => PaymentStatus::Pending, 'gateway' => 'bank_transfer']);
+
+    Livewire::actingAs($staff, 'admin')
+        ->test(ViewPayment::class, ['record' => $payment->getRouteKey()])
+        ->assertActionHidden('confirmBankTransfer');
+});

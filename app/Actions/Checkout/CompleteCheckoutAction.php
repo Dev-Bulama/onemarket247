@@ -23,6 +23,7 @@ use App\Models\Product;
 use App\Models\ProductVariation;
 use App\Models\WarehouseStock;
 use App\Services\Order\OrderStatusAggregator;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -118,7 +119,7 @@ class CompleteCheckoutAction
             $totalTax = $itemTaxes->sum('taxAmount');
 
             $order = Order::create([
-                ...$shippingData,
+                ...Arr::except($shippingData, ['payment_method']),
                 'currency_id' => $currency->id,
                 'exchange_rate_snapshot' => (float) ($currency->exchangeRate?->rate ?? 1),
                 'subtotal' => $cart->subtotal(),
@@ -188,6 +189,7 @@ class CompleteCheckoutAction
             $order->payments()->create([
                 'status' => PaymentStatus::Pending,
                 'amount' => $order->total,
+                'gateway' => ($shippingData['payment_method'] ?? null) === 'bank_transfer' ? 'bank_transfer' : null,
             ]);
 
             $order->invoice()->create([

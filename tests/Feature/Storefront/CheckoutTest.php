@@ -70,6 +70,42 @@ test('guest can complete checkout end to end and see the confirmation page', fun
         ->assertSee('Jane Guest');
 });
 
+test('choosing bank transfer at checkout creates a payment flagged for manual confirmation', function () {
+    Currency::factory()->create(['is_default' => true]);
+    $country = Country::factory()->create();
+    seedFreeShippingForStorefrontTest($country);
+    $product = Product::factory()->create(['price' => 1000, 'manage_stock' => true, 'stock_status' => StockStatus::InStock]);
+    $warehouse = Warehouse::factory()->create(['vendor_id' => $product->vendor_id]);
+    app(AdjustStockAction::class)->handle($warehouse, $product, 10, 'seed');
+
+    $addResponse = $this->post(route('cart.items.store'), ['product_id' => $product->id, 'quantity' => 1]);
+    $token = $addResponse->getCookie('cart_token')->getValue();
+
+    $this->withCookie('cart_token', $token)->get(route('checkout.index'))->assertOk();
+    $session = CheckoutSession::first();
+
+    $storeResponse = $this->withCookie('cart_token', $token)->post(route('checkout.store'), [
+        'checkout_session_key' => $session->idempotency_key,
+        'email' => 'bankguest@example.com',
+        'full_name' => 'Bank Guest',
+        'address_line_1' => '1 Bank St',
+        'country_id' => $country->id,
+        'payment_method' => 'bank_transfer',
+    ]);
+
+    $storeResponse->assertRedirect();
+    $order = Order::first();
+    $payment = $order->payments()->first();
+
+    expect($payment->gateway)->toBe('bank_transfer');
+
+    $this->withCookie('cart_token', $token)
+        ->get($storeResponse->headers->get('Location'))
+        ->assertOk()
+        ->assertSee('bank transfer')
+        ->assertSee($order->order_number);
+});
+
 test('a registered customer checkout attaches to their account and is protected from other customers', function () {
     Currency::factory()->create(['is_default' => true]);
     $country = Country::factory()->create();

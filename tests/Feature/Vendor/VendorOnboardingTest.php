@@ -61,6 +61,29 @@ test('automatic approval mode provisions the vendor immediately', function () {
         ->and($application->vendor->user->email)->toBe('auto@example.com');
 });
 
+test('agent info is optional but is stored when provided', function () {
+    submitVendorApplication([
+        'email' => 'withagent@example.com',
+        'agent_id_number' => 'AGT-001',
+        'agent_full_name' => 'Kunle Agent',
+        'agent_phone' => '+2348012345678',
+    ]);
+
+    $application = VendorApplication::where('email', 'withagent@example.com')->firstOrFail();
+    expect($application->agent_id_number)->toBe('AGT-001')
+        ->and($application->agent_full_name)->toBe('Kunle Agent')
+        ->and($application->agent_phone)->toBe('+2348012345678');
+});
+
+test('an application submitted without agent info still succeeds', function () {
+    submitVendorApplication(['email' => 'noagent@example.com']);
+
+    $application = VendorApplication::where('email', 'noagent@example.com')->firstOrFail();
+    expect($application->agent_id_number)->toBeNull()
+        ->and($application->agent_full_name)->toBeNull()
+        ->and($application->agent_phone)->toBeNull();
+});
+
 test('an application without accepting terms is rejected with a validation error', function () {
     $response = submitVendorApplication(['terms' => null]);
 

@@ -69,6 +69,27 @@
                     <input type="text" name="tax_identification_number" value="{{ old('tax_identification_number') }}"
                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                 </div>
+
+                <div class="pt-4 border-t border-gray-200">
+                    <h3 class="text-sm font-semibold text-gray-900">Agent info</h3>
+                    <p class="text-xs text-gray-500">Only fill this in if a OneMarket247 field agent is assisting with this application.</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Agent ID No.</label>
+                    <input type="text" name="agent_id_number" value="{{ old('agent_id_number') }}"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Agent full name</label>
+                    <input type="text" name="agent_full_name" value="{{ old('agent_full_name') }}"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Agent phone no.</label>
+                    <input type="text" name="agent_phone" value="{{ old('agent_phone') }}"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+
                 <button type="button" class="step-next rounded-md bg-brand-orange px-4 py-2 text-white font-medium hover:bg-brand-orange2" data-next="2">Next: Store</button>
             </section>
 

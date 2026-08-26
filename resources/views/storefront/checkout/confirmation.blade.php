@@ -29,6 +29,29 @@
                         </button>
                     </form>
                 </div>
+            @elseif ($payment?->gateway === 'bank_transfer')
+                <div class="mt-4 rounded-md bg-amber-50 px-4 py-4 text-sm text-amber-900">
+                    <p class="font-medium">Your items are reserved. Complete payment by bank transfer to confirm your order.</p>
+                    <dl class="mt-3 space-y-1">
+                        <div class="flex justify-between gap-4">
+                            <dt class="text-amber-700">Bank</dt>
+                            <dd class="font-medium">{{ $bankTransferDetails['bank_name'] ?? '—' }}</dd>
+                        </div>
+                        <div class="flex justify-between gap-4">
+                            <dt class="text-amber-700">Account name</dt>
+                            <dd class="font-medium">{{ $bankTransferDetails['account_name'] ?? '—' }}</dd>
+                        </div>
+                        <div class="flex justify-between gap-4">
+                            <dt class="text-amber-700">Account number</dt>
+                            <dd class="font-medium">{{ $bankTransferDetails['account_number'] ?? '—' }}</dd>
+                        </div>
+                        <div class="flex justify-between gap-4">
+                            <dt class="text-amber-700">Amount</dt>
+                            <dd class="font-medium">@price($order->total)</dd>
+                        </div>
+                    </dl>
+                    <p class="mt-3">Please use <span class="font-medium">{{ $order->order_number }}</span> as your transfer reference/narration, then contact us with your payment proof. Your order will be confirmed once we verify the transfer.</p>
+                </div>
             @elseif ($payment)
                 <div class="mt-4 rounded-md bg-gray-50 px-4 py-3 text-sm text-gray-600">
                     <p>Your items are reserved. Complete payment to confirm your order.</p>

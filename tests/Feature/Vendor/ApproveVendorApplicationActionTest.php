@@ -9,11 +9,11 @@ use App\Models\User;
 use App\Models\Vendor;
 use App\Models\VendorApplication;
 use App\Models\VendorDocument;
+use App\Notifications\VendorApplicationApprovedNotification;
 use App\Notifications\VendorApplicationRejectedNotification;
 use Database\Seeders\RolePermissionSeeder;
 use Database\Seeders\VendorSubscriptionPlanSeeder;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\Password;
 
 beforeEach(function () {
     (new RolePermissionSeeder)->run();
@@ -21,8 +21,7 @@ beforeEach(function () {
 });
 
 test('approving an application provisions user, vendor, store, subscription, and role', function () {
-    Password::shouldReceive('broker')->andReturnSelf();
-    Password::shouldReceive('sendResetLink')->once();
+    Notification::fake();
 
     $application = VendorApplication::factory()->create();
     VendorDocument::factory()->forApplication($application)->create();
@@ -46,11 +45,12 @@ test('approving an application provisions user, vendor, store, subscription, and
 
     $document = VendorDocument::first();
     expect($document->vendor_id)->toBe($vendor->id);
+
+    Notification::assertSentTo($vendor->user, VendorApplicationApprovedNotification::class);
 });
 
 test('approving an application whose store slug collides gets a unique slug', function () {
-    Password::shouldReceive('broker')->andReturnSelf();
-    Password::shouldReceive('sendResetLink')->once();
+    Notification::fake();
 
     $existingVendor = Vendor::factory()->create();
     Store::factory()->for($existingVendor)->create(['slug' => 'taken-slug']);

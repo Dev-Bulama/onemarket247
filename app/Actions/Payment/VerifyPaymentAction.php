@@ -2,12 +2,8 @@
 
 namespace App\Actions\Payment;
 
-use App\Actions\Inventory\DeductStockAction;
-use App\Actions\Order\UpdateVendorOrderStatusAction;
-use App\Actions\Wallet\CreditVendorWalletAction;
 use App\Enums\PaymentLogDirection;
 use App\Enums\PaymentStatus;
-use App\Enums\VendorOrderStatus;
 use App\Exceptions\PaymentGatewayException;
 use App\Models\Payment;
 use App\Models\PaymentLog;
@@ -28,7 +24,7 @@ class VerifyPaymentAction
 {
     public function __construct(
         private readonly PaystackGateway $gateway,
-        private readonly UpdateVendorOrderStatusAction $updateVendorOrderStatus,
+        private readonly MarkPaymentPaidAction $markPaymentPaid,
     ) {}
 
     public function handle(Payment $payment): Payment
@@ -65,41 +61,12 @@ class VerifyPaymentAction
             // trusted from the gateway response — the mitigation for
             // payment/price manipulation named in the security doc.
             if ($result->successful && $result->amount === $payment->amount) {
-                $payment->update(['status' => PaymentStatus::Paid, 'paid_at' => $result->paidAt ?? now(), 'meta' => $result->raw]);
-                $this->confirmVendorOrders($payment);
-                $this->deductReservedStock($payment);
-                $this->creditVendorWallets($payment);
+                $this->markPaymentPaid->handle($payment, $result->paidAt, $result->raw);
             } else {
                 $payment->update(['status' => PaymentStatus::Failed, 'failed_at' => now(), 'meta' => $result->raw]);
             }
 
             return $payment->fresh();
         });
-    }
-
-    private function confirmVendorOrders(Payment $payment): void
-    {
-        $payment->order->vendorOrders()
-            ->where('status', VendorOrderStatus::PendingPayment)
-            ->get()
-            ->each(fn ($vendorOrder) => $this->updateVendorOrderStatus->handle($vendorOrder, VendorOrderStatus::Confirmed, 'Payment confirmed.'));
-    }
-
-    private function deductReservedStock(Payment $payment): void
-    {
-        $payment->order->vendorOrders
-            ->flatMap(fn ($vendorOrder) => $vendorOrder->orderItems)
-            ->each(function ($item) {
-                if ($item->warehouse_id === null) {
-                    return;
-                }
-
-                app(DeductStockAction::class)->handle($item->warehouse, $item->sellable(), $item->quantity, null, $item->vendorOrder);
-            });
-    }
-
-    private function creditVendorWallets(Payment $payment): void
-    {
-        $payment->order->vendorOrders->each(fn ($vendorOrder) => app(CreditVendorWalletAction::class)->handle($vendorOrder));
     }
 }

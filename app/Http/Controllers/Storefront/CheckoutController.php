@@ -12,6 +12,8 @@ use App\Models\CheckoutSession;
 use App\Models\City;
 use App\Models\Country;
 use App\Models\Order;
+use App\Models\PaymentGateway;
+use App\Models\Setting;
 use App\Models\State;
 use App\Support\Cart\CartResolver;
 use Illuminate\Http\RedirectResponse;
@@ -42,6 +44,8 @@ class CheckoutController extends Controller
             'countries' => Country::where('is_active', true)->orderBy('name')->get(),
             'states' => State::where('is_active', true)->orderBy('name')->get(['id', 'country_id', 'name']),
             'cities' => City::where('is_active', true)->orderBy('name')->get(['id', 'state_id', 'name']),
+            'paystackAvailable' => PaymentGateway::where('code', 'paystack')->where('is_active', true)->exists(),
+            'bankTransferDetails' => $this->bankTransferDetails(),
         ]);
     }
 
@@ -73,6 +77,7 @@ class CheckoutController extends Controller
             'shipping_state_id' => $request->filled('state_id') ? $request->integer('state_id') : null,
             'shipping_city_id' => $request->filled('city_id') ? $request->integer('city_id') : null,
             'shipping_postal_code' => $request->string('postal_code')->value() ?: null,
+            'payment_method' => $request->string('payment_method')->value() ?: null,
         ];
 
         try {
@@ -93,6 +98,19 @@ class CheckoutController extends Controller
         return view('storefront.checkout.confirmation', [
             'order' => $order,
             'payment' => $order->payments->sortByDesc('id')->first(),
+            'bankTransferDetails' => $this->bankTransferDetails(),
         ]);
+    }
+
+    /**
+     * @return array{bank_name: ?string, account_name: ?string, account_number: ?string}
+     */
+    private function bankTransferDetails(): array
+    {
+        return [
+            'bank_name' => Setting::where('key', 'payment.bank_transfer.bank_name')->value('value'),
+            'account_name' => Setting::where('key', 'payment.bank_transfer.account_name')->value('value'),
+            'account_number' => Setting::where('key', 'payment.bank_transfer.account_number')->value('value'),
+        ];
     }
 }
