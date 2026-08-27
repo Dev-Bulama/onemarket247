@@ -89,25 +89,45 @@ authenticated — the app persists it locally and replays it as
 `cart_token` (query param or body field) on every subsequent cart call.
 See `App\Support\Cart\CartResolver`'s docblock.
 
+## 4b. Checkout
+
+```
+POST /api/v1/checkout/init                        ✅ (revalidates cart, mints/reuses idempotency key)
+POST /api/v1/checkout/complete                     ✅
+GET  /api/v1/checkout/{checkout_session_key}/status ✅
+```
+Open to guests and Sanctum customers alike, same as cart. `complete`
+reuses `CompleteCheckoutAction` — the exact same code path
+`Storefront\CheckoutController` runs, so an order created from the app is
+never a different shape than one created on the web.
+
 ## 5. Orders
 
 ```
-GET  /api/v1/orders
-GET  /api/v1/orders/{order}
+GET  /api/v1/orders                ✅ (auth:sanctum required — a guest has no account to list)
+GET  /api/v1/orders/{order}        ✅ (public_id UUID is the credential for a guest order, no auth needed)
 GET  /api/v1/orders/{order}/invoice
-GET  /api/v1/orders/{order}/track
-POST /api/v1/orders/{order}/cancel
+GET  /api/v1/orders/{order}/track  ✅
+POST /api/v1/orders/{order}/cancel ✅
 POST /api/v1/orders/{order}/reorder
 ```
+`/invoice` and `/reorder` are deferred — invoice is a PDF stream
+(`InvoiceDownloadController`), a different response shape than the rest of
+this API and lower priority than a working order history; reorder has no
+existing business logic anywhere to reuse (no such feature exists on web
+either), so building it now would mean inventing new checkout behaviour
+rather than exposing something that already works.
 
 ## 6. Payments
 
 ```
-GET  /api/v1/payments/methods
-POST /api/v1/payments/{order}/initialize
-POST /api/v1/payments/{order}/verify
-POST /api/v1/webhooks/payments/{gateway}   (unauthenticated, signature-verified)
+POST /api/v1/payments/{order}/initialize  ✅ (returns authorization_url as data — a mobile SDK opens it itself, no redirect())
+POST /api/v1/payments/{order}/verify      ✅ (same server-to-server VerifyPaymentAction the web callback triggers)
+POST /api/v1/webhooks/payments/{gateway}  ✅ (unauthenticated, signature-verified — already existed)
 ```
+`GET /payments/methods` was dropped — `GET /config`'s `payment_methods`
+already answers this; a second endpoint for the same fact would be a
+second place for it to drift out of sync.
 
 ## 7. Wishlist / Compare / Reviews / Questions
 

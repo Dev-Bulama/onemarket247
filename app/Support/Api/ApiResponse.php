@@ -2,6 +2,11 @@
 
 namespace App\Support\Api;
 
+use App\Exceptions\CheckoutValidationException;
+use App\Exceptions\InsufficientStockException;
+use App\Exceptions\InvalidOrderTransitionException;
+use App\Exceptions\PaymentGatewayException;
+use App\Exceptions\ShippingUnavailableException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -70,6 +75,19 @@ class ApiResponse
                 [],
                 'RATE_LIMITED',
                 Response::HTTP_TOO_MANY_REQUESTS,
+            ),
+            // Domain-rule violations thrown by checkout/payment/order
+            // Actions — legitimate 422s a client should show to the user
+            // verbatim, never the generic 500 fallback below.
+            $e instanceof CheckoutValidationException,
+            $e instanceof InsufficientStockException,
+            $e instanceof ShippingUnavailableException,
+            $e instanceof PaymentGatewayException,
+            $e instanceof InvalidOrderTransitionException => self::error(
+                $e->getMessage(),
+                [],
+                'DOMAIN_ERROR',
+                Response::HTTP_UNPROCESSABLE_ENTITY,
             ),
             $e instanceof HttpExceptionInterface => self::error(
                 $e->getMessage() ?: 'An error occurred.',

@@ -6,8 +6,11 @@ use App\Http\Controllers\Api\V1\CartController;
 use App\Http\Controllers\Api\V1\CartCouponController;
 use App\Http\Controllers\Api\V1\CartItemController;
 use App\Http\Controllers\Api\V1\CategoryController;
+use App\Http\Controllers\Api\V1\CheckoutController;
 use App\Http\Controllers\Api\V1\ConfigController;
 use App\Http\Controllers\Api\V1\HomeController;
+use App\Http\Controllers\Api\V1\OrderController;
+use App\Http\Controllers\Api\V1\PaymentController;
 use App\Http\Controllers\Api\V1\PaymentWebhookController;
 use App\Http\Controllers\Api\V1\ProductController;
 use App\Http\Controllers\Api\V1\ReferenceDataController;
@@ -76,5 +79,29 @@ Route::prefix('v1')->group(function () {
 
         Route::post('coupons', [CartCouponController::class, 'store']);
         Route::delete('coupons', [CartCouponController::class, 'destroy']);
+    });
+
+    // Checkout — open to guests and Sanctum-authenticated customers alike,
+    // same as cart above.
+    Route::middleware('throttle:60,1')->prefix('checkout')->group(function () {
+        Route::post('init', [CheckoutController::class, 'init']);
+        Route::post('complete', [CheckoutController::class, 'complete']);
+        Route::get('{checkoutSessionKey}/status', [CheckoutController::class, 'status']);
+    });
+
+    // Orders — {order} binds by public_id (Order::getRouteKeyName()), the
+    // same unguessable UUID a guest order's link already relies on for
+    // authorization (see OrderController::show's docblock); only the
+    // index (a real customer's order history) requires auth:sanctum.
+    Route::middleware('throttle:60,1')->prefix('orders')->group(function () {
+        Route::middleware('auth:sanctum')->get('/', [OrderController::class, 'index']);
+        Route::get('{order}', [OrderController::class, 'show']);
+        Route::get('{order}/track', [OrderController::class, 'track']);
+        Route::post('{order}/cancel', [OrderController::class, 'cancel']);
+    });
+
+    Route::middleware('throttle:30,1')->prefix('payments')->group(function () {
+        Route::post('{order}/initialize', [PaymentController::class, 'initialize']);
+        Route::post('{order}/verify', [PaymentController::class, 'verify']);
     });
 });
