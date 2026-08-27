@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AddressController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BrandController;
 use App\Http\Controllers\Api\V1\CartController;
@@ -7,15 +8,20 @@ use App\Http\Controllers\Api\V1\CartCouponController;
 use App\Http\Controllers\Api\V1\CartItemController;
 use App\Http\Controllers\Api\V1\CategoryController;
 use App\Http\Controllers\Api\V1\CheckoutController;
+use App\Http\Controllers\Api\V1\CompareController;
 use App\Http\Controllers\Api\V1\ConfigController;
 use App\Http\Controllers\Api\V1\HomeController;
 use App\Http\Controllers\Api\V1\OrderController;
 use App\Http\Controllers\Api\V1\PaymentController;
 use App\Http\Controllers\Api\V1\PaymentWebhookController;
 use App\Http\Controllers\Api\V1\ProductController;
+use App\Http\Controllers\Api\V1\ProfileController;
+use App\Http\Controllers\Api\V1\QuestionController;
 use App\Http\Controllers\Api\V1\ReferenceDataController;
+use App\Http\Controllers\Api\V1\ReviewController;
 use App\Http\Controllers\Api\V1\SearchController;
 use App\Http\Controllers\Api\V1\StoreController;
+use App\Http\Controllers\Api\V1\WishlistController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -64,6 +70,9 @@ Route::prefix('v1')->group(function () {
         Route::get('stores/{slug}/products', [StoreController::class, 'products']);
 
         Route::get('search', SearchController::class);
+
+        Route::get('products/{product:slug}/reviews', [ReviewController::class, 'index']);
+        Route::get('products/{product:slug}/questions', [QuestionController::class, 'index']);
     });
 
     // Cart — open to guests (identified by a client-persisted cart_token,
@@ -103,5 +112,36 @@ Route::prefix('v1')->group(function () {
     Route::middleware('throttle:30,1')->prefix('payments')->group(function () {
         Route::post('{order}/initialize', [PaymentController::class, 'initialize']);
         Route::post('{order}/verify', [PaymentController::class, 'verify']);
+    });
+
+    // Account features — all require a real account, unlike cart/checkout;
+    // gating the whole group behind auth:sanctum means every controller
+    // here can use $request->user() / Gate::authorize() exactly like their
+    // web equivalents (the middleware makes "sanctum" the default guard
+    // for the rest of the request) instead of the explicit-guard dance
+    // cart/checkout need to stay guest-accessible.
+    Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
+        Route::get('wishlist', [WishlistController::class, 'index']);
+        Route::post('wishlist/{product}', [WishlistController::class, 'store']);
+        Route::delete('wishlist/{product}', [WishlistController::class, 'destroy']);
+
+        Route::get('compare', [CompareController::class, 'index']);
+        Route::post('compare/{product}', [CompareController::class, 'store']);
+        Route::delete('compare/{product}', [CompareController::class, 'destroy']);
+
+        Route::get('addresses', [AddressController::class, 'index']);
+        Route::post('addresses', [AddressController::class, 'store']);
+        Route::patch('addresses/{address}', [AddressController::class, 'update']);
+        Route::delete('addresses/{address}', [AddressController::class, 'destroy']);
+
+        Route::get('profile', [ProfileController::class, 'show']);
+        Route::patch('profile', [ProfileController::class, 'update']);
+        Route::post('profile/password', [ProfileController::class, 'updatePassword']);
+
+        Route::post('products/{product:slug}/reviews', [ReviewController::class, 'store']);
+        Route::post('reviews/{review}/helpful', [ReviewController::class, 'markHelpful']);
+
+        Route::post('products/{product:slug}/questions', [QuestionController::class, 'store']);
+        Route::post('questions/{question}/answers', [QuestionController::class, 'answer']);
     });
 });

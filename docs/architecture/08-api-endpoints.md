@@ -132,12 +132,12 @@ second place for it to drift out of sync.
 ## 7. Wishlist / Compare / Reviews / Questions
 
 ```
-GET/POST/DELETE /api/v1/wishlist
-GET/POST/DELETE /api/v1/compare
-GET/POST        /api/v1/products/{slug}/reviews
-POST            /api/v1/reviews/{id}/helpful
-GET/POST        /api/v1/products/{slug}/questions
-POST            /api/v1/questions/{id}/answers
+GET/POST/DELETE /api/v1/wishlist                    ✅
+GET/POST/DELETE /api/v1/compare                     ✅
+GET/POST        /api/v1/products/{slug}/reviews     ✅ (GET public; POST requires auth)
+POST            /api/v1/reviews/{id}/helpful        ✅
+GET/POST        /api/v1/products/{slug}/questions   ✅ (GET public; POST requires auth)
+POST            /api/v1/questions/{id}/answers      ✅ (any Sanctum user — ProductQuestionPolicy::answer decides if they may, same as web: the product's own vendor/staff, or an admin)
 ```
 
 ## 8. Returns / Refunds / Disputes
@@ -179,11 +179,18 @@ POST  /api/v1/support/{ticket}/attachments
 ## 11. Profile / Addresses
 
 ```
-GET/PATCH       /api/v1/profile
-POST            /api/v1/profile/password
-GET/POST        /api/v1/addresses
-PATCH/DELETE    /api/v1/addresses/{id}
+GET/PATCH       /api/v1/profile           ✅
+POST            /api/v1/profile/password  ✅
+GET/POST        /api/v1/addresses         ✅
+PATCH/DELETE    /api/v1/addresses/{id}    ✅
 ```
+This whole section — plus wishlist/compare/reviews/questions writes above
+— requires `auth:sanctum`, unlike cart/checkout which stay guest-
+accessible. Gating the route group (rather than resolving the user
+per-controller like Cart/Checkout do) means every controller here reads
+`$request->user()` / uses `Gate::authorize()` exactly like its web
+equivalent, since the middleware makes "sanctum" the default guard for
+the rest of that request.
 
 ## 12. Vendor API (guard: vendor, prefix `/api/v1/vendor`)
 
