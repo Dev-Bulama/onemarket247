@@ -69,18 +69,25 @@ real public-facing entity, "vendor" isn't a separate storefront concept.
 ## 4. Cart & Checkout
 
 ```
-GET    /api/v1/cart
-POST   /api/v1/cart/items
-PATCH  /api/v1/cart/items/{id}
-DELETE /api/v1/cart/items/{id}
-POST   /api/v1/cart/coupons
-DELETE /api/v1/cart/coupons/{code}
-POST   /api/v1/cart/merge            (guest → authenticated merge)
+GET    /api/v1/cart                  ✅
+POST   /api/v1/cart/items            ✅
+PATCH  /api/v1/cart/items/{id}       ✅
+DELETE /api/v1/cart/items/{id}       ✅
+POST   /api/v1/cart/coupons          ✅
+DELETE /api/v1/cart/coupons          ✅ (no {code} — a cart only ever has one coupon, matching CartCoupon's HasOne)
+POST   /api/v1/cart/merge            ✅ (guest → authenticated merge, auth required)
 
 POST   /api/v1/checkout/init         (returns idempotency key + revalidated totals)
 POST   /api/v1/checkout/complete     (Idempotency-Key header required)
 GET    /api/v1/checkout/{session}/status
 ```
+
+Guest cart identity: the web's cart_token cookie doesn't work for a
+bearer-token mobile client (no cookie jar Laravel can rely on there), so
+every cart response includes `guest_token` when the caller isn't
+authenticated — the app persists it locally and replays it as
+`cart_token` (query param or body field) on every subsequent cart call.
+See `App\Support\Cart\CartResolver`'s docblock.
 
 ## 5. Orders
 

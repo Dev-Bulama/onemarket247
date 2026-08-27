@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BrandController;
+use App\Http\Controllers\Api\V1\CartController;
+use App\Http\Controllers\Api\V1\CartCouponController;
+use App\Http\Controllers\Api\V1\CartItemController;
 use App\Http\Controllers\Api\V1\CategoryController;
 use App\Http\Controllers\Api\V1\ConfigController;
 use App\Http\Controllers\Api\V1\HomeController;
@@ -58,5 +61,20 @@ Route::prefix('v1')->group(function () {
         Route::get('stores/{slug}/products', [StoreController::class, 'products']);
 
         Route::get('search', SearchController::class);
+    });
+
+    // Cart — open to guests (identified by a client-persisted cart_token,
+    // never a cookie — see CartResolver's docblock) and to Sanctum-
+    // authenticated customers alike, exactly like the web cart.
+    Route::middleware('throttle:120,1')->prefix('cart')->group(function () {
+        Route::get('/', [CartController::class, 'index']);
+        Route::post('merge', [CartController::class, 'merge']);
+
+        Route::post('items', [CartItemController::class, 'store']);
+        Route::patch('items/{cartItem}', [CartItemController::class, 'update']);
+        Route::delete('items/{cartItem}', [CartItemController::class, 'destroy']);
+
+        Route::post('coupons', [CartCouponController::class, 'store']);
+        Route::delete('coupons', [CartCouponController::class, 'destroy']);
     });
 });
