@@ -192,18 +192,40 @@ per-controller like Cart/Checkout do) means every controller here reads
 equivalent, since the middleware makes "sanctum" the default guard for
 the rest of that request.
 
-## 12. Vendor API (guard: vendor, prefix `/api/v1/vendor`)
+## 12. Vendor API (prefix `/api/v1/vendor`, middleware: `auth:sanctum`, `vendor.access`)
 
 ```
-GET/POST/PATCH  /api/v1/vendor/products
-GET/PATCH       /api/v1/vendor/inventory
-GET             /api/v1/vendor/orders
-PATCH           /api/v1/vendor/orders/{id}/status
-GET             /api/v1/vendor/earnings
-GET/POST        /api/v1/vendor/withdrawals
-GET/PATCH       /api/v1/vendor/store
-GET             /api/v1/vendor/analytics
+GET/PATCH  /api/v1/vendor/products/{id}         ✅ (see note — no POST)
+GET        /api/v1/vendor/products              ✅
+GET/PATCH  /api/v1/vendor/inventory(/{id})       ✅ (PATCH = adjust, via AdjustStockAction)
+GET        /api/v1/vendor/orders                ✅
+GET        /api/v1/vendor/orders/{id}            ✅
+PATCH      /api/v1/vendor/orders/{id}/status     ✅
+POST       /api/v1/vendor/orders/{id}/cancel     ✅ (not in the original spec, added — mirrors the Filament vendor panel's own cancel action)
+GET        /api/v1/vendor/earnings               ✅ (wallet balances)
+GET        /api/v1/vendor/earnings/transactions  ✅ (ledger, not in the original spec — the balances alone aren't enough to show a vendor where money came from)
+GET/POST   /api/v1/vendor/withdrawals            ✅
+POST       /api/v1/vendor/withdrawals/methods    ✅ (add a bank account — not in the original spec; withdrawals can't be requested without one)
+POST       /api/v1/vendor/withdrawals/{id}/cancel ✅
+GET/PATCH  /api/v1/vendor/store                  ✅
+GET        /api/v1/vendor/analytics
 ```
+Guard is `sanctum`, not a separate `vendor` guard — a vendor authenticates
+through the exact same `POST /auth/login` every customer uses (it already
+issues a `vendor:*`-scoped token when `user_type` is
+VendorOwner/VendorStaff). Access is gated by the `vendor.access`
+middleware (`App\Http\Middleware\EnsureVendorAccess`), which mirrors
+`User::canAccessPanel('vendor')` exactly — the same business rule that
+gates the Filament vendor panel, so nobody can reach through the API
+who couldn't already reach through the panel.
+
+Product creation isn't exposed yet: it needs image/variation upload
+handling that has no equivalent already built for a JSON API (the
+Filament form's FileUpload fields expect multipart uploads staged
+through Livewire) — building it half-done (no images) would ship a
+"create product" endpoint vendors can't actually use for a real
+listing. `/analytics` is deferred — there's no existing analytics
+computation anywhere (web included) to expose.
 
 ## 13. Standards Applied Uniformly
 

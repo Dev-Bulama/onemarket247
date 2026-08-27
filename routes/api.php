@@ -21,6 +21,12 @@ use App\Http\Controllers\Api\V1\ReferenceDataController;
 use App\Http\Controllers\Api\V1\ReviewController;
 use App\Http\Controllers\Api\V1\SearchController;
 use App\Http\Controllers\Api\V1\StoreController;
+use App\Http\Controllers\Api\V1\Vendor\EarningsController as VendorEarningsController;
+use App\Http\Controllers\Api\V1\Vendor\InventoryController as VendorInventoryController;
+use App\Http\Controllers\Api\V1\Vendor\ProductController as VendorProductController;
+use App\Http\Controllers\Api\V1\Vendor\StoreController as VendorStoreController;
+use App\Http\Controllers\Api\V1\Vendor\VendorOrderController;
+use App\Http\Controllers\Api\V1\Vendor\WithdrawalController as VendorWithdrawalController;
 use App\Http\Controllers\Api\V1\WishlistController;
 use Illuminate\Support\Facades\Route;
 
@@ -143,5 +149,34 @@ Route::prefix('v1')->group(function () {
 
         Route::post('products/{product:slug}/questions', [QuestionController::class, 'store']);
         Route::post('questions/{question}/answers', [QuestionController::class, 'answer']);
+    });
+
+    // Vendor API — a vendor owner or active store staff managing their own
+    // store from the app. vendor.access mirrors User::canAccessPanel('vendor')
+    // exactly (see EnsureVendorAccess), so anyone who could open the
+    // Filament vendor panel can use this, and no one else.
+    Route::middleware(['auth:sanctum', 'vendor.access', 'throttle:60,1'])->prefix('vendor')->group(function () {
+        Route::get('store', [VendorStoreController::class, 'show']);
+        Route::patch('store', [VendorStoreController::class, 'update']);
+
+        Route::get('products', [VendorProductController::class, 'index']);
+        Route::get('products/{product}', [VendorProductController::class, 'show']);
+        Route::patch('products/{product}', [VendorProductController::class, 'update']);
+
+        Route::get('inventory', [VendorInventoryController::class, 'index']);
+        Route::patch('inventory/{warehouseStock}', [VendorInventoryController::class, 'adjust']);
+
+        Route::get('orders', [VendorOrderController::class, 'index']);
+        Route::get('orders/{vendorOrder}', [VendorOrderController::class, 'show']);
+        Route::patch('orders/{vendorOrder}/status', [VendorOrderController::class, 'updateStatus']);
+        Route::post('orders/{vendorOrder}/cancel', [VendorOrderController::class, 'cancel']);
+
+        Route::get('earnings', [VendorEarningsController::class, 'summary']);
+        Route::get('earnings/transactions', [VendorEarningsController::class, 'transactions']);
+
+        Route::get('withdrawals', [VendorWithdrawalController::class, 'index']);
+        Route::post('withdrawals', [VendorWithdrawalController::class, 'store']);
+        Route::post('withdrawals/methods', [VendorWithdrawalController::class, 'addMethod']);
+        Route::post('withdrawals/{withdrawal}/cancel', [VendorWithdrawalController::class, 'cancel']);
     });
 });

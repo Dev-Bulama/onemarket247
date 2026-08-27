@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureVendorAccess;
 use App\Http\Middleware\SetDeliveryLocation;
 use App\Http\Middleware\SetDisplayCurrency;
 use App\Http\Middleware\SetLocale;
@@ -26,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
             SetDeliveryLocation::class,
             ShareStorefrontNavigation::class,
         ]);
+        $middleware->alias(['vendor.access' => EnsureVendorAccess::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
