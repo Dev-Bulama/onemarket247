@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Account\AddressController;
 use App\Http\Controllers\Account\CompareController;
+use App\Http\Controllers\Account\NotificationController;
 use App\Http\Controllers\Account\OrderController;
 use App\Http\Controllers\Account\WishlistController;
 use App\Http\Controllers\AccountController;
@@ -87,5 +88,9 @@ Route::middleware('auth:web')->group(function () {
         Route::get('account/orders/{order}', [OrderController::class, 'show'])->name('account.orders.show');
         Route::get('account/orders/{order}/track', [OrderController::class, 'track'])->name('account.orders.track');
         Route::post('account/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('account.orders.cancel');
+
+        Route::get('account/notifications', [NotificationController::class, 'index'])->name('account.notifications.index');
+        Route::post('account/notifications/{notification}/read', [NotificationController::class, 'markRead'])->name('account.notifications.read');
+        Route::post('account/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('account.notifications.read-all');
     });
 });

@@ -21,6 +21,13 @@
                 <a href="{{ route('account.addresses.index') }}" class="text-body hover:text-brand-orange">Addresses</a>
                 <a href="{{ route('account.wishlist.index') }}" class="text-body hover:text-brand-orange">Wishlist</a>
                 <a href="{{ route('account.compare.index') }}" class="text-body hover:text-brand-orange">Compare</a>
+                <a href="{{ route('account.notifications.index') }}" class="text-body hover:text-brand-orange">
+                    Messages
+                    @php($unreadCount = auth()->user()?->unreadNotifications()->count())
+                    @if ($unreadCount)
+                        <span class="ml-1 inline-flex items-center justify-center rounded-full bg-brand-orange px-1.5 py-0.5 text-[10px] font-semibold text-white">{{ $unreadCount }}</span>
+                    @endif
+                </a>
                 <a href="{{ route('account.security') }}" class="text-body hover:text-brand-orange">Security</a>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf

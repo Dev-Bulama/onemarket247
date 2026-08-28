@@ -167,14 +167,31 @@ GET  /api/v1/gift-cards/{code}/balance
 ## 10. Notifications / Support
 
 ```
-GET   /api/v1/notifications
-PATCH /api/v1/notifications/{id}/read
+GET   /api/v1/notifications        ✅
+PATCH /api/v1/notifications/{id}/read ✅
 GET   /api/v1/support
 POST  /api/v1/support
 GET   /api/v1/support/{ticket}
 POST  /api/v1/support/{ticket}/messages
 POST  /api/v1/support/{ticket}/attachments
 ```
+Lists Laravel's own database notifications (the `notifications` table —
+`$user->notifications()`), so this covers every notification a user gets,
+not just admin broadcasts: order status changes, review/question
+approvals, an admin's direct message (see below), any future Notification
+class that adds `'database'` to its `via()`. Support tickets remain
+deferred — no such feature exists on web yet.
+
+### Admin -> user messaging (not in the original spec)
+
+An admin composing a direct message to all users, all customers, all
+vendors, or specific people (Admin -> "Send Message" in the sidebar) is
+a new feature, not part of the original endpoint map. It has no
+dedicated API endpoints of its own — sending only ever happens from the
+admin panel — but delivery reuses this exact notifications list: a
+broadcast is just another row here, on both web (`/account/notifications`)
+and `GET /api/v1/notifications`. See `App\Actions\Admin\SendAdminMessageAction`
+and `App\Notifications\AdminBroadcastNotification`.
 
 ## 11. Profile / Addresses
 

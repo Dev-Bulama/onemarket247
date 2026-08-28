@@ -6,6 +6,7 @@ use App\Models\DeviceSession;
 use App\Models\LoginHistory;
 use App\Notifications\SuspiciousLoginNotification;
 use Illuminate\Auth\Events\Login;
+use Throwable;
 
 /**
  * Fires for every guard (admin/vendor/web) since Laravel dispatches
@@ -15,8 +16,11 @@ use Illuminate\Auth\Events\Login;
  * docs/architecture/10-security-architecture.md §1.
  *
  * Runs synchronously (not queued): it reads the live request/session, which
- * would not exist by the time a queued job executed. The outbound alert
- * email is still queued — SuspiciousLoginNotification itself is Queueable.
+ * would not exist by the time a queued job executed. SuspiciousLoginNotification
+ * itself is Queueable, but that only actually defers sending when
+ * QUEUE_CONNECTION is a real async driver with a worker running — with the
+ * "sync" driver (or no worker), a queued job still runs inline. Either way,
+ * a login itself must never fail because the alert email couldn't be sent.
  */
 class RecordLoginActivity
 {
@@ -55,7 +59,11 @@ class RecordLoginActivity
         }
 
         if ($isNewDevice) {
-            $event->user->notify(new SuspiciousLoginNotification($loginHistory));
+            try {
+                $event->user->notify(new SuspiciousLoginNotification($loginHistory));
+            } catch (Throwable $exception) {
+                report($exception);
+            }
         }
     }
 }

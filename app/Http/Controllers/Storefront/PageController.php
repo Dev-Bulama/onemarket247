@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\View\View;
+use Throwable;
 
 class PageController extends Controller
 {
@@ -25,13 +26,20 @@ class PageController extends Controller
             'message' => ['required', 'string', 'max:5000'],
         ]);
 
-        Notification::route('mail', config('mail.from.address'))
-            ->notify(new ContactMessageSubmittedNotification(
-                $data['name'],
-                $data['email'],
-                $data['subject'],
-                $data['message'],
-            ));
+        // The message itself is what matters here — a mail transport
+        // failure must never turn a submitted contact form into a 500 for
+        // the visitor.
+        try {
+            Notification::route('mail', config('mail.from.address'))
+                ->notify(new ContactMessageSubmittedNotification(
+                    $data['name'],
+                    $data['email'],
+                    $data['subject'],
+                    $data['message'],
+                ));
+        } catch (Throwable $exception) {
+            report($exception);
+        }
 
         return back()->with('status', "Thanks for reaching out — we'll get back to you soon.");
     }

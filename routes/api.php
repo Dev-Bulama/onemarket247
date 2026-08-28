@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\CheckoutController;
 use App\Http\Controllers\Api\V1\CompareController;
 use App\Http\Controllers\Api\V1\ConfigController;
 use App\Http\Controllers\Api\V1\HomeController;
+use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\OrderController;
 use App\Http\Controllers\Api\V1\PaymentController;
 use App\Http\Controllers\Api\V1\PaymentWebhookController;
@@ -143,6 +144,9 @@ Route::prefix('v1')->group(function () {
         Route::get('profile', [ProfileController::class, 'show']);
         Route::patch('profile', [ProfileController::class, 'update']);
         Route::post('profile/password', [ProfileController::class, 'updatePassword']);
+
+        Route::get('notifications', [NotificationController::class, 'index']);
+        Route::patch('notifications/{notification}/read', [NotificationController::class, 'markRead']);
 
         Route::post('products/{product:slug}/reviews', [ReviewController::class, 'store']);
         Route::post('reviews/{review}/helpful', [ReviewController::class, 'markHelpful']);
