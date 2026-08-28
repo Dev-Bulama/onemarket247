@@ -93,6 +93,16 @@ test('an admin with products.approve can approve but a stranger cannot', functio
         ->and($stranger->can('approve', Product::class))->toBeFalse();
 });
 
+test('checking access to a product whose vendor has been deleted does not crash', function () {
+    $vendor = Vendor::factory()->create();
+    Store::factory()->for($vendor)->create();
+    $product = Product::factory()->for($vendor)->create();
+    $vendor->delete();
+
+    expect($product->fresh()->vendor)->toBeNull()
+        ->and($vendor->user->can('update', $product->fresh()))->toBeFalse();
+});
+
 test('an admin with products.feature can feature but a stranger cannot', function () {
     Permission::findOrCreate('products.feature', 'web');
 

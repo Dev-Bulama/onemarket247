@@ -46,7 +46,7 @@ class ProductQuestionPolicy
     {
         $vendorId = $question->product->vendor_id;
 
-        if ($question->product->vendor->user_id === $user->id) {
+        if ($question->product->vendor?->user_id === $user->id) {
             return true;
         }
 

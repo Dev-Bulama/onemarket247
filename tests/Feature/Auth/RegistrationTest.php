@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Notifications\CustomerWelcomeNotification;
 use Illuminate\Support\Facades\Notification;
 
 test('a customer can register and is redirected toward email verification', function () {
@@ -21,6 +22,21 @@ test('a customer can register and is redirected toward email verification', func
 
     $this->assertAuthenticatedAs($user, 'web');
     $response->assertRedirect(route('account.dashboard'));
+});
+
+test('registering sends the customer a welcome notification', function () {
+    Notification::fake();
+
+    $this->post('/register', [
+        'name' => 'Jane Doe',
+        'email' => 'jane@example.com',
+        'password' => 'Sup3rSecret!',
+        'password_confirmation' => 'Sup3rSecret!',
+    ]);
+
+    $user = User::where('email', 'jane@example.com')->first();
+
+    Notification::assertSentTo($user, CustomerWelcomeNotification::class);
 });
 
 test('registration requires a unique email', function () {

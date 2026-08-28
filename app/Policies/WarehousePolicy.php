@@ -42,7 +42,7 @@ class WarehousePolicy
 
     private function hasWarehouseAccess(User $user, Warehouse $warehouse, ?string $storePermission = null): bool
     {
-        if ($warehouse->vendor->user_id === $user->id) {
+        if ($warehouse->vendor?->user_id === $user->id) {
             return true;
         }
 

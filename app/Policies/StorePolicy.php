@@ -35,7 +35,7 @@ class StorePolicy
 
     private function hasStoreAccess(User $user, Store $store, ?string $storePermission = null): bool
     {
-        if ($store->vendor->user_id === $user->id) {
+        if ($store->vendor?->user_id === $user->id) {
             return true;
         }
 

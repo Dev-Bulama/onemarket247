@@ -50,3 +50,18 @@ test('an unrelated user cannot update a store', function () {
 
     expect($stranger->can('update', $store))->toBeFalse();
 });
+
+test('viewing a store whose vendor has been deleted does not crash', function () {
+    Permission::findOrCreate('stores.manage', 'web');
+
+    $vendor = Vendor::factory()->create();
+    $store = Store::factory()->create(['vendor_id' => $vendor->id]);
+    $vendor->delete();
+
+    $admin = User::factory()->create();
+    $admin->givePermissionTo('stores.manage');
+
+    expect($store->fresh()->vendor)->toBeNull()
+        ->and($admin->can('view', $store->fresh()))->toBeTrue()
+        ->and($vendor->user->can('view', $store->fresh()))->toBeFalse();
+});

@@ -62,6 +62,16 @@ test('an unrelated vendor cannot update or delete another vendors warehouse', fu
         ->and($otherVendor->user->can('delete', $warehouse))->toBeFalse();
 });
 
+test('checking access to a warehouse whose vendor has been deleted does not crash', function () {
+    $vendor = Vendor::factory()->create();
+    Store::factory()->for($vendor)->create();
+    $warehouse = Warehouse::factory()->create(['vendor_id' => $vendor->id]);
+    $vendor->delete();
+
+    expect($warehouse->fresh()->vendor)->toBeNull()
+        ->and($vendor->user->can('update', $warehouse->fresh()))->toBeFalse();
+});
+
 test('an admin with warehouses.manage can manage any warehouse but a stranger cannot', function () {
     Permission::findOrCreate('warehouses.manage', 'web');
 

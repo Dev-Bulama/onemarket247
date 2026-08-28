@@ -52,7 +52,7 @@ class ProductPolicy
 
     private function hasProductAccess(User $user, Product $product, ?string $storePermission = null): bool
     {
-        if ($product->vendor->user_id === $user->id) {
+        if ($product->vendor?->user_id === $user->id) {
             return true;
         }
 

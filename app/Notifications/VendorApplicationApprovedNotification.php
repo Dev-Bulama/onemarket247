@@ -2,7 +2,9 @@
 
 namespace App\Notifications;
 
+use App\Models\EmailTemplate;
 use App\Models\Vendor;
+use App\Support\Mail\EmailTemplateKeys;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
@@ -34,6 +36,21 @@ class VendorApplicationApprovedNotification extends Notification
             'token' => $this->token,
             'email' => $notifiable->getEmailForPasswordReset(),
         ], false));
+
+        $template = EmailTemplate::active(EmailTemplateKeys::VendorApplicationApproved);
+
+        if ($template) {
+            $rendered = $template->render([
+                'vendor_name' => $this->vendor->user->name,
+                'store_name' => $this->vendor->store->name,
+            ]);
+
+            return (new MailMessage)
+                ->subject($rendered['subject'])
+                ->line($rendered['body'])
+                ->action('Set your password & log in', $url)
+                ->line('This link expires in 60 minutes for your security — if it expires, use "Forgot password" on the vendor login page to request a new one.');
+        }
 
         return (new MailMessage)
             ->subject('Your OneMarket247 vendor application has been approved!')

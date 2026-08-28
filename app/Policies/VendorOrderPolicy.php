@@ -34,7 +34,7 @@ class VendorOrderPolicy
 
     private function hasVendorOrderAccess(User $user, VendorOrder $vendorOrder, ?string $storePermission = null): bool
     {
-        if ($vendorOrder->vendor->user_id === $user->id) {
+        if ($vendorOrder->vendor?->user_id === $user->id) {
             return true;
         }
 

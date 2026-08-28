@@ -22,10 +22,13 @@ use App\Models\OrderItemTaxSnapshot;
 use App\Models\Product;
 use App\Models\ProductVariation;
 use App\Models\WarehouseStock;
+use App\Notifications\OrderConfirmationNotification;
 use App\Services\Order\OrderStatusAggregator;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
+use Throwable;
 
 /**
  * The checkout → order-creation flow from
@@ -204,7 +207,15 @@ class CompleteCheckoutAction
             $cart->update(['status' => CartStatus::Converted]);
             $lockedSession->update(['order_id' => $order->id]);
 
-            return $order->fresh(['vendorOrders.orderItems', 'payments', 'invoice']);
+            $order = $order->fresh(['vendorOrders.orderItems', 'payments', 'invoice']);
+
+            try {
+                Notification::send($order->notifiable(), new OrderConfirmationNotification($order));
+            } catch (Throwable $exception) {
+                report($exception);
+            }
+
+            return $order;
         });
     }
 

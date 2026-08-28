@@ -58,6 +58,16 @@ test('a different vendor cannot view someone elses vendor order', function () {
     expect($vendorB->user->can('view', $vendorOrder))->toBeFalse();
 });
 
+test('checking access to a vendor order whose vendor has been deleted does not crash', function () {
+    $vendor = Vendor::factory()->create();
+    Store::factory()->for($vendor)->create();
+    $vendorOrder = VendorOrder::factory()->create(['order_id' => Order::factory(), 'vendor_id' => $vendor->id]);
+    $vendor->delete();
+
+    expect($vendorOrder->fresh()->vendor)->toBeNull()
+        ->and($vendor->user->can('view', $vendorOrder->fresh()))->toBeFalse();
+});
+
 test('an admin with orders.view can view any vendor order', function () {
     Permission::findOrCreate('orders.view', 'web');
 

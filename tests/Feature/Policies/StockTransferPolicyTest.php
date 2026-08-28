@@ -61,6 +61,16 @@ test('an unrelated vendor cannot view or update another vendors transfer', funct
         ->and($otherVendor->user->can('update', $transfer))->toBeFalse();
 });
 
+test('checking access to a transfer whose source warehouse vendor has been deleted does not crash', function () {
+    $vendor = Vendor::factory()->create();
+    Store::factory()->for($vendor)->create();
+    $transfer = makeTransfer($vendor);
+    $vendor->delete();
+
+    expect($transfer->fresh()->fromWarehouse->vendor)->toBeNull()
+        ->and($vendor->user->can('view', $transfer->fresh()))->toBeFalse();
+});
+
 test('an admin with inventory.manage can view any transfer but a stranger cannot', function () {
     Permission::findOrCreate('inventory.manage', 'web');
 

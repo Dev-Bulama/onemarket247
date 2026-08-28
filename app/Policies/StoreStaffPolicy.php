@@ -39,6 +39,6 @@ class StoreStaffPolicy
 
     private function isOwner(User $user, StoreStaff $staff): bool
     {
-        return $staff->store->vendor->user_id === $user->id;
+        return $staff->store?->vendor?->user_id === $user->id;
     }
 }

@@ -53,6 +53,17 @@ test('an active store staff member with store.questions.answer can answer the qu
     expect($staffUser->can('answer', $question))->toBeTrue();
 });
 
+test('checking access to a question on a product whose vendor has been deleted does not crash', function () {
+    $vendor = Vendor::factory()->create();
+    Store::factory()->for($vendor)->create();
+    $product = Product::factory()->create(['vendor_id' => $vendor->id]);
+    $question = ProductQuestion::factory()->for($product)->create();
+    $vendor->delete();
+
+    expect($question->fresh()->product->vendor)->toBeNull()
+        ->and($vendor->user->can('answer', $question->fresh()))->toBeFalse();
+});
+
 test('an admin with questions.manage can view, delete, and answer any question', function () {
     Permission::findOrCreate('questions.manage', 'web');
 

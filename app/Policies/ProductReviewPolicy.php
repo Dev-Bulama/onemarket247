@@ -57,7 +57,7 @@ class ProductReviewPolicy
     {
         $vendorId = $review->product->vendor_id;
 
-        if ($review->product->vendor->user_id === $user->id) {
+        if ($review->product->vendor?->user_id === $user->id) {
             return true;
         }
 

@@ -6,9 +6,11 @@ use App\Enums\UserStatus;
 use App\Enums\UserType;
 use App\Models\CustomerProfile;
 use App\Models\User;
+use App\Notifications\CustomerWelcomeNotification;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Throwable;
 
 class RegisterCustomerAction
 {
@@ -30,6 +32,12 @@ class RegisterCustomerAction
             CustomerProfile::create(['user_id' => $user->id]);
 
             event(new Registered($user));
+
+            try {
+                $user->notify(new CustomerWelcomeNotification($user));
+            } catch (Throwable $exception) {
+                report($exception);
+            }
 
             return $user;
         });

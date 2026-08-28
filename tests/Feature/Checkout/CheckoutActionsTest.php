@@ -22,6 +22,8 @@ use App\Models\ShippingZoneLocation;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Models\Warehouse;
+use App\Notifications\OrderConfirmationNotification;
+use Illuminate\Support\Facades\Notification;
 
 /**
  * A free flat rate for the given country keeps this file's existing total
@@ -105,6 +107,48 @@ test('completing checkout creates one order split by vendor with reserved stock'
     expect($order->payments)->toHaveCount(1)
         ->and($order->payments->first()->status->value)->toBe('pending')
         ->and($order->payments->first()->amount)->toBe(4000);
+});
+
+test('completing checkout sends an order confirmation to a guest by email', function () {
+    Notification::fake();
+
+    Currency::factory()->create(['is_default' => true]);
+    $country = Country::factory()->create();
+    seedFreeShippingFor($country);
+    $product = Product::factory()->create(['manage_stock' => true, 'stock_status' => StockStatus::InStock]);
+    $warehouse = Warehouse::factory()->create(['vendor_id' => $product->vendor_id]);
+    app(AdjustStockAction::class)->handle($warehouse, $product, 10, 'seed');
+
+    $cart = Cart::factory()->create();
+    app(AddCartItemAction::class)->handle($cart, $product, null, 1);
+    $session = app(InitiateCheckoutAction::class)->handle($cart);
+    app(CompleteCheckoutAction::class)->handle($session, shippingDataFor($country));
+
+    Notification::assertSentOnDemand(
+        OrderConfirmationNotification::class,
+        fn ($notification, $channels, $notifiable) => $notifiable->routes['mail'] === 'jane@example.com',
+    );
+});
+
+test('completing checkout sends an order confirmation to a registered customer', function () {
+    Notification::fake();
+
+    Currency::factory()->create(['is_default' => true]);
+    $country = Country::factory()->create();
+    seedFreeShippingFor($country);
+    $product = Product::factory()->create(['manage_stock' => true, 'stock_status' => StockStatus::InStock]);
+    $warehouse = Warehouse::factory()->create(['vendor_id' => $product->vendor_id]);
+    app(AdjustStockAction::class)->handle($warehouse, $product, 10, 'seed');
+
+    $customer = User::factory()->create();
+    $cart = Cart::factory()->create(['customer_id' => $customer->id]);
+    app(AddCartItemAction::class)->handle($cart, $product, null, 1);
+    $session = app(InitiateCheckoutAction::class)->handle($cart);
+    $shippingData = shippingDataFor($country);
+    $shippingData['customer_id'] = $customer->id;
+    app(CompleteCheckoutAction::class)->handle($session, $shippingData);
+
+    Notification::assertSentTo($customer, OrderConfirmationNotification::class);
 });
 
 test('replaying the same checkout session returns the same order, never creating a second one', function () {

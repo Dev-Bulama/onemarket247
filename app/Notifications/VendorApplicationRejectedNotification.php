@@ -2,7 +2,9 @@
 
 namespace App\Notifications;
 
+use App\Models\EmailTemplate;
 use App\Models\VendorApplication;
+use App\Support\Mail\EmailTemplateKeys;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
@@ -20,6 +22,20 @@ class VendorApplicationRejectedNotification extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
+        $template = EmailTemplate::active(EmailTemplateKeys::VendorApplicationRejected);
+
+        if ($template) {
+            $rendered = $template->render([
+                'applicant_name' => $this->application->full_name,
+                'store_name' => $this->application->store_name,
+                'rejection_reason' => $this->application->rejection_reason ?? '',
+            ]);
+
+            return (new MailMessage)
+                ->subject($rendered['subject'])
+                ->line($rendered['body']);
+        }
+
         return (new MailMessage)
             ->subject('Your OneMarket247 vendor application')
             ->greeting('Hello '.$this->application->full_name.',')

@@ -38,7 +38,7 @@ class StockTransferPolicy
     {
         $vendorId = $transfer->fromWarehouse->vendor_id;
 
-        if ($transfer->fromWarehouse->vendor->user_id === $user->id) {
+        if ($transfer->fromWarehouse->vendor?->user_id === $user->id) {
             return true;
         }
 

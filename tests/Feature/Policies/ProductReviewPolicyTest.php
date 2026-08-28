@@ -71,6 +71,17 @@ test('an active store staff member with store.reviews.respond can view and respo
     expect($staffUser->can('update', $review))->toBeTrue();
 });
 
+test('checking access to a review on a product whose vendor has been deleted does not crash', function () {
+    $vendor = Vendor::factory()->create();
+    Store::factory()->for($vendor)->create();
+    $product = Product::factory()->create(['vendor_id' => $vendor->id]);
+    $review = ProductReview::factory()->for($product)->approved()->create();
+    $vendor->delete();
+
+    expect($review->fresh()->product->vendor)->toBeNull()
+        ->and($vendor->user->can('update', $review->fresh()))->toBeFalse();
+});
+
 test('an admin with reviews.moderate can view, update, and moderate any review', function () {
     Permission::findOrCreate('reviews.moderate', 'web');
 
