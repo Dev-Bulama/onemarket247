@@ -20,7 +20,7 @@ class VendorApplicationRequest extends FormRequest
             // Step 1 — applicant & business
             'full_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email', 'unique:vendor_applications,email'],
-            'phone' => ['nullable', 'string', 'max:30'],
+            'phone' => ['nullable', 'string', 'max:30', 'unique:users,phone'],
             'business_name' => ['required', 'string', 'max:255'],
             'registration_number' => ['nullable', 'string', 'max:100'],
             'tax_identification_number' => ['nullable', 'string', 'max:100'],
@@ -62,6 +62,7 @@ class VendorApplicationRequest extends FormRequest
     {
         return [
             'terms.accepted' => 'You must accept the vendor terms to continue.',
+            'phone.unique' => 'That phone number is already associated with another account.',
         ];
     }
 

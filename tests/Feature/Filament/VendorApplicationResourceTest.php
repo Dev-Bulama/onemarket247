@@ -36,6 +36,19 @@ test('an admin can approve a pending application from the list', function () {
         ->and($application->vendor_id)->not->toBeNull();
 });
 
+test('approving an application with a conflicting phone number shows an error instead of crashing', function () {
+    $admin = superAdminForApplications();
+    User::factory()->create(['phone' => '08072750486']);
+    $application = VendorApplication::factory()->create(['phone' => '08072750486']);
+
+    Livewire::actingAs($admin, 'admin')
+        ->test(ListVendorApplications::class)
+        ->callTableAction('approve', $application)
+        ->assertNotified('Cannot approve: phone number "08072750486" is already used by another account. Update the phone number on this application (or on the conflicting account) before approving.');
+
+    expect($application->fresh()->status)->toBe(VendorApplicationStatus::Pending);
+});
+
 test('an admin can reject a pending application with a reason', function () {
     Notification::fake();
 

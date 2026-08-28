@@ -99,6 +99,14 @@ test('an application with an email already used by an existing account is reject
     $response->assertSessionHasErrors('email');
 });
 
+test('an application with a phone number already used by an existing account is rejected', function () {
+    User::factory()->create(['phone' => '+15551234567']);
+
+    $response = submitVendorApplication(['email' => 'newphoneconflict@example.com']);
+
+    $response->assertSessionHasErrors('phone');
+});
+
 test('required documents must be uploaded', function () {
     $response = test()->post('/vendor/register', [
         'full_name' => 'Jane Doe',

@@ -5,6 +5,7 @@ namespace App\Filament\Resources\VendorApplications\Tables;
 use App\Actions\Vendor\ApproveVendorApplicationAction;
 use App\Actions\Vendor\RejectVendorApplicationAction;
 use App\Enums\VendorApplicationStatus;
+use App\Exceptions\VendorApplicationConflictException;
 use App\Models\VendorApplication;
 use Filament\Actions\Action;
 use Filament\Actions\ViewAction;
@@ -67,8 +68,12 @@ class VendorApplicationsTable
                     ->visible(fn (VendorApplication $record) => auth()->user()?->can('vendors.approve')
                         && $record->status === VendorApplicationStatus::Pending)
                     ->action(function (VendorApplication $record) {
-                        app(ApproveVendorApplicationAction::class)->handle($record, auth()->user());
-                        Notification::make()->title('Vendor application approved')->success()->send();
+                        try {
+                            app(ApproveVendorApplicationAction::class)->handle($record, auth()->user());
+                            Notification::make()->title('Vendor application approved')->success()->send();
+                        } catch (VendorApplicationConflictException $exception) {
+                            Notification::make()->title($exception->getMessage())->danger()->send();
+                        }
                     }),
                 Action::make('reject')
                     ->icon(Heroicon::OutlinedXCircle)

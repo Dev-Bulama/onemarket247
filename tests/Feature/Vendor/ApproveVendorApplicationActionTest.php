@@ -4,6 +4,7 @@ use App\Actions\Vendor\ApproveVendorApplicationAction;
 use App\Actions\Vendor\RejectVendorApplicationAction;
 use App\Enums\UserType;
 use App\Enums\VendorApplicationStatus;
+use App\Exceptions\VendorApplicationConflictException;
 use App\Models\Store;
 use App\Models\User;
 use App\Models\Vendor;
@@ -61,6 +62,29 @@ test('approving an application whose store slug collides gets a unique slug', fu
 
     expect($vendor->store->slug)->not->toBe('taken-slug')
         ->and($vendor->store->slug)->toStartWith('taken-slug-');
+});
+
+test('approving an application whose phone number is already taken raises a clear error instead of crashing', function () {
+    User::factory()->create(['phone' => '08072750486']);
+    $application = VendorApplication::factory()->create(['phone' => '08072750486']);
+
+    expect(fn () => app(ApproveVendorApplicationAction::class)->handle($application))
+        ->toThrow(VendorApplicationConflictException::class, 'phone number "08072750486" is already used by another account');
+
+    $application->refresh();
+    expect($application->status)->toBe(VendorApplicationStatus::Pending)
+        ->and(User::where('email', $application->email)->exists())->toBeFalse();
+});
+
+test('approving an application whose email is already taken raises a clear error instead of crashing', function () {
+    User::factory()->create(['email' => 'taken@example.com']);
+    $application = VendorApplication::factory()->create(['email' => 'taken@example.com', 'phone' => null]);
+
+    expect(fn () => app(ApproveVendorApplicationAction::class)->handle($application))
+        ->toThrow(VendorApplicationConflictException::class, 'email "taken@example.com" is already used by another account');
+
+    $application->refresh();
+    expect($application->status)->toBe(VendorApplicationStatus::Pending);
 });
 
 test('rejecting an application records the reason and notifies the applicant', function () {

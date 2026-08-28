@@ -9,6 +9,7 @@ use App\Enums\UserType;
 use App\Enums\VendorApplicationStatus;
 use App\Enums\VendorStatus;
 use App\Enums\VendorSubscriptionStatus;
+use App\Exceptions\VendorApplicationConflictException;
 use App\Models\Store;
 use App\Models\User;
 use App\Models\Vendor;
@@ -36,6 +37,8 @@ class ApproveVendorApplicationAction
 {
     public function handle(VendorApplication $application, ?User $reviewer = null): Vendor
     {
+        $this->assertNoAccountConflict($application);
+
         $vendor = DB::transaction(function () use ($application, $reviewer) {
             $user = User::create([
                 'name' => $application->full_name,
@@ -149,6 +152,30 @@ class ApproveVendorApplicationAction
         }
 
         return $vendor;
+    }
+
+    /**
+     * The submission form validates email/phone uniqueness at the moment
+     * of applying, but time passes between submission and an admin
+     * clicking "Approve" — a conflicting account can appear in the
+     * meantime (e.g. the applicant, or someone else, registers a customer
+     * account with the same phone). Checking here turns that into an
+     * actionable admin-facing message instead of an uncaught
+     * SQLSTATE[23000] unique-constraint crash from User::create().
+     */
+    private function assertNoAccountConflict(VendorApplication $application): void
+    {
+        if ($application->phone && User::where('phone', $application->phone)->exists()) {
+            throw new VendorApplicationConflictException(
+                "Cannot approve: phone number \"{$application->phone}\" is already used by another account. Update the phone number on this application (or on the conflicting account) before approving."
+            );
+        }
+
+        if (User::where('email', $application->email)->exists()) {
+            throw new VendorApplicationConflictException(
+                "Cannot approve: email \"{$application->email}\" is already used by another account. Resolve the conflicting account before approving."
+            );
+        }
     }
 
     private function uniqueSlug(string $slug): string
