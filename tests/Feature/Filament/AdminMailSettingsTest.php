@@ -74,8 +74,17 @@ test('sending a test email reports success when the mailer accepts it', function
 
     Livewire::actingAs($admin, 'admin')
         ->test(MailSettings::class)
-        ->call('sendTestEmail')
+        ->callAction('sendTestEmail', data: ['to' => $admin->email])
         ->assertNotified("Test email sent to {$admin->email}");
+});
+
+test('a test email can be sent to any address, not just the logged-in admin\'s own', function () {
+    $admin = mailSettingsAdmin();
+
+    Livewire::actingAs($admin, 'admin')
+        ->test(MailSettings::class)
+        ->callAction('sendTestEmail', data: ['to' => 'someone-else@example.com'])
+        ->assertNotified('Test email sent to someone-else@example.com');
 });
 
 test('sending a test email reports failure instead of crashing when the mailer is unreachable', function () {
@@ -84,6 +93,6 @@ test('sending a test email reports failure instead of crashing when the mailer i
 
     Livewire::actingAs($admin, 'admin')
         ->test(MailSettings::class)
-        ->call('sendTestEmail')
+        ->callAction('sendTestEmail', data: ['to' => $admin->email])
         ->assertNotified('Could not send the test email');
 });

@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\MailSetting;
+use Filament\Actions\Action;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -123,25 +124,39 @@ class MailSettings extends Page implements HasForms
         Notification::make()->title('Mail settings saved')->success()->send();
     }
 
-    public function sendTestEmail(): void
+    protected function getHeaderActions(): array
     {
-        $to = Auth::guard('admin')->user()?->email;
+        return [
+            Action::make('sendTestEmail')
+                ->label('Send test email')
+                ->icon(Heroicon::OutlinedPaperAirplane)
+                ->schema([
+                    TextInput::make('to')
+                        ->label('Send to')
+                        ->email()
+                        ->required()
+                        ->default(fn () => Auth::guard('admin')->user()?->email),
+                ])
+                ->action(function (array $data): void {
+                    $to = $data['to'];
 
-        try {
-            Mail::raw(
-                'This is a test email from '.config('app.name').". If you're reading this, your mail settings work.",
-                fn ($message) => $message->to($to)->subject('Test email — '.config('app.name')),
-            );
+                    try {
+                        Mail::raw(
+                            'This is a test email from '.config('app.name').". If you're reading this, your mail settings work.",
+                            fn ($message) => $message->to($to)->subject('Test email — '.config('app.name')),
+                        );
 
-            Notification::make()->title("Test email sent to {$to}")->success()->send();
-        } catch (Throwable $exception) {
-            report($exception);
+                        Notification::make()->title("Test email sent to {$to}")->success()->send();
+                    } catch (Throwable $exception) {
+                        report($exception);
 
-            Notification::make()
-                ->title('Could not send the test email')
-                ->body($exception->getMessage())
-                ->danger()
-                ->send();
-        }
+                        Notification::make()
+                            ->title('Could not send the test email')
+                            ->body($exception->getMessage())
+                            ->danger()
+                            ->send();
+                    }
+                }),
+        ];
     }
 }
