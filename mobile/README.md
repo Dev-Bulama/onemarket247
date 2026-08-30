@@ -46,13 +46,26 @@ The `android/` and `ios/` folders are already in this repo (generated via
 
 ## Point the app at your backend
 
-Edit `src/config/api.ts`:
+**You usually don't need to touch any code for this.** The app calls a
+`bootstrap` endpoint on every start, always against the production URL
+below, and that response tells it which API to actually use for
+everything else — controlled from **Admin → Settings → App Settings**
+(App\Models\AppSetting), no rebuild required. See "Admin-controlled
+backend URL & branding" further down for how that works and how to
+switch an already-installed app to your local machine for testing.
 
-- **Emulator**: `LOCAL_API_URL` defaults to `http://10.0.2.2:8000/api/v1` (Android emulator's alias for the host machine's `localhost`).
-- **Physical device**: put your phone and PC on the same network (or use a hotspot), find your PC's LAN IP, and set `LOCAL_API_URL` to `http://<that-ip>:8000/api/v1`.
-- **Production**: set `PRODUCTION_API_URL` to `https://onemarket247.com/api/v1` (already the default).
+The only thing in `src/config/api.ts` you should need to set, once, ever:
 
-Then, from the Laravel repo root:
+- **`PRODUCTION_API_URL`** — your live domain (already defaults to
+  `https://onemarket247.com/api/v1`). This is the one URL the app always
+  calls first, before it knows anything else, so it needs to always be
+  correct and always be reachable.
+
+`LOCAL_API_URL` there is a fallback used only if the bootstrap call fails
+entirely (e.g. testing fully offline with no prior successful launch) —
+not something you normally need to edit.
+
+If you *are* running the Laravel backend locally, from the Laravel repo root:
 
 ```bash
 php artisan serve --host=0.0.0.0 --port=8000
@@ -134,6 +147,36 @@ needed. To add push to another notification, add
 `App\Notifications\Channels\OneSignalChannel::class` to its `via()` and
 implement `toOneSignal($notifiable): OneSignalMessage`, same as any
 `toMail()`/`toDatabase()` method.
+
+## Admin-controlled backend URL & branding
+
+**Admin → Settings → App Settings** controls three things every
+already-installed app picks up the next time it opens — no app-store
+update, no rebuild:
+
+- **Which backend it talks to.** Useful for pointing your own test
+  devices at a local/staging server without touching the app's code —
+  set "Active Environment" to Local, fill in "Local/staging API URL"
+  (e.g. `http://192.168.1.50:8000/api/v1`, your machine's LAN IP), and
+  turn **off** "Force production" so that choice actually takes effect.
+  Leave "Force production" **on** (the default) for real users — it's a
+  safety net that keeps every app on production regardless of what the
+  environment picker says, so a forgotten test setting can never strand
+  real users on an unreachable server.
+- **App name, logo, and splash screen image** — hosted image URLs, shown
+  on the splash screen while the app loads (`SplashScreen.tsx`).
+- **Minimum app version** — an installed app older than this shows a
+  full-screen "Update Required" prompt instead of continuing
+  (`ForceUpdateScreen.tsx`). Leave blank to disable.
+
+How it works: the app always calls `GET {PRODUCTION_API_URL}/bootstrap`
+first, on every cold start (`bootstrapStore.ts`) — the one call that
+never gets redirected, since it's how the app finds out where everything
+else lives. That response's `api_base_url` is then applied to every
+other API call via `apiClient.setBaseUrl()`. If the bootstrap call fails
+(no internet on first launch, etc.), the app falls back to its last
+successfully-resolved settings (cached in AsyncStorage) rather than
+failing outright.
 
 ## Project structure
 

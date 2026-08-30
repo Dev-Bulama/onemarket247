@@ -59,6 +59,19 @@ const apiClient = axios.create({
   },
 });
 
+/**
+ * Called once on app startup after the bootstrap fetch resolves (see
+ * bootstrapStore.ts) — switches every subsequent API call to whichever
+ * URL the admin-configured environment resolved to, which may differ
+ * from the API_BASE_URL this client was created with (that's just the
+ * pre-bootstrap fallback for the very first request).
+ */
+export function setBaseUrl(url: string) {
+  if (url && url !== apiClient.defaults.baseURL) {
+    apiClient.defaults.baseURL = url;
+  }
+}
+
 // Retry safe read-only requests on network failure / 5xx (never on 4xx or writes)
 const RETRY_METHODS = new Set(['get', 'head']);
 const MAX_RETRIES = 2;
