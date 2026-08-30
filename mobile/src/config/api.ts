@@ -21,3 +21,11 @@ export const API_BASE_URL: string = __DEV__ ? LOCAL_API_URL : PRODUCTION_API_URL
 
 export const API_TIMEOUT = 20000;
 export const APP_VERSION = '1.0.0';
+
+/**
+ * The App ID from your OneSignal dashboard (Settings → Keys & IDs) — this
+ * is a public identifier, safe to ship inside the app (unlike the REST
+ * API key, which stays server-side only — see App\Filament\Pages\PushSettings
+ * in the Laravel repo). Must match the App ID entered there for push to work.
+ */
+export const ONESIGNAL_APP_ID = 'YOUR-ONESIGNAL-APP-ID';

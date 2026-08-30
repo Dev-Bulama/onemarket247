@@ -290,7 +290,22 @@ export default function ProductDetailScreen({ route, navigation }: any) {
           {product.description ? <Text style={styles.description}>{product.description}</Text> : null}
 
           {/* Reviews */}
-          <Text style={styles.sectionTitle}>Reviews ({product.review_count})</Text>
+          <View style={styles.reviewsHeaderRow}>
+            <Text style={styles.sectionTitle}>Reviews ({product.review_count})</Text>
+            <TouchableOpacity
+              style={styles.writeReviewBtn}
+              onPress={() => {
+                if (!isAuthenticated) {
+                  navigation.getParent()?.getParent()?.navigate('Auth', { screen: 'Login' });
+                  return;
+                }
+                navigation.navigate('WriteReview', { slug: product.slug, productName: product.name });
+              }}
+            >
+              <IonIcon name="create-outline" size={14} color={COLORS.primary} />
+              <Text style={styles.writeReviewText}>Write a Review</Text>
+            </TouchableOpacity>
+          </View>
           {reviews.length === 0 ? (
             <Text style={styles.noReviews}>No reviews yet.</Text>
           ) : (
@@ -306,6 +321,13 @@ export default function ProductDetailScreen({ route, navigation }: any) {
                 </View>
                 {review.title ? <Text style={styles.reviewTitle}>{review.title}</Text> : null}
                 {review.body ? <Text style={styles.reviewBody}>{review.body}</Text> : null}
+                {review.images && review.images.length > 0 && (
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.reviewImagesRow}>
+                    {review.images.map((url, idx) => (
+                      <Image key={idx} source={{ uri: url }} style={styles.reviewImage} />
+                    ))}
+                  </ScrollView>
+                )}
               </View>
             ))
           )}
@@ -442,7 +464,12 @@ const styles = StyleSheet.create({
   askBtn: { backgroundColor: COLORS.primary, borderRadius: SIZES.borderRadiusSm, width: 40, alignItems: 'center', justifyContent: 'center' },
   questionText: { fontSize: 13, fontWeight: '700', color: COLORS.text, marginBottom: 4 },
   answerText: { fontSize: 12, color: COLORS.textSecondary, marginLeft: 8, marginTop: 2, lineHeight: 17 },
+  reviewsHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  writeReviewBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  writeReviewText: { fontSize: 12, color: COLORS.primary, fontWeight: '700' },
   reviewCard: { borderBottomWidth: 1, borderBottomColor: COLORS.divider, paddingVertical: 12 },
+  reviewImagesRow: { marginTop: 8 },
+  reviewImage: { width: 64, height: 64, borderRadius: 8, marginRight: 8 },
   reviewHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
   reviewAuthor: { fontSize: 13, fontWeight: '700', color: COLORS.text },
   reviewStars: { flexDirection: 'row' },

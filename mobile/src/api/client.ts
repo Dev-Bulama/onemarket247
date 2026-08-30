@@ -20,6 +20,36 @@ async function getToken(): Promise<string | null> {
   return cachedToken;
 }
 
+// Same in-memory-cache-over-AsyncStorage pattern as the auth token above —
+// read on every request via the interceptor below, written by
+// localeStore.setLanguage()/setCurrency() (see src/store/localeStore.ts).
+let cachedLanguage: string | null | undefined = undefined;
+let cachedCurrency: string | null | undefined = undefined;
+
+export async function setPreferredLanguage(code: string | null) {
+  cachedLanguage = code;
+  if (code) await AsyncStorage.setItem('preferred_language', code);
+  else await AsyncStorage.removeItem('preferred_language');
+}
+
+export async function setPreferredCurrency(code: string | null) {
+  cachedCurrency = code;
+  if (code) await AsyncStorage.setItem('preferred_currency', code);
+  else await AsyncStorage.removeItem('preferred_currency');
+}
+
+async function getPreferredLanguage(): Promise<string | null> {
+  if (cachedLanguage !== undefined) return cachedLanguage;
+  cachedLanguage = await AsyncStorage.getItem('preferred_language');
+  return cachedLanguage;
+}
+
+async function getPreferredCurrency(): Promise<string | null> {
+  if (cachedCurrency !== undefined) return cachedCurrency;
+  cachedCurrency = await AsyncStorage.getItem('preferred_currency');
+  return cachedCurrency;
+}
+
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   timeout: API_TIMEOUT,
@@ -48,6 +78,10 @@ apiClient.interceptors.request.use(async (config: InternalAxiosRequestConfig) =>
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  const language = await getPreferredLanguage();
+  if (language) config.headers['X-Language'] = language;
+  const currency = await getPreferredCurrency();
+  if (currency) config.headers['X-Currency'] = currency;
   return config;
 });
 

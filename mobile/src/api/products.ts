@@ -21,8 +21,19 @@ export const productsApi = {
   reviews: (slug: string, page = 1) =>
     apiClient.get<PaginatedResponse<Review>>(`/products/${slug}/reviews`, { params: { page } }),
 
-  storeReview: (slug: string, data: { rating: number; title?: string; body: string }) =>
-    apiClient.post(`/products/${slug}/reviews`, data),
+  storeReview: (slug: string, data: { rating: number; title?: string; body: string; images?: { uri: string; name: string; type: string }[] }) => {
+    const form = new FormData();
+    form.append('rating', String(data.rating));
+    if (data.title) form.append('title', data.title);
+    form.append('body', data.body);
+    (data.images ?? []).forEach(image => {
+      // React Native's FormData accepts this {uri, name, type} shape directly.
+      form.append('images[]', image as unknown as Blob);
+    });
+    return apiClient.post<ApiResponse<Review>>(`/products/${slug}/reviews`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
 
   categories: () => apiClient.get<ApiResponse<Category[]>>('/categories'),
 

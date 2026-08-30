@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User } from '../types';
 import { authApi } from '../api/auth';
 import { setAuthToken } from '../api/client';
+import { usePushStore } from './pushStore';
 
 interface RegisterData {
   name: string;
@@ -56,6 +57,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       await setAuthToken(token);
       await AsyncStorage.setItem('user', JSON.stringify(user));
       set({ user, isAuthenticated: true });
+      usePushStore.getState().registerCurrentDevice();
     } finally {
       set({ isLoading: false });
     }
@@ -69,12 +71,16 @@ export const useAuthStore = create<AuthState>((set) => ({
       await setAuthToken(token);
       await AsyncStorage.setItem('user', JSON.stringify(user));
       set({ user, isAuthenticated: true });
+      usePushStore.getState().registerCurrentDevice();
     } finally {
       set({ isLoading: false });
     }
   },
 
   logout: async () => {
+    // Unregister this device before clearing the token — the
+    // device-tokens DELETE endpoint requires auth:sanctum.
+    await usePushStore.getState().unregisterCurrentDevice();
     try {
       await authApi.logout();
     } catch {

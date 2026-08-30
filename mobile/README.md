@@ -110,6 +110,31 @@ Before publishing to the Play Store, also replace the placeholder launcher
 icon (`android/app/src/main/res/mipmap-*/ic_launcher*.png`) with your own
 — those are still the default React Native template icon.
 
+## Setting up push notifications
+
+Push uses [OneSignal](https://onesignal.com). Two pieces of configuration,
+in two different places:
+
+1. **In the OneSignal dashboard**: create an app, grab its **App ID** and
+   **REST API Key** (Settings → Keys & IDs).
+2. **App ID** (public, safe to ship in the app) goes in
+   `src/config/api.ts` → `ONESIGNAL_APP_ID`. Until you set this to a real
+   value, `pushStore.initialize()` is a no-op — the app runs fine, it
+   just never registers for push.
+3. **REST API Key** (secret — never put this in the mobile app) goes into
+   the admin panel: **Admin → Settings → Push Notifications**, along with
+   the same App ID, then flip "Send push notifications" on. Use "Send
+   test push" there once a real device has registered (open the app,
+   log in — the device then shows up in the `device_tokens` table) to
+   confirm it actually works before relying on it.
+
+Once both are set, `AdminBroadcastNotification` (the "Send Message" admin
+feature) delivers as a native push automatically — no code changes
+needed. To add push to another notification, add
+`App\Notifications\Channels\OneSignalChannel::class` to its `via()` and
+implement `toOneSignal($notifiable): OneSignalMessage`, same as any
+`toMail()`/`toDatabase()` method.
+
 ## Project structure
 
 ```
@@ -144,19 +169,22 @@ mobile/
   `authorization_url`; once the WebView navigates away from the Paystack
   domain, the app calls `paymentsApi.verify()` (server-authoritative — a
   client-reported "success" is never trusted on its own).
+- Every request carries `X-Language`/`X-Currency` headers (see
+  `localeStore` + `apiClient`'s interceptor) driving the same
+  `SetApiLocale`/`SetApiDisplayCurrency` middleware the web session-based
+  switcher uses — change them from **Account → Language & Currency**.
+- Reviews accept up to 5 photos (multipart upload via `react-native-image-picker`),
+  stored the same way product images are (Spatie Media Library).
 
 ## What's stubbed / next steps
 
-- Push notifications (OneSignal or similar) are not wired up; the in-app
-  notifications list/badge uses polling against `/notifications` only, so
-  an admin's broadcast message only appears once the app is opened —
-  not as a native push while the app is closed.
 - No automated tests yet (Jest/RNTL) — the API layer is thin enough that
   most of the real logic (`cartStore`, `authStore`) would benefit from unit
   tests using mocked Axios responses.
-- No blog, static pages (FAQ/Terms/Privacy/About/Contact), or
-  language/currency switcher in the app — the web storefront has these,
-  but there's no `/api/v1` endpoint for any of them yet, so building the
-  mobile screens would mean adding the backend endpoints first.
+- Push notifications are wired end-to-end (see "Setting up push
+  notifications" above) but only `AdminBroadcastNotification` sends one
+  today — order-status changes, review approvals, etc. still only reach
+  mail/database until their notification classes are given the same
+  `OneSignalChannel::class` + `toOneSignal()` treatment.
 - Launcher icon and splash screen are still the React Native template
   defaults — swap them for OneMarket247 branding before any real release.

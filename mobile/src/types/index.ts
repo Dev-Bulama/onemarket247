@@ -3,9 +3,9 @@
 // sync when a resource's toArray() changes.
 
 export interface Money {
-  amount: number; // minor units (kobo/cents)
-  currency: string; // ISO code, e.g. "NGN"
-  formatted: string; // server-formatted display string, e.g. "₦269,000.00"
+  amount: number; // minor units, always in the store's base/settlement currency — safe for client-side math
+  currency: string; // ISO code of `amount` (the base currency, NOT the shopper's chosen display currency)
+  formatted: string; // already converted + formatted in the shopper's chosen display currency (X-Currency header) — always use this for display
 }
 
 export interface ApiResponse<T> {
@@ -284,6 +284,7 @@ export interface Review {
   body?: string | null;
   is_verified_purchase: boolean;
   vendor_response?: string | null;
+  images: string[];
   helpful_count: number;
   created_at: string;
 }
