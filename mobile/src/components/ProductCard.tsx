@@ -1,8 +1,19 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Dimensions, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { COLORS, SIZES } from '../constants';
 import { Product } from '../types';
+
+// Grid math lives here (not duplicated per screen) so every product grid in
+// the app — Home, Search, Category, Store, Wishlist — gets a card width that
+// actually adds up to the screen width for a 2-column row. A hardcoded card
+// width doesn't: on a 360dp-wide phone, two 168dp cards plus 16dp side
+// padding is 368dp — 8dp wider than the screen, so the cards visibly crowd
+// or clip each other. This derives the width instead, from whatever the
+// device's screen actually is.
+export const GRID_GAP = 12;
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const DEFAULT_CARD_WIDTH = (SCREEN_WIDTH - SIZES.screenPadding * 2 - GRID_GAP) / 2;
 
 export default function ProductCard({
   product,
@@ -21,6 +32,11 @@ export default function ProductCard({
 }) {
   const [adding, setAdding] = useState(false);
   const price = product.price ?? product.price_range?.min ?? null;
+  const cardWidth = width ?? DEFAULT_CARD_WIDTH;
+  // HomeScreen's list-view toggle passes width="100%" (a string) for a
+  // full-width row — the image can't be a "100%" height in that case (no
+  // percentage-height parent), so it keeps the old fixed height instead.
+  const imageHeight = typeof cardWidth === 'number' ? cardWidth : 150;
 
   const handleAddToCart = async () => {
     if (adding || !onAddToCart) return;
@@ -33,8 +49,8 @@ export default function ProductCard({
   };
 
   return (
-    <TouchableOpacity style={[styles.card, width ? { width } : null]} onPress={onPress} activeOpacity={0.88}>
-      <View style={styles.imageBox}>
+    <TouchableOpacity style={[styles.card, { width: cardWidth, marginBottom: GRID_GAP }]} onPress={onPress} activeOpacity={0.9}>
+      <View style={[styles.imageBox, { height: imageHeight }]}>
         {product.thumbnail ? (
           <Image source={{ uri: product.thumbnail }} style={styles.image} resizeMode="cover" />
         ) : (
@@ -51,7 +67,7 @@ export default function ProductCard({
 
         {onToggleWishlist && (
           <TouchableOpacity style={styles.wishlistBtn} onPress={() => onToggleWishlist(product.id)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <IonIcon name={isWishlisted ? 'heart' : 'heart-outline'} size={16} color={isWishlisted ? COLORS.danger : COLORS.textSecondary} />
+            <IonIcon name={isWishlisted ? 'heart' : 'heart-outline'} size={15} color={isWishlisted ? COLORS.danger : COLORS.textSecondary} />
           </TouchableOpacity>
         )}
       </View>
@@ -64,6 +80,9 @@ export default function ProductCard({
           <IonIcon name="star" size={11} color={COLORS.star} />
           <Text style={styles.ratingText}>{(Number(product.rating) || 0).toFixed(1)}</Text>
           <Text style={styles.reviewCount}> ({product.review_count})</Text>
+          <Text style={product.in_stock ? styles.stockText : styles.outOfStockText}>
+            {product.in_stock ? 'In stock' : 'Out of stock'}
+          </Text>
         </View>
 
         <View style={styles.priceRow}>
@@ -73,18 +92,25 @@ export default function ProductCard({
           ) : null}
         </View>
 
-        <View style={styles.footerRow}>
-          {product.in_stock ? (
-            <Text style={styles.stockText}>In Stock</Text>
-          ) : (
-            <Text style={styles.outOfStockText}>Out of Stock</Text>
-          )}
-          {onAddToCart && (
-            <TouchableOpacity style={styles.cartFab} onPress={handleAddToCart} activeOpacity={0.85} disabled={adding || !product.in_stock}>
-              {adding ? <ActivityIndicator size="small" color={COLORS.white} /> : <IonIcon name="cart-outline" size={14} color={COLORS.white} />}
-            </TouchableOpacity>
-          )}
-        </View>
+        {onAddToCart && (
+          <TouchableOpacity
+            style={[styles.addToCartBar, !product.in_stock && styles.addToCartBarDisabled]}
+            onPress={handleAddToCart}
+            activeOpacity={0.8}
+            disabled={adding || !product.in_stock}
+          >
+            {adding ? (
+              <ActivityIndicator size="small" color={COLORS.primary} />
+            ) : (
+              <>
+                <IonIcon name="add" size={15} color={product.in_stock ? COLORS.primary : COLORS.textMuted} />
+                <Text style={[styles.addToCartText, !product.in_stock && styles.addToCartTextDisabled]}>
+                  Add to cart
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -92,12 +118,12 @@ export default function ProductCard({
 
 const styles = StyleSheet.create({
   card: {
-    width: 168, backgroundColor: COLORS.white, borderRadius: SIZES.borderRadius,
-    marginBottom: 4, elevation: 2, shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 4,
-    overflow: 'hidden',
+    backgroundColor: COLORS.white, borderRadius: 14,
+    borderWidth: 1, borderColor: COLORS.border,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 6,
+    elevation: 1, overflow: 'hidden',
   },
-  imageBox: { width: '100%', height: 150, backgroundColor: COLORS.grayLight, position: 'relative' },
+  imageBox: { width: '100%', backgroundColor: COLORS.grayLight, position: 'relative' },
   image: { width: '100%', height: '100%' },
   imagePlaceholder: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   discountBadge: {
@@ -107,7 +133,7 @@ const styles = StyleSheet.create({
   discountText: { color: COLORS.white, fontSize: 11, fontWeight: 'bold' },
   wishlistBtn: {
     position: 'absolute', top: 8, right: 8,
-    width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.9)',
+    width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.92)',
     alignItems: 'center', justifyContent: 'center',
   },
   info: { padding: 10 },
@@ -116,14 +142,17 @@ const styles = StyleSheet.create({
   ratingRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
   ratingText: { fontSize: 11, color: COLORS.text, marginLeft: 2, fontWeight: '600' },
   reviewCount: { fontSize: 11, color: COLORS.textMuted },
-  priceRow: { flexDirection: 'row', alignItems: 'baseline', flexWrap: 'wrap', marginBottom: 4 },
+  stockText: { fontSize: 10, color: COLORS.accent, fontWeight: '600', marginLeft: 'auto' },
+  outOfStockText: { fontSize: 10, color: COLORS.danger, fontWeight: '600', marginLeft: 'auto' },
+  priceRow: { flexDirection: 'row', alignItems: 'baseline', flexWrap: 'wrap', marginBottom: 8 },
   price: { fontSize: 15, fontWeight: 'bold', color: COLORS.primary, marginRight: 6 },
   comparePrice: { fontSize: 11, color: COLORS.textMuted, textDecorationLine: 'line-through' },
-  stockText: { fontSize: 11, color: COLORS.accent, fontWeight: '600' },
-  outOfStockText: { fontSize: 11, color: COLORS.danger, fontWeight: '600' },
-  footerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 },
-  cartFab: {
-    backgroundColor: COLORS.primary, borderRadius: 14,
-    width: 26, height: 26, alignItems: 'center', justifyContent: 'center',
+  addToCartBar: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4,
+    borderWidth: 1.3, borderColor: COLORS.primary, borderRadius: SIZES.borderRadiusSm,
+    paddingVertical: 7,
   },
+  addToCartBarDisabled: { borderColor: COLORS.border, backgroundColor: COLORS.grayLight },
+  addToCartText: { color: COLORS.primary, fontSize: 11.5, fontWeight: '700' },
+  addToCartTextDisabled: { color: COLORS.textMuted },
 });
