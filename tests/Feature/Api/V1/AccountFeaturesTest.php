@@ -9,7 +9,9 @@ use App\Models\ProductReview;
 use App\Models\Store;
 use App\Models\User;
 use App\Models\Vendor;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 function apiCustomerToken(): array
 {
@@ -188,6 +190,21 @@ test('a customer can submit a review, which starts pending', function () {
         ])->assertCreated();
 
     expect(ProductReview::find($response->json('data.id'))->status)->toBe(ReviewStatus::Pending);
+});
+
+test('a customer can attach photos to a review', function () {
+    Storage::fake('public');
+    [$user, $token] = apiCustomerToken();
+    $product = Product::factory()->create();
+
+    $response = $this->withHeader('Authorization', "Bearer {$token}")
+        ->post("/api/v1/products/{$product->slug}/reviews", [
+            'rating' => 5,
+            'body' => 'Loved it, see photos.',
+            'images' => [UploadedFile::fake()->image('proof.jpg')],
+        ])->assertCreated();
+
+    expect($response->json('data.images'))->toHaveCount(1);
 });
 
 test('a customer cannot review the same product twice', function () {

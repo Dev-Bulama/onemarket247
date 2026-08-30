@@ -2,6 +2,8 @@
 
 namespace App\Notifications;
 
+use App\Notifications\Channels\OneSignalChannel;
+use App\Notifications\Messages\OneSignalMessage;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -11,10 +13,13 @@ use Illuminate\Notifications\Notification;
  * A message an admin sends directly to one or many users (see
  * App\Actions\Admin\SendAdminMessageAction) — appears in the recipient's
  * account notifications (database channel, so mobile/web can list it via
- * GET /api/v1/notifications) and as an email using the same branding
- * every other notification gets. Queued: a broadcast can target thousands
- * of users at once, and each send must never block the admin's request
- * or one failed mailbox from affecting the rest of the run.
+ * GET /api/v1/notifications), as an email using the same branding every
+ * other notification gets, and — for a recipient with a registered mobile
+ * device and an admin-configured OneSignal account (see
+ * App\Filament\Pages\PushSettings) — as a native push notification.
+ * Queued: a broadcast can target thousands of users at once, and each
+ * send must never block the admin's request or one failed mailbox/push
+ * from affecting the rest of the run.
  */
 class AdminBroadcastNotification extends Notification implements ShouldQueue
 {
@@ -28,7 +33,7 @@ class AdminBroadcastNotification extends Notification implements ShouldQueue
 
     public function via(object $notifiable): array
     {
-        return ['mail', 'database'];
+        return ['mail', 'database', OneSignalChannel::class];
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -60,5 +65,10 @@ class AdminBroadcastNotification extends Notification implements ShouldQueue
             'body' => $this->body,
             'sender_name' => $this->senderName,
         ];
+    }
+
+    public function toOneSignal(object $notifiable): OneSignalMessage
+    {
+        return OneSignalMessage::create($this->subject, $this->body);
     }
 }

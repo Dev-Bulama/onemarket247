@@ -130,6 +130,11 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         return $this->hasMany(Order::class, 'customer_id');
     }
 
+    public function deviceTokens(): HasMany
+    {
+        return $this->hasMany(DeviceToken::class);
+    }
+
     public function wishlistOrCreate(): Wishlist
     {
         return $this->wishlist()->first() ?? $this->wishlist()->create();

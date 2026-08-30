@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\AddressController;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\BlogController;
 use App\Http\Controllers\Api\V1\BrandController;
 use App\Http\Controllers\Api\V1\CartController;
 use App\Http\Controllers\Api\V1\CartCouponController;
@@ -10,9 +11,11 @@ use App\Http\Controllers\Api\V1\CategoryController;
 use App\Http\Controllers\Api\V1\CheckoutController;
 use App\Http\Controllers\Api\V1\CompareController;
 use App\Http\Controllers\Api\V1\ConfigController;
+use App\Http\Controllers\Api\V1\DeviceTokenController;
 use App\Http\Controllers\Api\V1\HomeController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\OrderController;
+use App\Http\Controllers\Api\V1\PageController;
 use App\Http\Controllers\Api\V1\PaymentController;
 use App\Http\Controllers\Api\V1\PaymentWebhookController;
 use App\Http\Controllers\Api\V1\ProductController;
@@ -80,7 +83,18 @@ Route::prefix('v1')->group(function () {
 
         Route::get('products/{product:slug}/reviews', [ReviewController::class, 'index']);
         Route::get('products/{product:slug}/questions', [QuestionController::class, 'index']);
+
+        Route::get('blog', [BlogController::class, 'index']);
+        Route::get('blog/{post:slug}', [BlogController::class, 'show']);
+
+        Route::get('pages/about-us', [PageController::class, 'aboutUs']);
+        Route::get('pages/partnership', [PageController::class, 'partnership']);
+        Route::get('pages/privacy', [PageController::class, 'privacy']);
+        Route::get('pages/terms', [PageController::class, 'terms']);
+        Route::get('pages/faq', [PageController::class, 'faq']);
     });
+
+    Route::post('contact', [PageController::class, 'contact'])->middleware('throttle:5,1');
 
     // Cart — open to guests (identified by a client-persisted cart_token,
     // never a cookie — see CartResolver's docblock) and to Sanctum-
@@ -153,6 +167,9 @@ Route::prefix('v1')->group(function () {
 
         Route::post('products/{product:slug}/questions', [QuestionController::class, 'store']);
         Route::post('questions/{question}/answers', [QuestionController::class, 'answer']);
+
+        Route::post('device-tokens', [DeviceTokenController::class, 'store']);
+        Route::delete('device-tokens', [DeviceTokenController::class, 'destroy']);
     });
 
     // Vendor API — a vendor owner or active store staff managing their own

@@ -10,7 +10,9 @@ use App\Models\Product;
 use App\Models\ProductReview;
 use App\Models\User;
 use App\Notifications\ReviewRejectedNotification;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Storage;
 
 test('submitting a review creates it as pending', function () {
     $product = Product::factory()->create();
@@ -21,6 +23,17 @@ test('submitting a review creates it as pending', function () {
     expect($review->status)->toBe(ReviewStatus::Pending)
         ->and($review->product_id)->toBe($product->id)
         ->and($review->customer_id)->toBe($customer->id);
+});
+
+test('submitting a review with photos attaches them to the review', function () {
+    Storage::fake('public');
+    $product = Product::factory()->create();
+    $customer = User::factory()->create(['user_type' => UserType::Customer]);
+    $images = [UploadedFile::fake()->image('one.jpg'), UploadedFile::fake()->image('two.jpg')];
+
+    $review = app(SubmitReviewAction::class)->handle($product, $customer, 5, 'Great', 'Loved it.', $images);
+
+    expect($review->getMedia('images'))->toHaveCount(2);
 });
 
 test('a customer cannot submit a second review for the same product', function () {

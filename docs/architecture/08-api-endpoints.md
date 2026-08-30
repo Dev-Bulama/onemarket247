@@ -134,10 +134,14 @@ second place for it to drift out of sync.
 ```
 GET/POST/DELETE /api/v1/wishlist                    ✅
 GET/POST/DELETE /api/v1/compare                     ✅
-GET/POST        /api/v1/products/{slug}/reviews     ✅ (GET public; POST requires auth)
+GET/POST        /api/v1/products/{slug}/reviews     ✅ (GET public; POST requires auth; POST accepts multipart `images[]`, up to 5, stored via Spatie Media Library same as products)
 POST            /api/v1/reviews/{id}/helpful        ✅
 GET/POST        /api/v1/products/{slug}/questions   ✅ (GET public; POST requires auth)
 POST            /api/v1/questions/{id}/answers      ✅ (any Sanctum user — ProductQuestionPolicy::answer decides if they may, same as web: the product's own vendor/staff, or an admin)
+GET             /api/v1/blog                        ✅ (mirrors Storefront\BlogController::index)
+GET             /api/v1/blog/{slug}                 ✅ (mirrors Storefront\BlogController::show, same published/404 rules)
+GET             /api/v1/pages/{about-us,partnership,privacy,terms,faq}  ✅ (structured JSON sourced from config('static_pages') — the exact same content the storefront Blade pages render, kept in one place so the two can't drift)
+POST            /api/v1/contact                     ✅ (mirrors Storefront\PageController::submitContact)
 ```
 
 ## 8. Returns / Refunds / Disputes
@@ -167,8 +171,10 @@ GET  /api/v1/gift-cards/{code}/balance
 ## 10. Notifications / Support
 
 ```
-GET   /api/v1/notifications        ✅
-PATCH /api/v1/notifications/{id}/read ✅
+GET    /api/v1/notifications        ✅
+PATCH  /api/v1/notifications/{id}/read ✅
+POST   /api/v1/device-tokens        ✅ (registers/reassigns a OneSignal player id to the authenticated user — see App\Http\Controllers\Api\V1\DeviceTokenController)
+DELETE /api/v1/device-tokens        ✅ (unregisters one, called on logout)
 GET   /api/v1/support
 POST  /api/v1/support
 GET   /api/v1/support/{ticket}
@@ -192,6 +198,14 @@ admin panel — but delivery reuses this exact notifications list: a
 broadcast is just another row here, on both web (`/account/notifications`)
 and `GET /api/v1/notifications`. See `App\Actions\Admin\SendAdminMessageAction`
 and `App\Notifications\AdminBroadcastNotification`.
+
+Since this notification's `via()` also includes `App\Notifications\Channels\OneSignalChannel`,
+it additionally delivers as a native push to every device the recipient
+has registered (`POST /api/v1/device-tokens`) — but only once an admin
+has entered real OneSignal credentials in `App\Filament\Pages\PushSettings`
+(`is_active` + App ID + REST API key); otherwise the channel is a no-op
+and the mail/database delivery is unaffected either way. A push failure
+never blocks the other channels — see that class's docblock.
 
 ## 11. Profile / Addresses
 

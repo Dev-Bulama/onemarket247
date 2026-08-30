@@ -20,6 +20,7 @@ class ReviewResource extends JsonResource
             'body' => $this->body,
             'is_verified_purchase' => $this->is_verified_purchase,
             'vendor_response' => $this->vendor_response,
+            'images' => $this->getMedia('images')->map(fn ($media) => $media->getUrl())->values(),
             'helpful_count' => $this->helpful_count,
             'created_at' => $this->created_at,
         ];

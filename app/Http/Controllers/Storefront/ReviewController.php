@@ -24,6 +24,7 @@ class ReviewController extends Controller
                 $request->integer('rating'),
                 $request->string('title')->value() ?: null,
                 $request->string('body')->value(),
+                $request->file('images', []),
             );
         } catch (RuntimeException $e) {
             return back()->withErrors(['review' => $e->getMessage()]);

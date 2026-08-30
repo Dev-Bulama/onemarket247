@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Middleware\EnsureVendorAccess;
+use App\Http\Middleware\SetApiDisplayCurrency;
+use App\Http\Middleware\SetApiLocale;
 use App\Http\Middleware\SetDeliveryLocation;
 use App\Http\Middleware\SetDisplayCurrency;
 use App\Http\Middleware\SetLocale;
@@ -26,6 +28,10 @@ return Application::configure(basePath: dirname(__DIR__))
             SetDisplayCurrency::class,
             SetDeliveryLocation::class,
             ShareStorefrontNavigation::class,
+        ]);
+        $middleware->api(append: [
+            SetApiLocale::class,
+            SetApiDisplayCurrency::class,
         ]);
         $middleware->alias(['vendor.access' => EnsureVendorAccess::class]);
     })
