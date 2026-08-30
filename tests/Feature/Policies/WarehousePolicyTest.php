@@ -19,14 +19,17 @@ test('the owning vendor can update and delete their own warehouse', function () 
 });
 
 test('an active store staff member with store.inventory.manage can update the warehouse', function () {
-    Permission::findOrCreate('store.inventory.manage', 'web');
+    // store.* permissions are seeded under the "vendor" guard in
+    // production (RolePermissionSeeder) — see WarehousePolicy for why
+    // policies now check the permission against that guard explicitly.
+    $permission = Permission::findOrCreate('store.inventory.manage', 'vendor');
 
     $vendor = Vendor::factory()->create();
     $store = Store::factory()->for($vendor)->create();
     $warehouse = Warehouse::factory()->create(['vendor_id' => $vendor->id]);
 
     $staffUser = User::factory()->create();
-    $staffUser->givePermissionTo('store.inventory.manage');
+    $staffUser->givePermissionTo($permission);
     StoreStaff::factory()->create([
         'store_id' => $store->id,
         'user_id' => $staffUser->id,

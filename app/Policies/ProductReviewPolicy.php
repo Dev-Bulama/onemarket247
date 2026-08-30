@@ -66,6 +66,11 @@ class ProductReviewPolicy
             ->where('status', StoreStaffStatus::Active)
             ->exists();
 
-        return $isActiveStaff && $user->can('store.reviews.respond');
+        // store.* permissions are seeded under the "vendor" guard; can()
+        // only resolves them inside a request already defaulting to that
+        // guard (the Filament vendor panel), not a Sanctum API request
+        // (default guard "web") — see ProductPolicy for the same fix,
+        // applied first.
+        return $isActiveStaff && $user->checkPermissionTo('store.reviews.respond', 'vendor');
     }
 }

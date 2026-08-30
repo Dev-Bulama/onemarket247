@@ -51,7 +51,12 @@ class StockTransferPolicy
             return false;
         }
 
-        return $storePermission === null || $user->can($storePermission);
+        // store.* permissions are seeded under the "vendor" guard; can()
+        // only resolves them inside a request already defaulting to that
+        // guard (the Filament vendor panel), not a Sanctum API request
+        // (default guard "web") — see ProductPolicy for the same fix,
+        // applied first.
+        return $storePermission === null || $user->checkPermissionTo($storePermission, 'vendor');
     }
 
     private function hasVendorWriteAccess(User $user): bool
@@ -62,6 +67,6 @@ class StockTransferPolicy
 
         return $user->storeStaff()
             ->where('status', StoreStaffStatus::Active)
-            ->exists() && $user->can('store.inventory.manage');
+            ->exists() && $user->checkPermissionTo('store.inventory.manage', 'vendor');
     }
 }

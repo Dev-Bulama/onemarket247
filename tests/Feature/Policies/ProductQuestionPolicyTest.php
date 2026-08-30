@@ -35,7 +35,10 @@ test('the owning vendor can view and answer a question on their product', functi
 });
 
 test('an active store staff member with store.questions.answer can answer the question', function () {
-    Permission::findOrCreate('store.questions.answer', 'web');
+    // store.* permissions are seeded under the "vendor" guard in
+    // production (RolePermissionSeeder) — see ProductPolicy for why
+    // policies now check the permission against that guard explicitly.
+    $permission = Permission::findOrCreate('store.questions.answer', 'vendor');
 
     $vendor = Vendor::factory()->create();
     $store = Store::factory()->for($vendor)->create();
@@ -43,7 +46,7 @@ test('an active store staff member with store.questions.answer can answer the qu
     $question = ProductQuestion::factory()->for($product)->create();
 
     $staffUser = User::factory()->create();
-    $staffUser->givePermissionTo('store.questions.answer');
+    $staffUser->givePermissionTo($permission);
     StoreStaff::factory()->create([
         'store_id' => $store->id,
         'user_id' => $staffUser->id,

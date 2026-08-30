@@ -53,7 +53,10 @@ test('the owning vendor can view and respond to a review on their product', func
 });
 
 test('an active store staff member with store.reviews.respond can view and respond to the review', function () {
-    Permission::findOrCreate('store.reviews.respond', 'web');
+    // store.* permissions are seeded under the "vendor" guard in
+    // production (RolePermissionSeeder) — see ProductPolicy for why
+    // policies now check the permission against that guard explicitly.
+    $permission = Permission::findOrCreate('store.reviews.respond', 'vendor');
 
     $vendor = Vendor::factory()->create();
     $store = Store::factory()->for($vendor)->create();
@@ -61,7 +64,7 @@ test('an active store staff member with store.reviews.respond can view and respo
     $review = ProductReview::factory()->for($product)->approved()->create();
 
     $staffUser = User::factory()->create();
-    $staffUser->givePermissionTo('store.reviews.respond');
+    $staffUser->givePermissionTo($permission);
     StoreStaff::factory()->create([
         'store_id' => $store->id,
         'user_id' => $staffUser->id,

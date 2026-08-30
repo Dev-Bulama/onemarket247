@@ -30,6 +30,10 @@ use App\Http\Controllers\Api\V1\Vendor\EarningsController as VendorEarningsContr
 use App\Http\Controllers\Api\V1\Vendor\InventoryController as VendorInventoryController;
 use App\Http\Controllers\Api\V1\Vendor\ProductController as VendorProductController;
 use App\Http\Controllers\Api\V1\Vendor\StoreController as VendorStoreController;
+use App\Http\Controllers\Api\V1\Vendor\StoreStaffController;
+use App\Http\Controllers\Api\V1\Vendor\SubscriptionController;
+use App\Http\Controllers\Api\V1\Vendor\VendorApplicationController;
+use App\Http\Controllers\Api\V1\Vendor\VendorDocumentController;
 use App\Http\Controllers\Api\V1\Vendor\VendorOrderController;
 use App\Http\Controllers\Api\V1\Vendor\WithdrawalController as VendorWithdrawalController;
 use App\Http\Controllers\Api\V1\WishlistController;
@@ -51,6 +55,13 @@ Route::prefix('v1')->group(function () {
 
     // Unauthenticated by design — see PaymentWebhookController.
     Route::post('webhooks/payments/{gateway}', PaymentWebhookController::class)->name('api.webhooks.payments');
+
+    // Public vendor onboarding — someone applying to become a vendor has no
+    // account yet, so this can't live in the auth:sanctum-gated vendor
+    // group below. Throttled like forgot-password: an unauthenticated
+    // write with real cost (documents get stored, a vendor may get
+    // auto-provisioned).
+    Route::post('vendor/apply', [VendorApplicationController::class, 'store'])->middleware('throttle:5,1');
 
     // Public catalog browsing — generous throttle, no auth required, mirrors
     // the storefront's own web controllers query-for-query (see each
@@ -183,8 +194,10 @@ Route::prefix('v1')->group(function () {
         Route::patch('store', [VendorStoreController::class, 'update']);
 
         Route::get('products', [VendorProductController::class, 'index']);
+        Route::post('products', [VendorProductController::class, 'store']);
         Route::get('products/{product}', [VendorProductController::class, 'show']);
         Route::patch('products/{product}', [VendorProductController::class, 'update']);
+        Route::delete('products/{product}', [VendorProductController::class, 'destroy']);
 
         Route::get('inventory', [VendorInventoryController::class, 'index']);
         Route::patch('inventory/{warehouseStock}', [VendorInventoryController::class, 'adjust']);
@@ -201,5 +214,16 @@ Route::prefix('v1')->group(function () {
         Route::post('withdrawals', [VendorWithdrawalController::class, 'store']);
         Route::post('withdrawals/methods', [VendorWithdrawalController::class, 'addMethod']);
         Route::post('withdrawals/{withdrawal}/cancel', [VendorWithdrawalController::class, 'cancel']);
+
+        Route::get('staff', [StoreStaffController::class, 'index']);
+        Route::post('staff', [StoreStaffController::class, 'store']);
+        Route::patch('staff/{storeStaff}', [StoreStaffController::class, 'update']);
+        Route::delete('staff/{storeStaff}', [StoreStaffController::class, 'destroy']);
+
+        Route::get('subscription', [SubscriptionController::class, 'index']);
+        Route::post('subscription/switch', [SubscriptionController::class, 'switchTo']);
+
+        Route::get('documents', [VendorDocumentController::class, 'index']);
+        Route::post('documents', [VendorDocumentController::class, 'store']);
     });
 });

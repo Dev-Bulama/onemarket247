@@ -18,14 +18,17 @@ test('the owning vendor can view their own vendor order', function () {
 });
 
 test('an active store staff member with store.orders.manage can view the vendor order', function () {
-    Permission::findOrCreate('store.orders.manage', 'web');
+    // store.* permissions are seeded under the "vendor" guard in
+    // production (RolePermissionSeeder) — see VendorOrderPolicy for why
+    // policies now check the permission against that guard explicitly.
+    $permission = Permission::findOrCreate('store.orders.manage', 'vendor');
 
     $vendor = Vendor::factory()->create();
     $store = Store::factory()->for($vendor)->create();
     $vendorOrder = VendorOrder::factory()->create(['order_id' => Order::factory(), 'vendor_id' => $vendor->id]);
 
     $staffUser = User::factory()->create();
-    $staffUser->givePermissionTo('store.orders.manage');
+    $staffUser->givePermissionTo($permission);
     StoreStaff::factory()->create([
         'store_id' => $store->id,
         'user_id' => $staffUser->id,

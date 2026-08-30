@@ -50,6 +50,15 @@ class ProductPolicy
         return $user->can('products.feature');
     }
 
+    /**
+     * store.* permissions are seeded under the "vendor" guard (see
+     * RolePermissionSeeder), so $user->can() resolves them correctly only
+     * inside a request whose default auth guard is already "vendor" (the
+     * Filament vendor panel). Outside that — a Sanctum API request, whose
+     * default guard is "web" — can() silently returns false even for a
+     * correctly-permissioned staff member. checkPermissionTo() with an
+     * explicit guard is immune to that.
+     */
     private function hasProductAccess(User $user, Product $product, ?string $storePermission = null): bool
     {
         if ($product->vendor?->user_id === $user->id) {
@@ -65,7 +74,7 @@ class ProductPolicy
             return false;
         }
 
-        return $storePermission === null || $user->can($storePermission);
+        return $storePermission === null || $user->checkPermissionTo($storePermission, 'vendor');
     }
 
     private function hasVendorWriteAccess(User $user): bool
@@ -76,6 +85,6 @@ class ProductPolicy
 
         return $user->storeStaff()
             ->where('status', StoreStaffStatus::Active)
-            ->exists() && $user->can('store.products.manage');
+            ->exists() && $user->checkPermissionTo('store.products.manage', 'vendor');
     }
 }

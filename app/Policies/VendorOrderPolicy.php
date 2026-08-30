@@ -47,8 +47,15 @@ class VendorOrderPolicy
             return false;
         }
 
+        // store.* permissions are seeded under the "vendor" guard; can()
+        // only resolves them inside a request already defaulting to that
+        // guard (the Filament vendor panel) — a Sanctum API request's
+        // default guard is "web", where can() wrongly returns false for a
+        // correctly-permissioned staff member. checkPermissionTo() with an
+        // explicit guard is immune to that (see ProductPolicy for the same
+        // fix, applied first).
         return $storePermission === null
-            ? $user->can('store.orders.manage')
-            : $user->can($storePermission);
+            ? $user->checkPermissionTo('store.orders.manage', 'vendor')
+            : $user->checkPermissionTo($storePermission, 'vendor');
     }
 }

@@ -15,11 +15,14 @@ test('the owning vendor can update their store', function () {
 });
 
 test('an active store staff member with the right permission can update the store', function () {
-    Permission::findOrCreate('store.settings.manage', 'web');
+    // store.* permissions are seeded under the "vendor" guard in
+    // production (RolePermissionSeeder) — see StorePolicy for why the
+    // policy now checks the permission against that guard explicitly.
+    $permission = Permission::findOrCreate('store.settings.manage', 'vendor');
 
     $store = Store::factory()->create();
     $staffUser = User::factory()->create();
-    $staffUser->givePermissionTo('store.settings.manage');
+    $staffUser->givePermissionTo($permission);
     StoreStaff::factory()->create([
         'store_id' => $store->id,
         'user_id' => $staffUser->id,
@@ -30,11 +33,11 @@ test('an active store staff member with the right permission can update the stor
 });
 
 test('a suspended store staff member cannot update the store even with the permission', function () {
-    Permission::findOrCreate('store.settings.manage', 'web');
+    $permission = Permission::findOrCreate('store.settings.manage', 'vendor');
 
     $store = Store::factory()->create();
     $staffUser = User::factory()->create();
-    $staffUser->givePermissionTo('store.settings.manage');
+    $staffUser->givePermissionTo($permission);
     StoreStaff::factory()->create([
         'store_id' => $store->id,
         'user_id' => $staffUser->id,

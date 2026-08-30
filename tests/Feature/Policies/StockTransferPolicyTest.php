@@ -33,14 +33,17 @@ test('the owning vendor can view and update their own transfer', function () {
 });
 
 test('an active store staff member with store.inventory.manage can update the transfer', function () {
-    Permission::findOrCreate('store.inventory.manage', 'web');
+    // store.* permissions are seeded under the "vendor" guard in
+    // production (RolePermissionSeeder) — see ProductPolicy for why
+    // policies now check the permission against that guard explicitly.
+    $permission = Permission::findOrCreate('store.inventory.manage', 'vendor');
 
     $vendor = Vendor::factory()->create();
     $store = Store::factory()->for($vendor)->create();
     $transfer = makeTransfer($vendor);
 
     $staffUser = User::factory()->create();
-    $staffUser->givePermissionTo('store.inventory.manage');
+    $staffUser->givePermissionTo($permission);
     StoreStaff::factory()->create([
         'store_id' => $store->id,
         'user_id' => $staffUser->id,
