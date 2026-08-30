@@ -195,6 +195,8 @@ export const vendorEarningsApi = {
 export const vendorWithdrawalsApi = {
   list: (page = 1) => apiClient.get<PaginatedResponse<VendorWithdrawal>>('/vendor/withdrawals', { params: { page } }),
 
+  methods: () => apiClient.get<ApiResponse<VendorWithdrawalMethod[]>>('/vendor/withdrawals/methods'),
+
   addMethod: (data: { bank_name: string; account_name: string; account_number: string; is_default?: boolean }) =>
     apiClient.post<ApiResponse<VendorWithdrawalMethod>>('/vendor/withdrawals/methods', data),
 

@@ -18,15 +18,13 @@ export default function VendorWithdrawalsScreen({ navigation }: any) {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState('');
 
-  // There is no GET endpoint to list a vendor's existing withdrawal
-  // methods — only POST /vendor/withdrawals/methods to add one. Methods
-  // added this session are kept here so they can be picked for a
-  // withdrawal request; on a fresh app launch the vendor needs to re-add
-  // a bank account once before requesting a withdrawal. (Flagged as a
-  // backend gap — ideally there'd be a GET list endpoint.)
   const [methods, setMethods] = useState<VendorWithdrawalMethod[]>([]);
   const [addMethodVisible, setAddMethodVisible] = useState(false);
   const [requestVisible, setRequestVisible] = useState(false);
+
+  const loadMethods = useCallback(() => {
+    vendorWithdrawalsApi.methods().then(res => setMethods(res.data.data)).catch(() => {});
+  }, []);
 
   const load = useCallback(async (targetPage: number) => {
     if (targetPage === 1) setLoading(true); else setLoadingMore(true);
@@ -44,7 +42,7 @@ export default function VendorWithdrawalsScreen({ navigation }: any) {
     }
   }, []);
 
-  useFocusEffect(useCallback(() => { load(1); }, [load]));
+  useFocusEffect(useCallback(() => { load(1); loadMethods(); }, [load, loadMethods]));
 
   const handleCancel = (withdrawal: VendorWithdrawal) => {
     vendorWithdrawalsApi.cancel(Number(withdrawal.id))

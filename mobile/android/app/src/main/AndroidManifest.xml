@@ -1,6 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Vendor onboarding/document upload lets a vendor take a photo of an
+         ID/business document (react-native-image-picker's launchCamera) —
+         required for that camera intent to be granted at runtime. -->
+    <uses-permission android:name="android.permission.CAMERA" />
 
     <application
       android:name=".MainApplication"

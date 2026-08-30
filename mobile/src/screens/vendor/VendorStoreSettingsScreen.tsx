@@ -21,16 +21,17 @@ export default function VendorStoreSettingsScreen({ navigation }: any) {
   const [seoTitle, setSeoTitle] = useState('');
   const [seoDescription, setSeoDescription] = useState('');
 
-  // StoreResource (the GET /vendor/store shape) doesn't include email or
-  // phone even though PATCH accepts them — city/state/country come back as
-  // plain display strings too, not ids, so there's no country/state/city
-  // picker here, just a free-text address field (per the build spec).
+  // city/state/country come back as plain display strings, not ids, so
+  // there's no country/state/city picker here, just a free-text address
+  // field (per the build spec).
   useEffect(() => {
     vendorStoreApi.show()
       .then(res => {
         const store = res.data.data;
         setName(store.name);
         setDescription(store.description ?? '');
+        setEmail(store.email ?? '');
+        setPhone(store.phone ?? '');
         setAddress(store.address ?? '');
         setOnVacation(store.status === 'vacation');
         setVacationMessage(store.vacation_message ?? '');

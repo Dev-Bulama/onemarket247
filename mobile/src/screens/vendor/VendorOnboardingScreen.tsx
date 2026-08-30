@@ -1,20 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, Modal, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { Asset, launchImageLibrary } from 'react-native-image-picker';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { COLORS, SIZES } from '../../constants';
-import { vendorApplicationApi } from '../../api/vendor';
+import { vendorApplicationApi, PickedFile } from '../../api/vendor';
 import { referenceApi } from '../../api/config';
 import { apiErrorMessage } from '../../api/client';
+import { pickDocumentFile, takeDocumentPhoto } from '../../utils/documentPicker';
 import { City, Country, State } from '../../types';
 import { VendorApplicationReceipt } from '../../types/vendor';
 
-// Documents are images only in this v1 — a photo of the ID/document via
-// react-native-image-picker, not a real document picker (see the
-// scope-constraints note in the build spec: adding a PDF picker means
-// another native Android rebuild cycle, out of scope right now). The
-// backend still accepts a pdf mime for these fields, it's just that the
-// app only offers a camera-roll photo.
 const STEPS = ['Business', 'Store', 'Banking', 'Documents'] as const;
 
 interface FormState {
@@ -61,9 +55,9 @@ export default function VendorOnboardingScreen({ navigation }: any) {
   const [cities, setCities] = useState<City[]>([]);
   const [pickerFor, setPickerFor] = useState<'country' | 'state' | 'city' | null>(null);
 
-  const [identityDoc, setIdentityDoc] = useState<Asset | null>(null);
-  const [businessDoc, setBusinessDoc] = useState<Asset | null>(null);
-  const [taxDoc, setTaxDoc] = useState<Asset | null>(null);
+  const [identityDoc, setIdentityDoc] = useState<PickedFile | null>(null);
+  const [businessDoc, setBusinessDoc] = useState<PickedFile | null>(null);
+  const [taxDoc, setTaxDoc] = useState<PickedFile | null>(null);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -84,10 +78,20 @@ export default function VendorOnboardingScreen({ navigation }: any) {
     else setCities([]);
   }, [form.stateId]);
 
-  const pickImage = (onPicked: (asset: Asset) => void) => {
-    launchImageLibrary({ mediaType: 'photo', selectionLimit: 1 }, response => {
-      if (response.assets?.[0]) onPicked(response.assets[0]);
-    });
+  const pickFile = async (onPicked: (file: PickedFile) => void) => {
+    setError('');
+    try {
+      const file = await pickDocumentFile();
+      if (file) onPicked(file);
+    } catch {
+      setError('Could not open the file picker. Please try again.');
+    }
+  };
+
+  const takePhoto = async (onPicked: (file: PickedFile) => void) => {
+    setError('');
+    const file = await takeDocumentPhoto();
+    if (file) onPicked(file);
   };
 
   const validateStep = (): string => {
@@ -124,12 +128,6 @@ export default function VendorOnboardingScreen({ navigation }: any) {
     setStep(prev => prev - 1);
   };
 
-  const toFile = (asset: Asset, fallbackName: string) => ({
-    uri: asset.uri!,
-    name: asset.fileName ?? fallbackName,
-    type: asset.type ?? 'image/jpeg',
-  });
-
   const handleSubmit = async () => {
     const validationError = validateStep();
     if (validationError) { setError(validationError); return; }
@@ -158,9 +156,9 @@ export default function VendorOnboardingScreen({ navigation }: any) {
         bank_name: form.bankName.trim(),
         bank_account_name: form.bankAccountName.trim(),
         bank_account_number: form.bankAccountNumber.trim(),
-        identity_document: toFile(identityDoc!, 'identity.jpg'),
-        business_registration_document: toFile(businessDoc!, 'business-registration.jpg'),
-        tax_certificate_document: taxDoc ? toFile(taxDoc, 'tax-certificate.jpg') : undefined,
+        identity_document: identityDoc!,
+        business_registration_document: businessDoc!,
+        tax_certificate_document: taxDoc ?? undefined,
         terms: form.terms,
       });
       setReceipt(res.data.data);
@@ -289,9 +287,9 @@ export default function VendorOnboardingScreen({ navigation }: any) {
 
         {step === 3 && (
           <>
-            <DocumentPicker label="Identity Document" required asset={identityDoc} onPick={() => pickImage(setIdentityDoc)} onRemove={() => setIdentityDoc(null)} />
-            <DocumentPicker label="Business Registration Document" required asset={businessDoc} onPick={() => pickImage(setBusinessDoc)} onRemove={() => setBusinessDoc(null)} />
-            <DocumentPicker label="Tax Certificate (optional)" asset={taxDoc} onPick={() => pickImage(setTaxDoc)} onRemove={() => setTaxDoc(null)} />
+            <DocumentPicker label="Identity Document" required file={identityDoc} onPickFile={() => pickFile(setIdentityDoc)} onTakePhoto={() => takePhoto(setIdentityDoc)} onRemove={() => setIdentityDoc(null)} />
+            <DocumentPicker label="Business Registration Document" required file={businessDoc} onPickFile={() => pickFile(setBusinessDoc)} onTakePhoto={() => takePhoto(setBusinessDoc)} onRemove={() => setBusinessDoc(null)} />
+            <DocumentPicker label="Tax Certificate (optional)" file={taxDoc} onPickFile={() => pickFile(setTaxDoc)} onTakePhoto={() => takePhoto(setTaxDoc)} onRemove={() => setTaxDoc(null)} />
 
             <View style={styles.termsRow}>
               <Switch value={form.terms} onValueChange={v => set('terms', v)} trackColor={{ true: COLORS.primary }} />
@@ -361,28 +359,43 @@ function Field(props: {
   );
 }
 
-function DocumentPicker({ label, required, asset, onPick, onRemove }: {
+function DocumentPicker({ label, required, file, onPickFile, onTakePhoto, onRemove }: {
   label: string;
   required?: boolean;
-  asset: Asset | null;
-  onPick: () => void;
+  file: PickedFile | null;
+  onPickFile: () => void;
+  onTakePhoto: () => void;
   onRemove: () => void;
 }) {
+  const isImage = file?.type?.startsWith('image/');
   return (
     <View style={{ marginBottom: 16 }}>
       <Text style={styles.label}>{label}{required ? ' *' : ''}</Text>
-      {asset?.uri ? (
+      {file ? (
         <View style={styles.docPreviewBox}>
-          <Image source={{ uri: asset.uri }} style={styles.docPreviewImage} />
+          {isImage ? (
+            <Image source={{ uri: file.uri }} style={styles.docPreviewImage} />
+          ) : (
+            <View style={[styles.docPreviewImage, styles.docPreviewFile]}>
+              <IonIcon name="document-text-outline" size={28} color={COLORS.textSecondary} />
+              <Text style={styles.docFileName} numberOfLines={2}>{file.name}</Text>
+            </View>
+          )}
           <TouchableOpacity style={styles.docRemoveBtn} onPress={onRemove}>
             <IonIcon name="close-circle" size={20} color={COLORS.danger} />
           </TouchableOpacity>
         </View>
       ) : (
-        <TouchableOpacity style={styles.docPickBtn} onPress={onPick}>
-          <IonIcon name="camera-outline" size={20} color={COLORS.textSecondary} />
-          <Text style={styles.docPickText}>Take or choose a photo</Text>
-        </TouchableOpacity>
+        <View style={styles.docPickRow}>
+          <TouchableOpacity style={styles.docPickBtn} onPress={onPickFile}>
+            <IonIcon name="document-outline" size={20} color={COLORS.textSecondary} />
+            <Text style={styles.docPickText}>Choose PDF or Image</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.docPickBtn} onPress={onTakePhoto}>
+            <IonIcon name="camera-outline" size={20} color={COLORS.textSecondary} />
+            <Text style={styles.docPickText}>Take Photo</Text>
+          </TouchableOpacity>
+        </View>
       )}
     </View>
   );
@@ -412,10 +425,13 @@ const styles = StyleSheet.create({
   selectInput: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 12, backgroundColor: COLORS.grayLight },
   selectValue: { fontSize: 13, color: COLORS.text },
   selectPlaceholder: { fontSize: 13, color: COLORS.placeholder },
-  docPickBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderColor: COLORS.border, borderStyle: 'dashed', borderRadius: SIZES.borderRadiusSm, padding: 14, backgroundColor: COLORS.grayLight },
-  docPickText: { fontSize: 13, color: COLORS.textSecondary },
+  docPickRow: { flexDirection: 'row', gap: 8 },
+  docPickBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1, borderColor: COLORS.border, borderStyle: 'dashed', borderRadius: SIZES.borderRadiusSm, padding: 12, backgroundColor: COLORS.grayLight },
+  docPickText: { fontSize: 12, color: COLORS.textSecondary, textAlign: 'center' },
   docPreviewBox: { position: 'relative', width: 100, height: 100 },
   docPreviewImage: { width: 100, height: 100, borderRadius: SIZES.borderRadiusSm },
+  docPreviewFile: { alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.grayLight, padding: 6 },
+  docFileName: { fontSize: 9, color: COLORS.textSecondary, textAlign: 'center', marginTop: 4 },
   docRemoveBtn: { position: 'absolute', top: -8, right: -8, backgroundColor: COLORS.white, borderRadius: 12 },
   termsRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 20 },
   termsText: { flex: 1, fontSize: 13, color: COLORS.text },

@@ -1,17 +1,15 @@
 import React, { useCallback, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { ActivityIndicator, FlatList, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Asset, launchImageLibrary } from 'react-native-image-picker';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { COLORS, DOCUMENT_STATUSES, SIZES } from '../../constants';
 import { vendorDocumentsApi } from '../../api/vendor';
 import { apiErrorMessage } from '../../api/client';
+import { PickedFile } from '../../api/vendor';
 import { VendorDocumentItem } from '../../types/vendor';
 import StatusBadge from '../../components/StatusBadge';
+import { pickDocumentFile, takeDocumentPhoto } from '../../utils/documentPicker';
 
-// Documents are images only in this v1 (see VendorOnboardingScreen's header
-// comment) — a photo of the document via react-native-image-picker, not a
-// real document/PDF picker.
 const DOCUMENT_TYPES: { value: string; label: string }[] = [
   { value: 'identity', label: 'Identity Document' },
   { value: 'business_registration', label: 'Business Registration' },
@@ -105,26 +103,32 @@ export default function VendorDocumentsScreen({ navigation }: any) {
 
 function UploadSheet({ onClose, onUploaded }: { onClose: () => void; onUploaded: (document: VendorDocumentItem) => void }) {
   const [type, setType] = useState('identity');
-  const [asset, setAsset] = useState<Asset | null>(null);
+  const [file, setFile] = useState<PickedFile | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
 
-  const pickImage = () => {
-    launchImageLibrary({ mediaType: 'photo', selectionLimit: 1 }, response => {
-      if (response.assets?.[0]) setAsset(response.assets[0]);
-    });
+  const handlePickFile = async () => {
+    setError('');
+    try {
+      const picked = await pickDocumentFile();
+      if (picked) setFile(picked);
+    } catch {
+      setError('Could not open the file picker. Please try again.');
+    }
+  };
+
+  const handleTakePhoto = async () => {
+    setError('');
+    const picked = await takeDocumentPhoto();
+    if (picked) setFile(picked);
   };
 
   const handleSubmit = async () => {
-    if (!asset?.uri) { setError('Please choose a photo of the document.'); return; }
+    if (!file) { setError('Please choose a file or take a photo of the document.'); return; }
     setUploading(true);
     setError('');
     try {
-      const res = await vendorDocumentsApi.upload(type, {
-        uri: asset.uri,
-        name: asset.fileName ?? 'document.jpg',
-        type: asset.type ?? 'image/jpeg',
-      });
+      const res = await vendorDocumentsApi.upload(type, file);
       onUploaded(res.data.data);
     } catch (e) {
       setError(apiErrorMessage(e, 'Could not upload this document.'));
@@ -148,11 +152,18 @@ function UploadSheet({ onClose, onUploaded }: { onClose: () => void; onUploaded:
           ))}
         </View>
 
-        <Text style={styles.label}>Photo</Text>
-        <TouchableOpacity style={styles.pickBtn} onPress={pickImage}>
-          <IonIcon name="camera-outline" size={20} color={COLORS.textSecondary} />
-          <Text style={styles.pickBtnText}>{asset ? 'Change photo' : 'Take or choose a photo'}</Text>
-        </TouchableOpacity>
+        <Text style={styles.label}>File</Text>
+        {file ? <Text style={styles.fileName} numberOfLines={1}>{file.name}</Text> : null}
+        <View style={styles.pickRow}>
+          <TouchableOpacity style={styles.pickBtn} onPress={handlePickFile}>
+            <IonIcon name="document-outline" size={20} color={COLORS.textSecondary} />
+            <Text style={styles.pickBtnText}>Choose PDF or Image</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.pickBtn} onPress={handleTakePhoto}>
+            <IonIcon name="camera-outline" size={20} color={COLORS.textSecondary} />
+            <Text style={styles.pickBtnText}>Take Photo</Text>
+          </TouchableOpacity>
+        </View>
 
         <TouchableOpacity style={styles.saveBtn} onPress={handleSubmit} disabled={uploading}>
           {uploading ? <ActivityIndicator color={COLORS.white} /> : <Text style={styles.saveBtnText}>Upload</Text>}
@@ -189,8 +200,10 @@ const styles = StyleSheet.create({
   chipActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
   chipText: { fontSize: 12, color: COLORS.text, fontWeight: '600' },
   chipTextActive: { color: COLORS.white },
-  pickBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderColor: COLORS.border, borderStyle: 'dashed', borderRadius: SIZES.borderRadiusSm, padding: 14, backgroundColor: COLORS.grayLight },
-  pickBtnText: { fontSize: 13, color: COLORS.textSecondary },
+  fileName: { fontSize: 12, color: COLORS.text, marginBottom: 8 },
+  pickRow: { flexDirection: 'row', gap: 8 },
+  pickBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1, borderColor: COLORS.border, borderStyle: 'dashed', borderRadius: SIZES.borderRadiusSm, padding: 12, backgroundColor: COLORS.grayLight },
+  pickBtnText: { fontSize: 12, color: COLORS.textSecondary, textAlign: 'center' },
   saveBtn: { backgroundColor: COLORS.primary, borderRadius: SIZES.borderRadius, paddingVertical: 14, alignItems: 'center', marginTop: 20 },
   saveBtnText: { color: COLORS.white, fontWeight: 'bold', fontSize: 15 },
 });

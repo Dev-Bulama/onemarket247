@@ -14,6 +14,8 @@ export interface VendorStoreProfile {
   name: string;
   slug: string;
   description?: string | null;
+  email?: string | null;
+  phone?: string | null;
   status: string;
   is_verified: boolean;
   is_featured: boolean;
@@ -86,10 +88,6 @@ export interface VendorWithdrawal {
   rejection_reason?: string | null;
 }
 
-// Returned only by POST /vendor/withdrawals/methods — there is no GET list
-// endpoint for these (backend gap, see mobile/src/screens/vendor/
-// VendorWithdrawalsScreen.tsx's header comment), so screens keep whatever
-// methods get created in-session in local state.
 export interface VendorWithdrawalMethod {
   id: number;
   bank_name: string;

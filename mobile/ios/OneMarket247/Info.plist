@@ -34,6 +34,10 @@
 	</dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string></string>
+	<key>NSCameraUsageDescription</key>
+	<string>Take a photo of a product review or a vendor document.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Choose photos for a product, review, or vendor document.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIRequiredDeviceCapabilities</key>
