@@ -1,0 +1,85 @@
+import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_BASE_URL, API_TIMEOUT } from '../config/api';
+
+// In-memory token cache — avoids an AsyncStorage round trip on every request.
+let cachedToken: string | null | undefined = undefined;
+
+export async function setAuthToken(token: string | null) {
+  cachedToken = token;
+  if (token) {
+    await AsyncStorage.setItem('auth_token', token);
+  } else {
+    await AsyncStorage.removeItem('auth_token');
+  }
+}
+
+async function getToken(): Promise<string | null> {
+  if (cachedToken !== undefined) return cachedToken;
+  cachedToken = await AsyncStorage.getItem('auth_token');
+  return cachedToken;
+}
+
+const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: API_TIMEOUT,
+  headers: {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+  },
+});
+
+// Retry safe read-only requests on network failure / 5xx (never on 4xx or writes)
+const RETRY_METHODS = new Set(['get', 'head']);
+const MAX_RETRIES = 2;
+
+function isRetryable(error: AxiosError): boolean {
+  if (!RETRY_METHODS.has((error.config?.method ?? '').toLowerCase())) return false;
+  if (!error.response) return true; // network error
+  return error.response.status >= 500;
+}
+
+function sleep(ms: number) {
+  return new Promise<void>(resolve => setTimeout(() => resolve(), ms));
+}
+
+apiClient.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
+  const token = await getToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+apiClient.interceptors.response.use(
+  response => response,
+  async (error: AxiosError) => {
+    const config = error.config as (InternalAxiosRequestConfig & { _retryCount?: number }) | undefined;
+
+    if (error.response?.status === 401) {
+      cachedToken = null;
+      await AsyncStorage.removeItem('auth_token');
+      await AsyncStorage.removeItem('user');
+      return Promise.reject(error);
+    }
+
+    if (isRetryable(error) && config) {
+      config._retryCount = (config._retryCount ?? 0) + 1;
+      if (config._retryCount <= MAX_RETRIES) {
+        await sleep(500 * Math.pow(2, config._retryCount - 1));
+        return apiClient(config);
+      }
+    }
+
+    return Promise.reject(error);
+  },
+);
+
+/** Human-readable message from any API error — every error response body
+ * follows App\Support\Api\ApiResponse::error()'s {message, errors, error_code} shape. */
+export function apiErrorMessage(error: unknown, fallback = 'Something went wrong. Please try again.'): string {
+  const err = error as AxiosError<{ message?: string }>;
+  return err?.response?.data?.message || (err?.message === 'Network Error' ? 'No internet connection.' : fallback);
+}
+
+export default apiClient;
