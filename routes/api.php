@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\AddressController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BlogController;
+use App\Http\Controllers\Api\V1\BootstrapController;
 use App\Http\Controllers\Api\V1\BrandController;
 use App\Http\Controllers\Api\V1\CartController;
 use App\Http\Controllers\Api\V1\CartCouponController;
@@ -56,6 +57,7 @@ Route::prefix('v1')->group(function () {
     // controller's docblock) so mobile and web can never disagree on what
     // a product/category/store/search result looks like.
     Route::middleware('throttle:120,1')->group(function () {
+        Route::get('bootstrap', BootstrapController::class);
         Route::get('config', ConfigController::class);
 
         Route::get('languages', [ReferenceDataController::class, 'languages']);
