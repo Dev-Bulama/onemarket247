@@ -7,6 +7,7 @@ use App\Actions\Withdrawal\RequestWithdrawalAction;
 use App\Enums\WithdrawalStatus;
 use App\Exceptions\InsufficientWalletBalanceException;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Api\V1\WithdrawalMethodResource;
 use App\Http\Resources\Api\V1\WithdrawalResource;
 use App\Models\Vendor;
 use App\Models\Withdrawal;
@@ -28,6 +29,16 @@ class WithdrawalController extends Controller
         return Paginated::response($withdrawals, WithdrawalResource::class);
     }
 
+    public function methods(Request $request): JsonResponse
+    {
+        $methods = WithdrawalMethod::where('vendor_id', $request->user()->actingVendorId())
+            ->orderByDesc('is_default')
+            ->latest()
+            ->get();
+
+        return ApiResponse::success(WithdrawalMethodResource::collection($methods));
+    }
+
     public function addMethod(Request $request): JsonResponse
     {
         $data = $request->validate([
@@ -45,13 +56,7 @@ class WithdrawalController extends Controller
             'is_default' => $data['is_default'] ?? false,
         ]);
 
-        return ApiResponse::success([
-            'id' => $method->id,
-            'bank_name' => $method->bank_name,
-            'account_name' => $method->account_name,
-            'account_number' => $method->account_number,
-            'is_default' => $method->is_default,
-        ], status: 201);
+        return ApiResponse::success(new WithdrawalMethodResource($method), status: 201);
     }
 
     public function store(Request $request, RequestWithdrawalAction $action): JsonResponse

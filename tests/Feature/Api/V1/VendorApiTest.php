@@ -47,9 +47,19 @@ test('a vendor can view and update their store', function () {
         ->patchJson('/api/v1/vendor/store', [
             'name' => 'Updated Store Name',
             'status' => 'active',
+            'email' => 'store@example.com',
+            'phone' => '08012345678',
         ])
         ->assertOk()
-        ->assertJsonPath('data.name', 'Updated Store Name');
+        ->assertJsonPath('data.name', 'Updated Store Name')
+        ->assertJsonPath('data.email', 'store@example.com')
+        ->assertJsonPath('data.phone', '08012345678');
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/v1/vendor/store')
+        ->assertOk()
+        ->assertJsonPath('data.email', 'store@example.com')
+        ->assertJsonPath('data.phone', '08012345678');
 });
 
 test('a vendor can list and update their own products, but not another vendor\'s', function () {
@@ -196,6 +206,27 @@ test('a vendor can add a withdrawal method, request a withdrawal, and cancel it'
         ->postJson("/api/v1/vendor/withdrawals/{$withdrawalId}/cancel")
         ->assertOk()
         ->assertJsonPath('data.status', 'cancelled');
+});
+
+test('a vendor can list their withdrawal methods, but not another vendor\'s', function () {
+    [$vendor, $token] = vendorToken();
+    [$otherVendor] = vendorToken();
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/vendor/withdrawals/methods', [
+            'bank_name' => 'First Bank',
+            'account_name' => 'Vendor Name',
+            'account_number' => '1234567890',
+        ])->assertCreated();
+
+    WithdrawalMethod::factory()->create(['vendor_id' => $otherVendor->id]);
+
+    $response = $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/v1/vendor/withdrawals/methods')
+        ->assertOk();
+
+    expect($response->json('data'))->toHaveCount(1)
+        ->and($response->json('data.0.bank_name'))->toBe('First Bank');
 });
 
 test('requesting a withdrawal larger than the available balance is rejected', function () {

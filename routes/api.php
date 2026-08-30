@@ -212,6 +212,7 @@ Route::prefix('v1')->group(function () {
 
         Route::get('withdrawals', [VendorWithdrawalController::class, 'index']);
         Route::post('withdrawals', [VendorWithdrawalController::class, 'store']);
+        Route::get('withdrawals/methods', [VendorWithdrawalController::class, 'methods']);
         Route::post('withdrawals/methods', [VendorWithdrawalController::class, 'addMethod']);
         Route::post('withdrawals/{withdrawal}/cancel', [VendorWithdrawalController::class, 'cancel']);
 

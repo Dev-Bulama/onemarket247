@@ -17,6 +17,8 @@ class StoreResource extends JsonResource
             'name' => $this->name,
             'slug' => $this->slug,
             'description' => $this->description,
+            'email' => $this->email,
+            'phone' => $this->phone,
             'status' => $this->status->value,
             'is_verified' => $this->is_verified,
             'is_featured' => $this->is_featured,
