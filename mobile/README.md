@@ -22,6 +22,28 @@ npm install
 cd ios && pod install && cd ..
 ```
 
+### Prerequisites for a native build
+
+The `android/` and `ios/` folders are already in this repo (generated via
+`@react-native-community/cli init`, then re-branded — package
+`com.onemarket247`, display name "OneMarket 24/7"), so there's no
+`react-native init` step to run. You still need:
+
+- **Node 18+** (already required for `npm install` above).
+- **Java 17** — specifically 17, not a newer or older version. Gradle's
+  toolchain resolution is strict about this; a mismatched JDK fails the
+  build immediately with `Cannot find a Java installation on your machine
+  matching this tasks requirements: {languageVersion=17, ...}`. Use
+  [sdkman](https://sdkman.io) or your OS package manager, and if you have
+  multiple JDKs installed, point `JAVA_HOME` at the 17 one before building.
+- **Android Studio** (for the Android SDK, platform-tools, and an
+  emulator) — installing Android Studio normally sets `ANDROID_HOME`
+  for you and creates `android/local.properties` automatically the first
+  time you open the `android/` folder in it or run a Gradle sync.
+- **Xcode** (macOS only, for iOS) + CocoaPods (`sudo gem install cocoapods`
+  or via the bundled `Gemfile`: `bundle install && cd ios && bundle exec
+  pod install`).
+
 ## Point the app at your backend
 
 Edit `src/config/api.ts`:
@@ -36,13 +58,57 @@ Then, from the Laravel repo root:
 php artisan serve --host=0.0.0.0 --port=8000
 ```
 
-## Run
+## Run (development)
 
 ```bash
 npm run android
 # or
 npm run ios
 ```
+
+This produces a debug build signed with the shared RN debug keystore
+(`android/app/debug.keystore`) — fine for local testing, but every debug
+APK on every developer's machine shares that same signature, so **never
+distribute a debug APK**, and never use it as your Play Store upload key.
+
+## Building a release APK
+
+1. **Generate your own upload keystore** (once — keep it somewhere safe,
+   outside the repo, and never commit it):
+   ```bash
+   keytool -genkeypair -v -storetype PKCS12 \
+     -keystore onemarket247-upload.keystore \
+     -alias onemarket247 -keyalg RSA -keysize 2048 -validity 10000
+   ```
+2. Move it into `android/app/`, then add to `android/gradle.properties`
+   (also outside version control — put it in `android/gradle.properties`
+   locally, or better, in `~/.gradle/gradle.properties` so it's never at
+   risk of being committed):
+   ```
+   ONEMARKET_UPLOAD_STORE_FILE=onemarket247-upload.keystore
+   ONEMARKET_UPLOAD_KEY_ALIAS=onemarket247
+   ONEMARKET_UPLOAD_STORE_PASSWORD=<your password>
+   ONEMARKET_UPLOAD_KEY_PASSWORD=<your password>
+   ```
+3. Point the release `signingConfig` in `android/app/build.gradle` at
+   those properties instead of `signingConfigs.debug` (the scaffold ships
+   pointed at the debug keystore purely so `npm run android` works out of
+   the box — swap this before you build anything you intend to distribute).
+4. Before building, double-check `src/config/api.ts`'s
+   `PRODUCTION_API_URL` is what you want a release build to hit — release
+   builds always use it, debug builds default to it too once `__DEV__` is
+   false, which it always is for a release build.
+5. Build:
+   ```bash
+   cd android && ./gradlew assembleRelease
+   # output: android/app/build/outputs/apk/release/app-release.apk
+   ```
+   Or for a Play Store upload, `./gradlew bundleRelease` produces an
+   `.aab` instead (`app/build/outputs/bundle/release/app-release.aab`).
+
+Before publishing to the Play Store, also replace the placeholder launcher
+icon (`android/app/src/main/res/mipmap-*/ic_launcher*.png`) with your own
+— those are still the default React Native template icon.
 
 ## Project structure
 
@@ -81,10 +147,16 @@ mobile/
 
 ## What's stubbed / next steps
 
-- Wishlist and product-compare screens are not built yet (the API endpoints
-  exist — `wishlist`, `compare` — but no UI consumes them).
 - Push notifications (OneSignal or similar) are not wired up; the in-app
-  notifications list/badge uses polling against `/notifications` only.
+  notifications list/badge uses polling against `/notifications` only, so
+  an admin's broadcast message only appears once the app is opened —
+  not as a native push while the app is closed.
 - No automated tests yet (Jest/RNTL) — the API layer is thin enough that
   most of the real logic (`cartStore`, `authStore`) would benefit from unit
   tests using mocked Axios responses.
+- No blog, static pages (FAQ/Terms/Privacy/About/Contact), or
+  language/currency switcher in the app — the web storefront has these,
+  but there's no `/api/v1` endpoint for any of them yet, so building the
+  mobile screens would mean adding the backend endpoints first.
+- Launcher icon and splash screen are still the React Native template
+  defaults — swap them for OneMarket247 branding before any real release.
