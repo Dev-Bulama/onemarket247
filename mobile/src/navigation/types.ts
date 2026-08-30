@@ -1,6 +1,7 @@
 export type RootStackParamList = {
   Main: undefined;
   Auth: { screen?: 'Login' | 'Register' } | undefined;
+  Vendor: undefined;
 };
 
 export type AuthStackParamList = {
@@ -39,4 +40,30 @@ export type ProfileStackParamList = {
   Compare: undefined;
   ProductDetail: { slug: string };
   Store: { slug: string };
+  VendorOnboarding: undefined;
+};
+
+// Vendor dashboard (createBottomTabNavigator, see VendorNavigator.tsx) —
+// each tab wraps its own native-stack, listed here per-stack the same
+// loose way the customer-facing stacks above are (not every screen in
+// every stack, just the params that matter).
+export type VendorProductsStackParamList = {
+  VendorProducts: undefined;
+  VendorProductForm: { productId?: number } | undefined;
+  VendorInventory: undefined;
+};
+
+export type VendorOrdersStackParamList = {
+  VendorOrders: undefined;
+  VendorOrderDetail: { orderId: number };
+};
+
+export type VendorMoreStackParamList = {
+  VendorMore: undefined;
+  VendorEarnings: undefined;
+  VendorWithdrawals: undefined;
+  VendorStaff: undefined;
+  VendorSubscription: undefined;
+  VendorDocuments: undefined;
+  VendorStoreSettings: undefined;
 };

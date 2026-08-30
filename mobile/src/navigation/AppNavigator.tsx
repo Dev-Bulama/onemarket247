@@ -9,6 +9,7 @@ import { usePushStore } from '../store/pushStore';
 import { useBootstrapStore } from '../store/bootstrapStore';
 import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
+import VendorNavigator from './VendorNavigator';
 import SplashScreen from '../screens/auth/SplashScreen';
 import ForceUpdateScreen from '../screens/common/ForceUpdateScreen';
 
@@ -54,6 +55,7 @@ export default function AppNavigator() {
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Main" component={MainNavigator} />
         <Stack.Screen name="Auth" component={AuthNavigator} options={{ animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="Vendor" component={VendorNavigator} />
       </Stack.Navigator>
     </NavigationContainer>
   );

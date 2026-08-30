@@ -23,6 +23,11 @@ export default function ProfileScreen({ navigation }: any) {
     { icon: 'git-compare-outline', label: 'Compare Products', onPress: () => navigation.navigate('Compare') },
   ];
 
+  const isVendor = user?.user_type === 'vendor_owner' || user?.user_type === 'vendor_staff';
+  const vendorItem = isVendor
+    ? { icon: 'storefront-outline', label: 'Vendor Dashboard', onPress: () => navigation.getParent()?.getParent()?.navigate('Vendor') }
+    : { icon: 'storefront-outline', label: 'Become a Seller', onPress: () => navigation.navigate('VendorOnboarding') };
+
   const infoItems = [
     { icon: 'language-outline', label: 'Language & Currency', onPress: () => navigation.navigate('Preferences') },
     { icon: 'newspaper-outline', label: 'Blog', onPress: () => navigation.navigate('Blog') },
@@ -73,6 +78,14 @@ export default function ProfileScreen({ navigation }: any) {
           ))}
         </View>
       )}
+
+      <View style={styles.menu}>
+        <TouchableOpacity style={styles.menuRow} onPress={vendorItem.onPress}>
+          <IonIcon name={vendorItem.icon} size={20} color={COLORS.text} />
+          <Text style={styles.menuLabel}>{vendorItem.label}</Text>
+          <IonIcon name="chevron-forward" size={18} color={COLORS.textMuted} />
+        </TouchableOpacity>
+      </View>
 
       <Text style={styles.sectionLabel}>Info & Help</Text>
       <View style={styles.menu}>
