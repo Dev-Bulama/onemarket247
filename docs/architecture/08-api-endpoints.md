@@ -44,7 +44,7 @@ GET /api/v1/states/{id}/cities     ✅
 ## 3. Storefront / Catalog
 
 ```
-GET /api/v1/home                   ✅ (mirrors Storefront\HomeController's sections exactly)
+GET /api/v1/home                   ✅ (mirrors Storefront\HomeController's sections exactly, plus a `hero_slides` key mirroring resources/views/storefront/home.blade.php's own HeroSlide query — the same admin-managed slides shown on the web homepage)
 GET /api/v1/categories             ✅
 GET /api/v1/categories/{slug}      ✅
 GET /api/v1/brands                 ✅

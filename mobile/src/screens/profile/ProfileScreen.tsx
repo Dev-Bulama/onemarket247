@@ -19,6 +19,8 @@ export default function ProfileScreen({ navigation }: any) {
   const menuItems = [
     { icon: 'receipt-outline', label: 'My Orders', onPress: () => navigation.navigate('Orders') },
     { icon: 'location-outline', label: 'My Addresses', onPress: () => navigation.navigate('Addresses') },
+    { icon: 'heart-outline', label: 'My Wishlist', onPress: () => navigation.navigate('Wishlist') },
+    { icon: 'git-compare-outline', label: 'Compare Products', onPress: () => navigation.navigate('Compare') },
   ];
 
   return (

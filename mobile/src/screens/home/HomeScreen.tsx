@@ -1,16 +1,17 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator, FlatList, Image, Modal, RefreshControl, ScrollView,
+  ActivityIndicator, Dimensions, FlatList, Image, Modal, RefreshControl, ScrollView,
   StyleSheet, Text, TouchableOpacity, View,
 } from 'react-native';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { COLORS, SIZES } from '../../constants';
 import { productsApi, ProductFilters } from '../../api/products';
 import { homeApi } from '../../api/home';
-import { Category, Product } from '../../types';
+import { Category, HeroSlide, Product } from '../../types';
 import { useAuthStore } from '../../store/authStore';
 import { useCartStore } from '../../store/cartStore';
 import { useNotificationStore } from '../../store/notificationStore';
+import { useWishlistStore } from '../../store/wishlistStore';
 import ProductCard from '../../components/ProductCard';
 import { apiErrorMessage } from '../../api/client';
 
@@ -32,15 +33,19 @@ const CATEGORY_ICONS: Record<string, string> = {
   Groceries: 'cart-outline',
 };
 
+const SCREEN_WIDTH = Dimensions.get('window').width;
+
 function categoryIcon(name: string): string {
   return CATEGORY_ICONS[name] ?? 'pricetag-outline';
 }
 
 export default function HomeScreen({ navigation }: any) {
-  const { user } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
   const { addItem } = useCartStore();
   const { unreadCount, fetchUnreadCount } = useNotificationStore();
+  const { ids: wishlistIds, toggle: toggleWishlist, fetchWishlist } = useWishlistStore();
 
+  const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
   const [flashSale, setFlashSale] = useState<Product[]>([]);
@@ -61,9 +66,13 @@ export default function HomeScreen({ navigation }: any) {
 
   useEffect(() => {
     productsApi.categories().then(res => setCategories(res.data.data)).catch(() => {});
-    homeApi.get().then(res => setFlashSale(res.data.data.flash_sale.products)).catch(() => {});
+    homeApi.get().then(res => {
+      setFlashSale(res.data.data.flash_sale.products);
+      setHeroSlides(res.data.data.hero_slides);
+    }).catch(() => {});
     fetchUnreadCount();
-  }, [fetchUnreadCount]);
+    if (isAuthenticated) fetchWishlist();
+  }, [fetchUnreadCount, isAuthenticated, fetchWishlist]);
 
   const loadProducts = useCallback(async (targetPage: number, replace: boolean) => {
     if (targetPage === 1) setLoading(replace ? false : true);
@@ -107,6 +116,14 @@ export default function HomeScreen({ navigation }: any) {
     } catch {
       // silently ignore — the cart badge simply won't update
     }
+  };
+
+  const handleToggleWishlist = (productId: number) => {
+    if (!isAuthenticated) {
+      navigation.getParent()?.getParent()?.navigate('Auth', { screen: 'Login' });
+      return;
+    }
+    toggleWishlist(productId);
   };
 
   const firstName = user?.name?.trim().split(' ')[0] ?? '';
@@ -167,10 +184,23 @@ export default function HomeScreen({ navigation }: any) {
             width={numColumns === 2 ? undefined : '100%' as any}
             onPress={() => navigation.navigate('ProductDetail', { slug: item.slug })}
             onAddToCart={handleAddToCart}
+            onToggleWishlist={handleToggleWishlist}
+            isWishlisted={wishlistIds.has(item.id)}
           />
         )}
         ListHeaderComponent={
           <View>
+            {/* Hero banners (admin-managed via Settings > Hero Slides) */}
+            {heroSlides.length > 0 && (
+              <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} style={styles.bannerScroll}>
+                {heroSlides.map(slide => (
+                  <TouchableOpacity key={slide.id} activeOpacity={0.9} onPress={() => navigation.getParent()?.navigate('CategoriesTab')}>
+                    {slide.image_url ? <Image source={{ uri: slide.image_url }} style={styles.bannerImage} /> : null}
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            )}
+
             {/* Category pills */}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryList}>
               <TouchableOpacity style={styles.categoryItem} onPress={() => setActiveCategoryId(null)}>
@@ -210,7 +240,13 @@ export default function HomeScreen({ navigation }: any) {
                   keyExtractor={item => 'flash-' + item.id}
                   contentContainerStyle={{ paddingHorizontal: SIZES.screenPadding }}
                   renderItem={({ item }) => (
-                    <ProductCard product={item} onPress={() => navigation.navigate('ProductDetail', { slug: item.slug })} onAddToCart={handleAddToCart} />
+                    <ProductCard
+                      product={item}
+                      onPress={() => navigation.navigate('ProductDetail', { slug: item.slug })}
+                      onAddToCart={handleAddToCart}
+                      onToggleWishlist={handleToggleWishlist}
+                      isWishlisted={wishlistIds.has(item.id)}
+                    />
                   )}
                 />
               </View>
@@ -316,6 +352,8 @@ const styles = StyleSheet.create({
   searchBtn: { backgroundColor: COLORS.primary, borderRadius: SIZES.borderRadius, width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
 
   listContent: { paddingHorizontal: SIZES.screenPadding, paddingBottom: 24 },
+  bannerScroll: { height: 160, marginBottom: 8 },
+  bannerImage: { width: SCREEN_WIDTH - SIZES.screenPadding * 2, height: 160, borderRadius: SIZES.borderRadiusLg, marginRight: SIZES.screenPadding },
   gridRow: { justifyContent: 'space-between' },
 
   categoryList: { paddingVertical: 12, gap: 4 },

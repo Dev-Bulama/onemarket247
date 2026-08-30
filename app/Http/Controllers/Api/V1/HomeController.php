@@ -8,9 +8,11 @@ use App\Enums\ProductStatus;
 use App\Enums\StoreStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\BrandResource;
+use App\Http\Resources\Api\V1\HeroSlideResource;
 use App\Http\Resources\Api\V1\ProductResource;
 use App\Http\Resources\Api\V1\StoreResource;
 use App\Models\Brand;
+use App\Models\HeroSlide;
 use App\Models\Product;
 use App\Models\Store;
 use App\Support\Api\ApiResponse;
@@ -81,7 +83,14 @@ class HomeController extends Controller
             $request->integer('state_id') ?: null,
         );
 
+        // Mirrors resources/views/storefront/home.blade.php's own hero-slide
+        // query exactly, so mobile and web show identical, admin-managed slides.
+        $heroSlides = HeroSlide::query()->active()->orderBy('sort_order')->get()
+            ->filter(fn (HeroSlide $slide) => $slide->imageUrl())
+            ->values();
+
         return ApiResponse::success([
+            'hero_slides' => HeroSlideResource::collection($heroSlides),
             'featured_products' => ProductResource::collection($featuredProducts),
             'new_arrivals' => ProductResource::collection($newArrivals),
             'best_sellers' => ProductResource::collection($bestSellers),

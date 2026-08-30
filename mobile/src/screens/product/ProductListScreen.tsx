@@ -5,6 +5,8 @@ import { COLORS, SIZES } from '../../constants';
 import { productsApi, ProductFilters } from '../../api/products';
 import { Product } from '../../types';
 import { useCartStore } from '../../store/cartStore';
+import { useAuthStore } from '../../store/authStore';
+import { useWishlistStore } from '../../store/wishlistStore';
 import ProductCard from '../../components/ProductCard';
 import { apiErrorMessage } from '../../api/client';
 
@@ -18,6 +20,20 @@ const SORT_OPTIONS: { label: string; value: ProductFilters['sort'] }[] = [
 export default function ProductListScreen({ route, navigation }: any) {
   const { categoryId, brandId, title } = (route.params ?? {}) as { categoryId?: number; brandId?: number; title?: string };
   const { addItem } = useCartStore();
+  const { isAuthenticated } = useAuthStore();
+  const { ids: wishlistIds, toggle: toggleWishlist, fetchWishlist } = useWishlistStore();
+
+  useEffect(() => {
+    if (isAuthenticated) fetchWishlist();
+  }, [isAuthenticated, fetchWishlist]);
+
+  const handleToggleWishlist = (productId: number) => {
+    if (!isAuthenticated) {
+      navigation.getParent()?.getParent()?.navigate('Auth', { screen: 'Login' });
+      return;
+    }
+    toggleWishlist(productId);
+  };
 
   const [products, setProducts] = useState<Product[]>([]);
   const [page, setPage] = useState(1);
@@ -80,7 +96,13 @@ export default function ProductListScreen({ route, navigation }: any) {
           onEndReached={() => !loadingMore && page < lastPage && load(page + 1)}
           onEndReachedThreshold={0.4}
           renderItem={({ item }) => (
-            <ProductCard product={item} onPress={() => navigation.navigate('ProductDetail', { slug: item.slug })} onAddToCart={id => addItem(id, 1)} />
+            <ProductCard
+              product={item}
+              onPress={() => navigation.navigate('ProductDetail', { slug: item.slug })}
+              onAddToCart={id => addItem(id, 1)}
+              onToggleWishlist={handleToggleWishlist}
+              isWishlisted={wishlistIds.has(item.id)}
+            />
           )}
           ListFooterComponent={loadingMore ? <ActivityIndicator size="small" color={COLORS.primary} style={{ marginVertical: 16 }} /> : null}
         />

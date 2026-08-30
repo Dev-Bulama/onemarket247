@@ -13,6 +13,7 @@ export type HomeStackParamList = {
   Search: undefined;
   ProductList: { categoryId?: number; brandId?: number; title?: string; search?: string } | undefined;
   ProductDetail: { slug: string };
+  Store: { slug: string };
   Notifications: undefined;
 };
 
@@ -34,4 +35,8 @@ export type ProfileStackParamList = {
   AddAddress: { addressId?: number } | undefined;
   Orders: undefined;
   OrderDetail: { orderId: string };
+  Wishlist: undefined;
+  Compare: undefined;
+  ProductDetail: { slug: string };
+  Store: { slug: string };
 };

@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { COLORS, SIZES } from '../../constants';
 import { searchApi } from '../../api/products';
 import { Product } from '../../types';
 import { useCartStore } from '../../store/cartStore';
+import { useAuthStore } from '../../store/authStore';
+import { useWishlistStore } from '../../store/wishlistStore';
 import ProductCard from '../../components/ProductCard';
 
 const RECENT_SEARCHES = ['headphones', 'smartphone', 'laptop', 'smart watch'];
@@ -14,6 +16,20 @@ export default function SearchScreen({ navigation }: any) {
   const [results, setResults] = useState<Product[] | null>(null);
   const [loading, setLoading] = useState(false);
   const { addItem } = useCartStore();
+  const { isAuthenticated } = useAuthStore();
+  const { ids: wishlistIds, toggle: toggleWishlist, fetchWishlist } = useWishlistStore();
+
+  const handleToggleWishlist = (productId: number) => {
+    if (!isAuthenticated) {
+      navigation.getParent()?.getParent()?.navigate('Auth', { screen: 'Login' });
+      return;
+    }
+    toggleWishlist(productId);
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) fetchWishlist();
+  }, [isAuthenticated, fetchWishlist]);
 
   const runSearch = async (q: string) => {
     if (!q.trim()) return;
@@ -79,7 +95,13 @@ export default function SearchScreen({ navigation }: any) {
           columnWrapperStyle={{ justifyContent: 'space-between' }}
           contentContainerStyle={{ padding: SIZES.screenPadding }}
           renderItem={({ item }) => (
-            <ProductCard product={item} onPress={() => navigation.navigate('ProductDetail', { slug: item.slug })} onAddToCart={id => addItem(id, 1)} />
+            <ProductCard
+              product={item}
+              onPress={() => navigation.navigate('ProductDetail', { slug: item.slug })}
+              onAddToCart={id => addItem(id, 1)}
+              onToggleWishlist={handleToggleWishlist}
+              isWishlisted={wishlistIds.has(item.id)}
+            />
           )}
         />
       )}

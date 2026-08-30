@@ -313,6 +313,12 @@ export interface City {
   name: string;
 }
 
+export interface HeroSlide {
+  id: number;
+  image_url: string | null;
+  sort_order: number;
+}
+
 export interface AppConfig {
   default_currency: string;
   default_language: string;

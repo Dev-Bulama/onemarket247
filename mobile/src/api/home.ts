@@ -1,7 +1,8 @@
 import apiClient from './client';
-import { ApiResponse, Brand, Product, Store } from '../types';
+import { ApiResponse, Brand, HeroSlide, Product, Store } from '../types';
 
 export interface HomePayload {
+  hero_slides: HeroSlide[];
   featured_products: Product[];
   new_arrivals: Product[];
   best_sellers: Product[];

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator, Dimensions, Image, ScrollView, StyleSheet, Text,
-  TouchableOpacity, View,
+  TextInput, TouchableOpacity, View,
 } from 'react-native';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { COLORS, SIZES } from '../../constants';
@@ -9,15 +9,23 @@ import { productsApi } from '../../api/products';
 import { apiErrorMessage } from '../../api/client';
 import { ProductDetail, ProductVariation, Review } from '../../types';
 import { useCartStore } from '../../store/cartStore';
+import { useAuthStore } from '../../store/authStore';
+import { useWishlistStore } from '../../store/wishlistStore';
+import { compareApi, ProductQuestion, questionsApi } from '../../api/wishlist';
 
 const { width } = Dimensions.get('window');
 
 export default function ProductDetailScreen({ route, navigation }: any) {
   const { slug } = route.params as { slug: string };
   const { addItem, cart } = useCartStore();
+  const { isAuthenticated } = useAuthStore();
+  const { ids: wishlistIds, toggle: toggleWishlist, fetchWishlist } = useWishlistStore();
 
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [questions, setQuestions] = useState<ProductQuestion[]>([]);
+  const [newQuestion, setNewQuestion] = useState('');
+  const [askingQuestion, setAskingQuestion] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeImage, setActiveImage] = useState(0);
@@ -25,6 +33,7 @@ export default function ProductDetailScreen({ route, navigation }: any) {
   const [quantity, setQuantity] = useState(1);
   const [adding, setAdding] = useState(false);
   const [addedMessage, setAddedMessage] = useState('');
+  const [addedToCompare, setAddedToCompare] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -34,7 +43,47 @@ export default function ProductDetailScreen({ route, navigation }: any) {
       .catch(e => setError(apiErrorMessage(e, 'Could not load this product.')))
       .finally(() => setLoading(false));
     productsApi.reviews(slug).then(res => setReviews(res.data.data)).catch(() => {});
-  }, [slug]);
+    questionsApi.list(slug).then(res => setQuestions(res.data.data)).catch(() => {});
+    if (isAuthenticated) fetchWishlist();
+  }, [slug, isAuthenticated, fetchWishlist]);
+
+  const handleToggleWishlist = () => {
+    if (!product) return;
+    if (!isAuthenticated) {
+      navigation.getParent()?.getParent()?.navigate('Auth', { screen: 'Login' });
+      return;
+    }
+    toggleWishlist(product.id);
+  };
+
+  const handleAddToCompare = async () => {
+    if (!product) return;
+    try {
+      await compareApi.add(product.id);
+      setAddedToCompare(true);
+    } catch {
+      // silently ignore — compare list simply won't include this item
+    }
+  };
+
+  const handleAskQuestion = async () => {
+    if (!product || !newQuestion.trim()) return;
+    if (!isAuthenticated) {
+      navigation.getParent()?.getParent()?.navigate('Auth', { screen: 'Login' });
+      return;
+    }
+    setAskingQuestion(true);
+    try {
+      await questionsApi.ask(slug, newQuestion.trim());
+      setNewQuestion('');
+      const res = await questionsApi.list(slug);
+      setQuestions(res.data.data);
+    } catch {
+      // the input simply stays filled so the shopper can retry
+    } finally {
+      setAskingQuestion(false);
+    }
+  };
 
   const attributeGroups = useMemo(() => {
     if (!product) return {} as Record<string, string[]>;
@@ -111,8 +160,12 @@ export default function ProductDetailScreen({ route, navigation }: any) {
             <IonIcon name="arrow-back" size={22} color={COLORS.text} />
           </TouchableOpacity>
           <View style={styles.headerRightIcons}>
-            <TouchableOpacity style={styles.headerIconBtn}><IonIcon name="share-outline" size={20} color={COLORS.text} /></TouchableOpacity>
-            <TouchableOpacity style={styles.headerIconBtn}><IonIcon name="heart-outline" size={20} color={COLORS.text} /></TouchableOpacity>
+            <TouchableOpacity style={styles.headerIconBtn} onPress={handleAddToCompare}>
+              <IonIcon name={addedToCompare ? 'git-compare' : 'git-compare-outline'} size={20} color={addedToCompare ? COLORS.primary : COLORS.text} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.headerIconBtn} onPress={handleToggleWishlist}>
+              <IonIcon name={wishlistIds.has(product.id) ? 'heart' : 'heart-outline'} size={20} color={wishlistIds.has(product.id) ? COLORS.danger : COLORS.text} />
+            </TouchableOpacity>
             <TouchableOpacity style={styles.headerIconBtn} onPress={() => navigation.getParent()?.navigate('CartTab')}>
               <View>
                 <IonIcon name="cart-outline" size={20} color={COLORS.text} />
@@ -219,10 +272,11 @@ export default function ProductDetailScreen({ route, navigation }: any) {
           </View>
 
           {product.vendor && (
-            <View style={styles.vendorRow}>
+            <TouchableOpacity style={styles.vendorRow} onPress={() => navigation.navigate('Store', { slug: product.vendor!.store_slug })}>
               <IonIcon name="storefront-outline" size={16} color={COLORS.textSecondary} />
               <Text style={styles.vendorText}>Sold by {product.vendor.store_name}</Text>
-            </View>
+              <IonIcon name="chevron-forward" size={14} color={COLORS.textMuted} />
+            </TouchableOpacity>
           )}
 
           {addedMessage ? <Text style={styles.addedMessage}>{addedMessage}</Text> : null}
@@ -252,6 +306,33 @@ export default function ProductDetailScreen({ route, navigation }: any) {
                 </View>
                 {review.title ? <Text style={styles.reviewTitle}>{review.title}</Text> : null}
                 {review.body ? <Text style={styles.reviewBody}>{review.body}</Text> : null}
+              </View>
+            ))
+          )}
+
+          {/* Questions & Answers */}
+          <Text style={styles.sectionTitle}>Questions & Answers</Text>
+          <View style={styles.askRow}>
+            <TextInput
+              style={styles.askInput}
+              placeholder="Ask a question about this product"
+              placeholderTextColor={COLORS.placeholder}
+              value={newQuestion}
+              onChangeText={setNewQuestion}
+            />
+            <TouchableOpacity style={styles.askBtn} onPress={handleAskQuestion} disabled={askingQuestion || !newQuestion.trim()}>
+              {askingQuestion ? <ActivityIndicator size="small" color={COLORS.white} /> : <IonIcon name="send" size={16} color={COLORS.white} />}
+            </TouchableOpacity>
+          </View>
+          {questions.length === 0 ? (
+            <Text style={styles.noReviews}>No questions yet — be the first to ask.</Text>
+          ) : (
+            questions.slice(0, 5).map(q => (
+              <View key={q.id} style={styles.reviewCard}>
+                <Text style={styles.questionText}>Q: {q.question}</Text>
+                {q.answers?.map(a => (
+                  <Text key={a.id} style={styles.answerText}>A: {a.answer}{a.answered_by ? ` — ${a.answered_by}` : ''}</Text>
+                ))}
               </View>
             ))
           )}
@@ -356,6 +437,11 @@ const styles = StyleSheet.create({
   description: { fontSize: 13, color: COLORS.textSecondary, lineHeight: 20, marginBottom: 8 },
 
   noReviews: { fontSize: 13, color: COLORS.textMuted },
+  askRow: { flexDirection: 'row', gap: 8, marginBottom: 12 },
+  askInput: { flex: 1, borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, backgroundColor: COLORS.grayLight },
+  askBtn: { backgroundColor: COLORS.primary, borderRadius: SIZES.borderRadiusSm, width: 40, alignItems: 'center', justifyContent: 'center' },
+  questionText: { fontSize: 13, fontWeight: '700', color: COLORS.text, marginBottom: 4 },
+  answerText: { fontSize: 12, color: COLORS.textSecondary, marginLeft: 8, marginTop: 2, lineHeight: 17 },
   reviewCard: { borderBottomWidth: 1, borderBottomColor: COLORS.divider, paddingVertical: 12 },
   reviewHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
   reviewAuthor: { fontSize: 13, fontWeight: '700', color: COLORS.text },

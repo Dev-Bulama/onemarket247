@@ -13,6 +13,7 @@ import SearchScreen from '../screens/search/SearchScreen';
 import CategoriesScreen from '../screens/home/CategoriesScreen';
 import ProductListScreen from '../screens/product/ProductListScreen';
 import ProductDetailScreen from '../screens/product/ProductDetailScreen';
+import StoreScreen from '../screens/product/StoreScreen';
 import NotificationsScreen from '../screens/notifications/NotificationsScreen';
 import CartScreen from '../screens/cart/CartScreen';
 import CheckoutScreen from '../screens/checkout/CheckoutScreen';
@@ -22,6 +23,8 @@ import OrdersScreen from '../screens/order/OrdersScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
 import AddressesScreen from '../screens/profile/AddressesScreen';
 import AddAddressScreen from '../screens/profile/AddAddressScreen';
+import WishlistScreen from '../screens/profile/WishlistScreen';
+import CompareScreen from '../screens/profile/CompareScreen';
 
 const Tab = createBottomTabNavigator();
 const HomeStack = createNativeStackNavigator();
@@ -36,6 +39,7 @@ function HomeStackNav() {
       <HomeStack.Screen name="Home" component={HomeScreen} />
       <HomeStack.Screen name="ProductList" component={ProductListScreen} />
       <HomeStack.Screen name="ProductDetail" component={ProductDetailScreen} />
+      <HomeStack.Screen name="Store" component={StoreScreen} />
       <HomeStack.Screen name="Notifications" component={NotificationsScreen} />
     </HomeStack.Navigator>
   );
@@ -47,6 +51,7 @@ function CategoriesStackNav() {
       <CategoriesStack.Screen name="Categories" component={CategoriesScreen} />
       <CategoriesStack.Screen name="ProductList" component={ProductListScreen} />
       <CategoriesStack.Screen name="ProductDetail" component={ProductDetailScreen} />
+      <CategoriesStack.Screen name="Store" component={StoreScreen} />
     </CategoriesStack.Navigator>
   );
 }
@@ -57,6 +62,7 @@ function SearchStackNav() {
       <SearchStack.Screen name="Search" component={SearchScreen} />
       <SearchStack.Screen name="ProductList" component={ProductListScreen} />
       <SearchStack.Screen name="ProductDetail" component={ProductDetailScreen} />
+      <SearchStack.Screen name="Store" component={StoreScreen} />
     </SearchStack.Navigator>
   );
 }
@@ -89,6 +95,10 @@ function ProfileStackNav({ navigation }: any) {
       <ProfileStack.Screen name="AddAddress" component={AddAddressScreen} />
       <ProfileStack.Screen name="Orders" component={OrdersScreen} />
       <ProfileStack.Screen name="OrderDetail" component={OrderDetailScreen} />
+      <ProfileStack.Screen name="Wishlist" component={WishlistScreen} />
+      <ProfileStack.Screen name="Compare" component={CompareScreen} />
+      <ProfileStack.Screen name="ProductDetail" component={ProductDetailScreen} />
+      <ProfileStack.Screen name="Store" component={StoreScreen} />
     </ProfileStack.Navigator>
   );
 }
