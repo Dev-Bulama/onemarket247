@@ -6,11 +6,15 @@ import { storesApi } from '../../api/products';
 import { apiErrorMessage } from '../../api/client';
 import { Product, Store } from '../../types';
 import { useCartStore } from '../../store/cartStore';
-import ProductCard from '../../components/ProductCard';
+import { useBootstrapStore } from '../../store/bootstrapStore';
+import { useLocaleStore } from '../../store/localeStore';
+import ProductCard, { computeGridCardWidth } from '../../components/ProductCard';
 
 export default function StoreScreen({ route, navigation }: any) {
   const { slug } = route.params as { slug: string };
   const { addItem } = useCartStore();
+  const gridColumns = useBootstrapStore(s => s.productGridColumns);
+  const { language, currency } = useLocaleStore();
 
   const [store, setStore] = useState<Store | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -28,7 +32,7 @@ export default function StoreScreen({ route, navigation }: any) {
       setPage(res.data.meta.pagination.current_page);
       setLastPage(res.data.meta.pagination.last_page);
     }).finally(() => setLoading(false));
-  }, [slug]);
+  }, [slug, language, currency]);
 
   const loadMore = useCallback(() => {
     if (loadingMore || page >= lastPage) return;
@@ -60,9 +64,10 @@ export default function StoreScreen({ route, navigation }: any) {
       </View>
 
       <FlatList
+        key={gridColumns}
         data={products}
         keyExtractor={item => String(item.id)}
-        numColumns={2}
+        numColumns={gridColumns}
         columnWrapperStyle={styles.row}
         contentContainerStyle={styles.list}
         onEndReached={loadMore}
@@ -93,7 +98,7 @@ export default function StoreScreen({ route, navigation }: any) {
           </View>
         }
         renderItem={({ item }) => (
-          <ProductCard product={item} onPress={() => navigation.navigate('ProductDetail', { slug: item.slug })} onAddToCart={id => addItem(id, 1)} />
+          <ProductCard product={item} width={computeGridCardWidth(gridColumns)} onPress={() => navigation.navigate('ProductDetail', { slug: item.slug })} onAddToCart={id => addItem(id, 1)} />
         )}
         ListFooterComponent={loadingMore ? <ActivityIndicator size="small" color={COLORS.primary} style={styles.footerLoader} /> : null}
         ListEmptyComponent={<Text style={styles.emptyText}>This store has no products yet.</Text>}

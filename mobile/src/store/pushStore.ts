@@ -42,6 +42,11 @@ export const usePushStore = create<PushState>((set, get) => ({
   },
 
   registerCurrentDevice: async () => {
+    // Calling into the native OneSignal bridge before OneSignal.initialize()
+    // has run (e.g. ONESIGNAL_APP_ID is still unset) crashes natively — a
+    // JS try/catch can't trap that, unlike a normal rejected promise. This
+    // must stay the first line here, not just inside initialize().
+    if (!get().initialized) return;
     const id = get().subscriptionId ?? (await OneSignal.User.pushSubscription.getIdAsync().catch(() => null));
     if (!id) return;
     try {

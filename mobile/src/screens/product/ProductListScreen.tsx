@@ -7,7 +7,9 @@ import { Product } from '../../types';
 import { useCartStore } from '../../store/cartStore';
 import { useAuthStore } from '../../store/authStore';
 import { useWishlistStore } from '../../store/wishlistStore';
-import ProductCard from '../../components/ProductCard';
+import { useBootstrapStore } from '../../store/bootstrapStore';
+import { useLocaleStore } from '../../store/localeStore';
+import ProductCard, { computeGridCardWidth } from '../../components/ProductCard';
 import { apiErrorMessage } from '../../api/client';
 
 const SORT_OPTIONS: { label: string; value: ProductFilters['sort'] }[] = [
@@ -22,6 +24,8 @@ export default function ProductListScreen({ route, navigation }: any) {
   const { addItem } = useCartStore();
   const { isAuthenticated } = useAuthStore();
   const { ids: wishlistIds, toggle: toggleWishlist, fetchWishlist } = useWishlistStore();
+  const gridColumns = useBootstrapStore(s => s.productGridColumns);
+  const { language, currency } = useLocaleStore();
 
   useEffect(() => {
     if (isAuthenticated) fetchWishlist();
@@ -60,7 +64,7 @@ export default function ProductListScreen({ route, navigation }: any) {
     }
   }, [categoryId, brandId, sort]);
 
-  useEffect(() => { load(1); }, [load]);
+  useEffect(() => { load(1); }, [load, language, currency]);
 
   const activeSortLabel = SORT_OPTIONS.find(o => o.value === sort)?.label ?? 'Latest';
 
@@ -88,9 +92,10 @@ export default function ProductListScreen({ route, navigation }: any) {
         </View>
       ) : (
         <FlatList
+          key={gridColumns}
           data={products}
           keyExtractor={item => String(item.id)}
-          numColumns={2}
+          numColumns={gridColumns}
           columnWrapperStyle={{ justifyContent: 'space-between' }}
           contentContainerStyle={{ padding: SIZES.screenPadding }}
           onEndReached={() => !loadingMore && page < lastPage && load(page + 1)}
@@ -98,6 +103,7 @@ export default function ProductListScreen({ route, navigation }: any) {
           renderItem={({ item }) => (
             <ProductCard
               product={item}
+              width={computeGridCardWidth(gridColumns)}
               onPress={() => navigation.navigate('ProductDetail', { slug: item.slug })}
               onAddToCart={id => addItem(id, 1)}
               onToggleWishlist={handleToggleWishlist}

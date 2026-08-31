@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   ActivityIndicator, Dimensions, FlatList, Image, Modal, RefreshControl, ScrollView,
   StyleSheet, Text, TouchableOpacity, View,
@@ -12,7 +13,9 @@ import { useAuthStore } from '../../store/authStore';
 import { useCartStore } from '../../store/cartStore';
 import { useNotificationStore } from '../../store/notificationStore';
 import { useWishlistStore } from '../../store/wishlistStore';
-import ProductCard from '../../components/ProductCard';
+import { useBootstrapStore } from '../../store/bootstrapStore';
+import { useLocaleStore } from '../../store/localeStore';
+import ProductCard, { computeGridCardWidth } from '../../components/ProductCard';
 import { apiErrorMessage } from '../../api/client';
 
 const SORT_OPTIONS: { label: string; value: ProductFilters['sort'] }[] = [
@@ -44,6 +47,8 @@ export default function HomeScreen({ navigation }: any) {
   const { addItem } = useCartStore();
   const { unreadCount, fetchUnreadCount } = useNotificationStore();
   const { ids: wishlistIds, toggle: toggleWishlist, fetchWishlist } = useWishlistStore();
+  const gridColumns = useBootstrapStore(s => s.productGridColumns);
+  const { language, currency } = useLocaleStore();
 
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -59,7 +64,8 @@ export default function HomeScreen({ navigation }: any) {
   const [error, setError] = useState('');
 
   const [sort, setSort] = useState<ProductFilters['sort']>('latest');
-  const [numColumns, setNumColumns] = useState<1 | 2>(2);
+  const [isListView, setIsListView] = useState(false);
+  const numColumns = isListView ? 1 : gridColumns;
   const [sortModalVisible, setSortModalVisible] = useState(false);
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [inStockOnly, setInStockOnly] = useState(false);
@@ -70,9 +76,13 @@ export default function HomeScreen({ navigation }: any) {
       setFlashSale(res.data.data.flash_sale.products);
       setHeroSlides(res.data.data.hero_slides);
     }).catch(() => {});
-    fetchUnreadCount();
     if (isAuthenticated) fetchWishlist();
-  }, [fetchUnreadCount, isAuthenticated, fetchWishlist]);
+  }, [isAuthenticated, fetchWishlist, language, currency]);
+
+  // Plain useEffect only runs once on mount — the bell badge needs to
+  // reflect notifications that arrived while the user was on another tab,
+  // so it refetches every time Home regains focus instead.
+  useFocusEffect(useCallback(() => { fetchUnreadCount(); }, [fetchUnreadCount]));
 
   const loadProducts = useCallback(async (targetPage: number, replace: boolean) => {
     if (targetPage === 1) setLoading(replace ? false : true);
@@ -99,7 +109,12 @@ export default function HomeScreen({ navigation }: any) {
 
   useEffect(() => {
     loadProducts(1, false);
-  }, [loadProducts]);
+    // language/currency aren't read inside loadProducts, but changing
+    // either means every price/label on this screen is now stale — the
+    // X-Language/X-Currency headers (see api/client.ts) only affect the
+    // NEXT request, so a screen already showing data needs to explicitly
+    // refetch when the user changes either from Preferences.
+  }, [loadProducts, language, currency]);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -173,7 +188,7 @@ export default function HomeScreen({ navigation }: any) {
         data={products}
         keyExtractor={item => String(item.id)}
         numColumns={numColumns}
-        columnWrapperStyle={numColumns === 2 ? styles.gridRow : undefined}
+        columnWrapperStyle={!isListView ? styles.gridRow : undefined}
         contentContainerStyle={styles.listContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[COLORS.primary]} />}
         onEndReached={onEndReached}
@@ -181,7 +196,7 @@ export default function HomeScreen({ navigation }: any) {
         renderItem={({ item }) => (
           <ProductCard
             product={item}
-            width={numColumns === 2 ? undefined : '100%' as any}
+            width={isListView ? '100%' as any : computeGridCardWidth(gridColumns)}
             onPress={() => navigation.navigate('ProductDetail', { slug: item.slug })}
             onAddToCart={handleAddToCart}
             onToggleWishlist={handleToggleWishlist}
@@ -229,6 +244,32 @@ export default function HomeScreen({ navigation }: any) {
               </TouchableOpacity>
             </ScrollView>
 
+            {/* Sell on OneMarket24/7 — the "Become a Seller" row in Account
+                is easy to miss; this is the more visible entry point most
+                marketplace apps put on their home screen. */}
+            <TouchableOpacity
+              style={styles.sellBanner}
+              activeOpacity={0.9}
+              onPress={() => {
+                const isVendor = user?.user_type === 'vendor_owner' || user?.user_type === 'vendor_staff';
+                if (isVendor) navigation.getParent()?.getParent()?.navigate('Vendor');
+                else navigation.getParent()?.navigate('ProfileTab', { screen: 'VendorOnboarding' });
+              }}
+            >
+              <View style={styles.sellBannerIconBox}>
+                <IonIcon name="storefront" size={22} color={COLORS.white} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.sellBannerTitle}>
+                  {user?.user_type === 'vendor_owner' || user?.user_type === 'vendor_staff' ? 'Go to your Vendor Dashboard' : 'Sell on OneMarket 24/7'}
+                </Text>
+                <Text style={styles.sellBannerSubtitle}>
+                  {user?.user_type === 'vendor_owner' || user?.user_type === 'vendor_staff' ? 'Manage products, orders and earnings' : 'Reach thousands of shoppers — start today'}
+                </Text>
+              </View>
+              <IonIcon name="chevron-forward" size={18} color={COLORS.white} />
+            </TouchableOpacity>
+
             {/* Flash sale */}
             {flashSale.length > 0 && (
               <View style={styles.flashSection}>
@@ -242,6 +283,7 @@ export default function HomeScreen({ navigation }: any) {
                   renderItem={({ item }) => (
                     <ProductCard
                       product={item}
+                      width={computeGridCardWidth(gridColumns)}
                       onPress={() => navigation.navigate('ProductDetail', { slug: item.slug })}
                       onAddToCart={handleAddToCart}
                       onToggleWishlist={handleToggleWishlist}
@@ -266,11 +308,11 @@ export default function HomeScreen({ navigation }: any) {
                 <IonIcon name="chevron-down" size={14} color={COLORS.text} />
               </TouchableOpacity>
               <View style={styles.viewToggle}>
-                <TouchableOpacity onPress={() => setNumColumns(2)} style={styles.viewToggleBtn}>
-                  <IonIcon name="grid" size={18} color={numColumns === 2 ? COLORS.primary : COLORS.textMuted} />
+                <TouchableOpacity onPress={() => setIsListView(false)} style={styles.viewToggleBtn}>
+                  <IonIcon name="grid" size={18} color={!isListView ? COLORS.primary : COLORS.textMuted} />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => setNumColumns(1)} style={styles.viewToggleBtn}>
-                  <IonIcon name="list" size={18} color={numColumns === 1 ? COLORS.primary : COLORS.textMuted} />
+                <TouchableOpacity onPress={() => setIsListView(true)} style={styles.viewToggleBtn}>
+                  <IonIcon name="list" size={18} color={isListView ? COLORS.primary : COLORS.textMuted} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -366,6 +408,17 @@ const styles = StyleSheet.create({
   categoryImage: { width: 52, height: 52 },
   categoryName: { fontSize: 11, color: COLORS.text, textAlign: 'center' },
   categoryNameActive: { color: COLORS.accent, fontWeight: '700' },
+
+  sellBanner: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: COLORS.secondary, borderRadius: SIZES.borderRadius, padding: 14, marginBottom: 14,
+  },
+  sellBannerIconBox: {
+    width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  sellBannerTitle: { fontSize: 14, fontWeight: 'bold', color: COLORS.white },
+  sellBannerSubtitle: { fontSize: 11, color: 'rgba(255,255,255,0.75)', marginTop: 2 },
 
   flashSection: { backgroundColor: COLORS.white, paddingVertical: 14, marginBottom: 12, borderRadius: SIZES.borderRadius },
   flashTitle: { fontSize: 16, fontWeight: 'bold', color: COLORS.danger, paddingHorizontal: SIZES.screenPadding, marginBottom: 10 },

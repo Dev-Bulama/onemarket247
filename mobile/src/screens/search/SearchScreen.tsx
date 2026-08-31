@@ -7,7 +7,8 @@ import { Product } from '../../types';
 import { useCartStore } from '../../store/cartStore';
 import { useAuthStore } from '../../store/authStore';
 import { useWishlistStore } from '../../store/wishlistStore';
-import ProductCard from '../../components/ProductCard';
+import { useBootstrapStore } from '../../store/bootstrapStore';
+import ProductCard, { computeGridCardWidth } from '../../components/ProductCard';
 
 const RECENT_SEARCHES = ['headphones', 'smartphone', 'laptop', 'smart watch'];
 
@@ -18,6 +19,7 @@ export default function SearchScreen({ navigation }: any) {
   const { addItem } = useCartStore();
   const { isAuthenticated } = useAuthStore();
   const { ids: wishlistIds, toggle: toggleWishlist, fetchWishlist } = useWishlistStore();
+  const gridColumns = useBootstrapStore(s => s.productGridColumns);
 
   const handleToggleWishlist = (productId: number) => {
     if (!isAuthenticated) {
@@ -89,14 +91,16 @@ export default function SearchScreen({ navigation }: any) {
 
       {!loading && results && results.length > 0 && (
         <FlatList
+          key={gridColumns}
           data={results}
           keyExtractor={item => String(item.id)}
-          numColumns={2}
+          numColumns={gridColumns}
           columnWrapperStyle={{ justifyContent: 'space-between' }}
           contentContainerStyle={{ padding: SIZES.screenPadding }}
           renderItem={({ item }) => (
             <ProductCard
               product={item}
+              width={computeGridCardWidth(gridColumns)}
               onPress={() => navigation.navigate('ProductDetail', { slug: item.slug })}
               onAddToCart={id => addItem(id, 1)}
               onToggleWishlist={handleToggleWishlist}

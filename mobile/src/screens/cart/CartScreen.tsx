@@ -4,19 +4,21 @@ import IonIcon from 'react-native-vector-icons/Ionicons';
 import { COLORS, SIZES } from '../../constants';
 import { useCartStore } from '../../store/cartStore';
 import { useAuthStore } from '../../store/authStore';
+import { useLocaleStore } from '../../store/localeStore';
 import { CartItem } from '../../types';
 import { apiErrorMessage } from '../../api/client';
 
 export default function CartScreen({ navigation }: any) {
   const { cart, fetchCart, updateItem, removeItem, applyCoupon, removeCoupon, isLoading } = useCartStore();
   const { isAuthenticated } = useAuthStore();
+  const { language, currency } = useLocaleStore();
   const [couponCode, setCouponCode] = useState('');
   const [couponError, setCouponError] = useState('');
   const [applyingCoupon, setApplyingCoupon] = useState(false);
 
   useEffect(() => {
     fetchCart();
-  }, [fetchCart]);
+  }, [fetchCart, language, currency]);
 
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) return;

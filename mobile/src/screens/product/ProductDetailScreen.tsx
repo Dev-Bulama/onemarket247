@@ -12,6 +12,7 @@ import { useCartStore } from '../../store/cartStore';
 import { useAuthStore } from '../../store/authStore';
 import { useWishlistStore } from '../../store/wishlistStore';
 import { compareApi, ProductQuestion, questionsApi } from '../../api/wishlist';
+import { useLocaleStore } from '../../store/localeStore';
 
 const { width } = Dimensions.get('window');
 
@@ -20,6 +21,7 @@ export default function ProductDetailScreen({ route, navigation }: any) {
   const { addItem, cart } = useCartStore();
   const { isAuthenticated } = useAuthStore();
   const { ids: wishlistIds, toggle: toggleWishlist, fetchWishlist } = useWishlistStore();
+  const { language, currency } = useLocaleStore();
 
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -45,7 +47,7 @@ export default function ProductDetailScreen({ route, navigation }: any) {
     productsApi.reviews(slug).then(res => setReviews(res.data.data)).catch(() => {});
     questionsApi.list(slug).then(res => setQuestions(res.data.data)).catch(() => {});
     if (isAuthenticated) fetchWishlist();
-  }, [slug, isAuthenticated, fetchWishlist]);
+  }, [slug, isAuthenticated, fetchWishlist, language, currency]);
 
   const handleToggleWishlist = () => {
     if (!product) return;

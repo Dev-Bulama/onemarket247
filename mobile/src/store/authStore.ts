@@ -57,7 +57,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       await setAuthToken(token);
       await AsyncStorage.setItem('user', JSON.stringify(user));
       set({ user, isAuthenticated: true });
-      usePushStore.getState().registerCurrentDevice();
+      usePushStore.getState().registerCurrentDevice().catch(() => {});
     } finally {
       set({ isLoading: false });
     }
@@ -71,7 +71,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       await setAuthToken(token);
       await AsyncStorage.setItem('user', JSON.stringify(user));
       set({ user, isAuthenticated: true });
-      usePushStore.getState().registerCurrentDevice();
+      usePushStore.getState().registerCurrentDevice().catch(() => {});
     } finally {
       set({ isLoading: false });
     }

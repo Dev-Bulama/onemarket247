@@ -50,6 +50,16 @@ export default function VendorProductsScreen({ navigation }: any) {
       .catch(e => setError(apiErrorMessage(e, 'Could not delete this product.')));
   };
 
+  const [submittingId, setSubmittingId] = useState<number | null>(null);
+
+  const handleSubmitForReview = (product: VendorProductItem) => {
+    setSubmittingId(product.id);
+    vendorProductsApi.submit(product.id)
+      .then(res => setProducts(prev => prev.map(p => (p.id === product.id ? res.data.data : p))))
+      .catch(e => setError(apiErrorMessage(e, 'Could not submit this product for review.')))
+      .finally(() => setSubmittingId(null));
+  };
+
   return (
     <View style={styles.flex}>
       <View style={styles.header}>
@@ -111,6 +121,22 @@ export default function VendorProductsScreen({ navigation }: any) {
                     <Text style={styles.rejectionReason} numberOfLines={2}>{item.rejection_reason}</Text>
                   ) : null}
                   <StatusBadge label={statusInfo.label} color={statusInfo.color} />
+                  {(item.status === 'draft' || item.status === 'rejected') && (
+                    <TouchableOpacity
+                      style={styles.submitBtn}
+                      onPress={() => handleSubmitForReview(item)}
+                      disabled={submittingId === item.id}
+                    >
+                      {submittingId === item.id ? (
+                        <ActivityIndicator size="small" color={COLORS.primary} />
+                      ) : (
+                        <>
+                          <IonIcon name="paper-plane-outline" size={13} color={COLORS.primary} />
+                          <Text style={styles.submitBtnText}>Submit for review</Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
+                  )}
                 </View>
                 <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDelete(item)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                   <IonIcon name="trash-outline" size={18} color={COLORS.danger} />
@@ -149,4 +175,10 @@ const styles = StyleSheet.create({
   price: { fontSize: 13, fontWeight: 'bold', color: COLORS.primary, marginBottom: 6 },
   rejectionReason: { fontSize: 11, color: COLORS.danger, marginBottom: 6 },
   deleteBtn: { padding: 6 },
+  submitBtn: {
+    flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 4,
+    borderWidth: 1, borderColor: COLORS.primary, borderRadius: SIZES.borderRadiusSm,
+    paddingHorizontal: 8, paddingVertical: 4, marginTop: 6,
+  },
+  submitBtnText: { fontSize: 11, color: COLORS.primary, fontWeight: '700' },
 });

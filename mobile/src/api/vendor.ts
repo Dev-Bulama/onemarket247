@@ -162,6 +162,8 @@ export const vendorProductsApi = {
     apiClient.patch<ApiResponse<VendorProductItem>>(`/vendor/products/${id}`, data),
 
   destroy: (id: number) => apiClient.delete<ApiResponse<null>>(`/vendor/products/${id}`),
+
+  submit: (id: number) => apiClient.post<ApiResponse<VendorProductItem>>(`/vendor/products/${id}/submit`),
 };
 
 export const vendorInventoryApi = {

@@ -5,11 +5,13 @@ import IonIcon from 'react-native-vector-icons/Ionicons';
 import { COLORS, SIZES } from '../../constants';
 import { useWishlistStore } from '../../store/wishlistStore';
 import { useCartStore } from '../../store/cartStore';
-import ProductCard from '../../components/ProductCard';
+import { useBootstrapStore } from '../../store/bootstrapStore';
+import ProductCard, { computeGridCardWidth } from '../../components/ProductCard';
 
 export default function WishlistScreen({ navigation }: any) {
   const { items, isLoading, fetchWishlist, toggle } = useWishlistStore();
   const { addItem } = useCartStore();
+  const gridColumns = useBootstrapStore(s => s.productGridColumns);
 
   useFocusEffect(useCallback(() => { fetchWishlist(); }, [fetchWishlist]));
 
@@ -30,14 +32,16 @@ export default function WishlistScreen({ navigation }: any) {
         </View>
       ) : (
         <FlatList
+          key={gridColumns}
           data={items}
           keyExtractor={item => String(item.id)}
-          numColumns={2}
+          numColumns={gridColumns}
           columnWrapperStyle={styles.row}
           contentContainerStyle={styles.list}
           renderItem={({ item }) => (
             <ProductCard
               product={item}
+              width={computeGridCardWidth(gridColumns)}
               onPress={() => navigation.navigate('ProductDetail', { slug: item.slug })}
               onAddToCart={id => addItem(id, 1)}
               onToggleWishlist={toggle}

@@ -12,6 +12,10 @@ interface BootstrapState {
   splashLogoUrl: string | null;
   updateRequired: boolean;
   isLoading: boolean;
+  /** Admin-configured product grid column count (App\Models\AppSetting's
+   * product_grid_columns) — defaults to 4 before bootstrap resolves, same
+   * as the backend column default. */
+  productGridColumns: number;
   /** Call once, before anything else on app start (see AppNavigator).
    * Resolves the real API base URL and applies it to apiClient, then
    * loads branding — falling back to a cached last-known-good result
@@ -36,6 +40,7 @@ export const useBootstrapStore = create<BootstrapState>((set) => ({
   splashLogoUrl: null,
   updateRequired: false,
   isLoading: true,
+  productGridColumns: 4,
 
   load: async () => {
     let payload = null;
@@ -59,6 +64,7 @@ export const useBootstrapStore = create<BootstrapState>((set) => ({
       logoUrl: payload?.logo_url ?? null,
       splashLogoUrl: payload?.splash_logo_url ?? null,
       updateRequired: !!payload?.min_app_version && !isVersionAtLeast(APP_VERSION, payload.min_app_version),
+      productGridColumns: payload?.product_grid_columns && payload.product_grid_columns >= 2 ? payload.product_grid_columns : 4,
       isLoading: false,
     });
   },
