@@ -60,6 +60,12 @@ test('language seeder creates exactly one default language and at least one RTL 
         ->and(Language::where('direction', 'rtl')->count())->toBeGreaterThan(0);
 });
 
+test('language seeder only activates English — the others have no translated content behind them yet', function () {
+    (new LanguageSeeder)->run();
+
+    expect(Language::where('is_active', true)->pluck('code')->all())->toBe(['en']);
+});
+
 test('settings seeder seeds the baseline platform settings', function () {
     (new SettingsSeeder)->run();
 

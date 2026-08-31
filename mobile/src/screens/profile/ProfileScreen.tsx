@@ -29,7 +29,7 @@ export default function ProfileScreen({ navigation }: any) {
     : { icon: 'storefront-outline', label: 'Become a Seller', onPress: () => navigation.navigate('VendorOnboarding') };
 
   const infoItems = [
-    { icon: 'language-outline', label: 'Language & Currency', onPress: () => navigation.navigate('Preferences') },
+    { icon: 'cash-outline', label: 'Currency', onPress: () => navigation.navigate('Preferences') },
     { icon: 'newspaper-outline', label: 'Blog', onPress: () => navigation.navigate('Blog') },
     { icon: 'help-circle-outline', label: 'FAQ', onPress: () => navigation.navigate('Faq') },
     { icon: 'mail-outline', label: 'Contact Us', onPress: () => navigation.navigate('Contact') },

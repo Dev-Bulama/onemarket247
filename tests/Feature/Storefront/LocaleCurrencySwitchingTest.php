@@ -24,6 +24,13 @@ it('switches locale and rtl direction based on the session choice', function () 
     expect(app()->getLocale())->toBe('ar');
 });
 
+it('hides the language switcher when only one language is active', function () {
+    Language::factory()->create(['code' => 'en', 'is_default' => true, 'is_active' => true]);
+    Language::factory()->create(['code' => 'ar', 'is_default' => false, 'is_active' => false]);
+
+    $this->get('/')->assertOk()->assertDontSee(route('locale.switch', 'en'), false);
+});
+
 it('falls back to any active language if no default and no session choice exist', function () {
     Language::factory()->create(['code' => 'fr', 'is_default' => false, 'is_active' => true]);
 

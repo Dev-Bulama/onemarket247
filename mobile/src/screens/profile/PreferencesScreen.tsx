@@ -2,30 +2,31 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { COLORS, SIZES } from '../../constants';
-import { CurrencyOption, LanguageOption, referenceApi } from '../../api/config';
+import { CurrencyOption, referenceApi } from '../../api/config';
 import { useLocaleStore } from '../../store/localeStore';
 
+// The language picker is hidden for now — there's no translated UI content
+// anywhere yet (web or mobile), so picking a non-English language changed
+// nothing visible. Currency switching is real (server-side conversion) and
+// stays. Re-add the language section once real translations exist — see
+// useLocaleStore's setLanguage()/referenceApi.languages(), both still here
+// and functional, just not surfaced in this screen.
 export default function PreferencesScreen({ navigation }: any) {
-  const { language, currency, setLanguage, setCurrency } = useLocaleStore();
-  const [languages, setLanguages] = useState<LanguageOption[]>([]);
+  const { currency, setCurrency } = useLocaleStore();
   const [currencies, setCurrencies] = useState<CurrencyOption[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([referenceApi.languages(), referenceApi.currencies()]).then(([lang, curr]) => {
-      setLanguages(lang.data.data);
-      setCurrencies(curr.data.data);
-    }).finally(() => setLoading(false));
+    referenceApi.currencies().then(res => setCurrencies(res.data.data)).finally(() => setLoading(false));
   }, []);
 
-  const activeLanguage = language ?? languages.find(l => l.is_default)?.code;
   const activeCurrency = currency ?? currencies.find(c => c.is_default)?.code;
 
   return (
     <View style={styles.flex}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}><IonIcon name="arrow-back" size={22} color={COLORS.text} /></TouchableOpacity>
-        <Text style={styles.headerTitle}>Language & Currency</Text>
+        <Text style={styles.headerTitle}>Currency</Text>
         <View style={styles.backSpacer} />
       </View>
 
@@ -33,19 +34,6 @@ export default function PreferencesScreen({ navigation }: any) {
         <ActivityIndicator size="large" color={COLORS.primary} style={styles.loader} />
       ) : (
         <ScrollView contentContainerStyle={styles.content}>
-          <Text style={styles.sectionLabel}>Language</Text>
-          <View style={styles.optionList}>
-            {languages.map(lang => (
-              <TouchableOpacity key={lang.code} style={styles.optionRow} onPress={() => setLanguage(lang.code)}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.optionLabel}>{lang.native_name}</Text>
-                  <Text style={styles.optionSubLabel}>{lang.name}</Text>
-                </View>
-                {activeLanguage === lang.code && <IonIcon name="checkmark-circle" size={20} color={COLORS.primary} />}
-              </TouchableOpacity>
-            ))}
-          </View>
-
           <Text style={styles.sectionLabel}>Currency</Text>
           <View style={styles.optionList}>
             {currencies.map(curr => (
@@ -55,8 +43,6 @@ export default function PreferencesScreen({ navigation }: any) {
               </TouchableOpacity>
             ))}
           </View>
-
-          <Text style={styles.note}>Changes apply the next time you load a page — pull to refresh if a screen you're already on doesn't update.</Text>
         </ScrollView>
       )}
     </View>
