@@ -45,7 +45,8 @@ test('approving an application provisions user, vendor, store, subscription, and
         ->and($application->reviewed_by)->toBe($admin->id);
 
     $document = VendorDocument::first();
-    expect($document->vendor_id)->toBe($vendor->id);
+    expect($document->vendor_id)->toBe($vendor->id)
+        ->and($document->vendor_application_id)->toBeNull();
 
     Notification::assertSentTo($vendor->user, VendorApplicationApprovedNotification::class);
 });

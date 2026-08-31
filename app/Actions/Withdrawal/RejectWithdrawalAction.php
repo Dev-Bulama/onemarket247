@@ -10,6 +10,7 @@ use App\Enums\WithdrawalStatus;
 use App\Exceptions\InvalidWithdrawalTransitionException;
 use App\Models\User;
 use App\Models\Withdrawal;
+use App\Support\AuditLogger;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -28,6 +29,7 @@ class RejectWithdrawalAction
 
         return DB::transaction(function () use ($withdrawal, $reason, $admin) {
             $wallet = $this->lockedWallet($withdrawal->vendor);
+            $before = $withdrawal->only(['status']);
 
             $this->recordTransaction($wallet, WalletTransactionType::WithdrawalReversed, WalletBalanceBucket::Reserved, -$withdrawal->amount, withdrawal: $withdrawal);
             $this->recordTransaction($wallet, WalletTransactionType::WithdrawalReversed, WalletBalanceBucket::Available, $withdrawal->amount, withdrawal: $withdrawal);
@@ -38,6 +40,8 @@ class RejectWithdrawalAction
                 'reviewed_by' => $admin->id,
                 'reviewed_at' => now(),
             ]);
+
+            AuditLogger::record('withdrawal.rejected', $withdrawal, $before, $withdrawal->only(['status', 'rejection_reason']), $admin);
 
             return $withdrawal->fresh();
         });

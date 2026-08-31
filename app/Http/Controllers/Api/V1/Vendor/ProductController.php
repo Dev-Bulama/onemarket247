@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1\Vendor;
 
+use App\Actions\Product\SubmitProductForApprovalAction;
 use App\Enums\ProductStatus;
 use App\Enums\ProductType;
 use App\Enums\StockStatus;
@@ -142,6 +143,28 @@ class ProductController extends Controller
         $product->delete();
 
         return ApiResponse::success(message: 'Product deleted.');
+    }
+
+    /**
+     * Mirrors App\Filament\Vendor\Resources\Products\Tables\ProductsTable's
+     * "Submit for review" row action — moves a Draft/Rejected product to
+     * PendingApproval (or straight to Published under automatic approval
+     * mode), same App\Actions\Product\SubmitProductForApprovalAction. Only
+     * a Draft/Rejected product can be submitted; a product not in either
+     * state fails the enum check the action doesn't itself enforce, so
+     * that's checked here instead.
+     */
+    public function submit(Request $request, Product $product, SubmitProductForApprovalAction $action): JsonResponse
+    {
+        Gate::authorize('update', $product);
+
+        abort_unless(
+            in_array($product->status, [ProductStatus::Draft, ProductStatus::Rejected], true),
+            422,
+            'Only a draft or rejected product can be submitted for review.',
+        );
+
+        return ApiResponse::success(new VendorProductResource($action->handle($product)));
     }
 
     private function uniqueSlug(string $name): string

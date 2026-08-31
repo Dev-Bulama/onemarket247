@@ -18,6 +18,7 @@ use App\Models\VendorDocument;
 use App\Models\VendorSubscription;
 use App\Models\VendorSubscriptionPlan;
 use App\Notifications\VendorApplicationApprovedNotification;
+use App\Support\AuditLogger;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
@@ -92,8 +93,16 @@ class ApproveVendorApplicationAction
                 Role::where('name', 'Vendor Owner')->where('guard_name', 'vendor')->first()
             );
 
+            // vendor_application_id is cleared as documents migrate to the new
+            // vendor — see the alter-vendor-documents migration's docblock:
+            // exactly one of vendor_id/vendor_application_id is meant to be
+            // set at a time. Leaving both set would mean deleting this
+            // (now-approved, historical) application cascades onto the
+            // vendor's live documents via vendor_documents' cascadeOnDelete
+            // on vendor_application_id.
             VendorDocument::where('vendor_application_id', $application->id)->update([
                 'vendor_id' => $vendor->id,
+                'vendor_application_id' => null,
             ]);
 
             $plan = $application->subscriptionPlan
@@ -117,6 +126,8 @@ class ApproveVendorApplicationAction
                 'reviewed_by' => $reviewer?->id,
                 'reviewed_at' => now(),
             ]);
+
+            AuditLogger::record('vendor_application.approved', $application, ['status' => 'pending'], ['status' => 'approved', 'vendor_id' => $vendor->id], $reviewer);
 
             return $vendor;
         });

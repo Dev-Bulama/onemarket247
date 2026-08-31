@@ -57,3 +57,42 @@ test('an admin can create a blog post with a cover image and it is stamped with 
     expect($post->author_id)->toBe($admin->id)
         ->and($post->getFirstMediaUrl('cover'))->not->toBe('');
 });
+
+test('a post created as Published without an explicit published_at is auto-stamped and visible publicly', function () {
+    $admin = blogAdminUser();
+
+    Livewire::actingAs($admin, 'admin')
+        ->test(CreateBlogPost::class)
+        ->fillForm([
+            'title' => 'Auto Published Post',
+            'slug' => 'auto-published-post',
+            'body' => 'Body text.',
+            'status' => BlogPostStatus::Published->value,
+        ])
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    $post = BlogPost::where('slug', 'auto-published-post')->firstOrFail();
+
+    expect($post->published_at)->not->toBeNull()
+        ->and($post->published_at->lessThanOrEqualTo(now()))->toBeTrue();
+
+    $this->get('/blog')->assertOk()->assertSee('Auto Published Post');
+});
+
+test('a post created as Draft is not auto-stamped with published_at', function () {
+    $admin = blogAdminUser();
+
+    Livewire::actingAs($admin, 'admin')
+        ->test(CreateBlogPost::class)
+        ->fillForm([
+            'title' => 'Still A Draft',
+            'slug' => 'still-a-draft',
+            'body' => 'Body text.',
+            'status' => BlogPostStatus::Draft->value,
+        ])
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    expect(BlogPost::where('slug', 'still-a-draft')->firstOrFail()->published_at)->toBeNull();
+});

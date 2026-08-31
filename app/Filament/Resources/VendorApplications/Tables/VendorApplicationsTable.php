@@ -8,6 +8,7 @@ use App\Enums\VendorApplicationStatus;
 use App\Exceptions\VendorApplicationConflictException;
 use App\Models\VendorApplication;
 use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
@@ -87,6 +88,8 @@ class VendorApplicationsTable
                         app(RejectVendorApplicationAction::class)->handle($record, $data['reason'], auth()->user());
                         Notification::make()->title('Vendor application rejected')->success()->send();
                     }),
+                DeleteAction::make()
+                    ->visible(fn (VendorApplication $record) => auth()->user()?->can('delete', $record) ?? false),
             ]);
     }
 }

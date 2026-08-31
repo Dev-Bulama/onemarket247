@@ -10,6 +10,7 @@ use App\Enums\WithdrawalStatus;
 use App\Exceptions\InvalidWithdrawalTransitionException;
 use App\Models\User;
 use App\Models\Withdrawal;
+use App\Support\AuditLogger;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -31,6 +32,7 @@ class MarkWithdrawalPaidAction
 
         return DB::transaction(function () use ($withdrawal, $admin) {
             $wallet = $this->lockedWallet($withdrawal->vendor);
+            $before = $withdrawal->only(['status']);
 
             $this->recordTransaction($wallet, WalletTransactionType::WithdrawalPaid, WalletBalanceBucket::Reserved, -$withdrawal->amount, withdrawal: $withdrawal);
             $this->recordTransaction($wallet, WalletTransactionType::WithdrawalPaid, WalletBalanceBucket::Withdrawn, $withdrawal->amount, withdrawal: $withdrawal);
@@ -40,6 +42,8 @@ class MarkWithdrawalPaidAction
                 'reviewed_by' => $withdrawal->reviewed_by ?? $admin->id,
                 'paid_at' => now(),
             ]);
+
+            AuditLogger::record('withdrawal.paid', $withdrawal, $before, $withdrawal->only(['status']), $admin);
 
             return $withdrawal->fresh();
         });

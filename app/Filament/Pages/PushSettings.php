@@ -6,6 +6,7 @@ use App\Models\DeviceToken;
 use App\Models\PushSetting;
 use App\Notifications\Channels\OneSignalChannel;
 use App\Notifications\Messages\OneSignalMessage;
+use App\Support\AuditLogger;
 use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -87,9 +88,26 @@ class PushSettings extends Page implements HasForms
             unset($data['rest_api_key']);
         }
 
-        PushSetting::current()->update($data);
+        $setting = PushSetting::current();
+        $before = $setting->only(array_keys($data));
+        $setting->update($data);
+
+        AuditLogger::record('push_settings.updated', $setting, static::redactApiKey($before), static::redactApiKey($data));
 
         Notification::make()->title('Push settings saved')->success()->send();
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private static function redactApiKey(array $data): array
+    {
+        if (array_key_exists('rest_api_key', $data)) {
+            $data['rest_api_key'] = '[redacted]';
+        }
+
+        return $data;
     }
 
     protected function getHeaderActions(): array

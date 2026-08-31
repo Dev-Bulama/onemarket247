@@ -80,3 +80,29 @@ test('a staff admin without vendors.approve cannot see the resource', function (
 
     $this->actingAs($staff, 'admin')->get('/admin/vendor-applications')->assertForbidden();
 });
+
+test('an admin can delete a pending or rejected application', function () {
+    $admin = superAdminForApplications();
+    $pending = VendorApplication::factory()->create();
+    $rejected = VendorApplication::factory()->create(['status' => VendorApplicationStatus::Rejected]);
+
+    Livewire::actingAs($admin, 'admin')
+        ->test(ListVendorApplications::class)
+        ->callTableAction('delete', $pending);
+
+    Livewire::actingAs($admin, 'admin')
+        ->test(ListVendorApplications::class)
+        ->callTableAction('delete', $rejected);
+
+    expect(VendorApplication::find($pending->id))->toBeNull()
+        ->and(VendorApplication::find($rejected->id))->toBeNull();
+});
+
+test('the delete action is hidden for an approved application', function () {
+    $admin = superAdminForApplications();
+    $application = VendorApplication::factory()->approved()->create();
+
+    Livewire::actingAs($admin, 'admin')
+        ->test(ListVendorApplications::class)
+        ->assertTableActionHidden('delete', $application);
+});

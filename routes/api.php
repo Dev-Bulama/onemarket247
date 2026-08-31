@@ -198,6 +198,7 @@ Route::prefix('v1')->group(function () {
         Route::get('products/{product}', [VendorProductController::class, 'show']);
         Route::patch('products/{product}', [VendorProductController::class, 'update']);
         Route::delete('products/{product}', [VendorProductController::class, 'destroy']);
+        Route::post('products/{product}/submit', [VendorProductController::class, 'submit']);
 
         Route::get('inventory', [VendorInventoryController::class, 'index']);
         Route::patch('inventory/{warehouseStock}', [VendorInventoryController::class, 'adjust']);

@@ -34,6 +34,25 @@ class BlogPost extends Model implements HasMedia
         $this->addMediaCollection('cover')->singleFile();
     }
 
+    /**
+     * scopePublished() (used by both the storefront and API blog
+     * controllers) requires published_at to be set and in the past, not
+     * just status = Published — the admin form lets status be chosen
+     * without ever touching published_at, which silently kept every
+     * "Published" post invisible on the public blog page. Auto-filling it
+     * here (rather than adding a default to the form field, which
+     * wouldn't apply retroactively or to any other write path) fixes it
+     * at the one place every write goes through.
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (self $post) {
+            if ($post->status === BlogPostStatus::Published && $post->published_at === null) {
+                $post->published_at = now();
+            }
+        });
+    }
+
     public function author(): BelongsTo
     {
         return $this->belongsTo(User::class, 'author_id');

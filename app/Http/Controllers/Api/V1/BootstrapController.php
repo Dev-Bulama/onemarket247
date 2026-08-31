@@ -28,6 +28,7 @@ class BootstrapController extends Controller
             'logo_url' => $settings->logo_url,
             'splash_logo_url' => $settings->splash_logo_url,
             'min_app_version' => $settings->min_app_version,
+            'product_grid_columns' => $settings->product_grid_columns,
         ]);
     }
 }

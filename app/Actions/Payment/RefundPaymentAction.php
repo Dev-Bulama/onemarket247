@@ -10,6 +10,7 @@ use App\Models\Payment;
 use App\Models\PaymentLog;
 use App\Models\User;
 use App\Services\Payment\PaystackGateway;
+use App\Support\AuditLogger;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -62,8 +63,9 @@ class RefundPaymentAction
             'payload' => $result->raw,
         ]);
 
-        return DB::transaction(function () use ($payment, $amount) {
+        return DB::transaction(function () use ($payment, $amount, $actor) {
             $payment = Payment::whereKey($payment->id)->lockForUpdate()->firstOrFail();
+            $before = $payment->only(['refunded_amount', 'status']);
             $refundedAmount = $payment->refunded_amount + $amount;
 
             $payment->update([
@@ -72,6 +74,8 @@ class RefundPaymentAction
             ]);
 
             $this->reverseVendorWalletCredits($payment, $amount);
+
+            AuditLogger::record('payment.refunded', $payment, $before, $payment->only(['refunded_amount', 'status']), $actor);
 
             return $payment->fresh();
         });

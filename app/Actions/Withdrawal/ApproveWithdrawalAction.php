@@ -6,6 +6,7 @@ use App\Enums\WithdrawalStatus;
 use App\Exceptions\InvalidWithdrawalTransitionException;
 use App\Models\User;
 use App\Models\Withdrawal;
+use App\Support\AuditLogger;
 
 /**
  * Marks a withdrawal as reviewed and approved; funds stay in
@@ -20,11 +21,15 @@ class ApproveWithdrawalAction
             throw new InvalidWithdrawalTransitionException('Only a pending withdrawal can be approved.');
         }
 
+        $before = $withdrawal->only(['status']);
+
         $withdrawal->update([
             'status' => WithdrawalStatus::Approved,
             'reviewed_by' => $admin->id,
             'reviewed_at' => now(),
         ]);
+
+        AuditLogger::record('withdrawal.approved', $withdrawal, $before, $withdrawal->only(['status']), $admin);
 
         return $withdrawal->fresh();
     }

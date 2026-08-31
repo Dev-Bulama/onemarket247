@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\VendorApplicationStatus;
 use App\Models\User;
 use App\Models\VendorApplication;
 
@@ -32,8 +33,16 @@ class VendorApplicationPolicy
         return $user->can('vendors.approve');
     }
 
+    /**
+     * Never for an Approved application — a live vendor account, store,
+     * and (as of the vendor_application_id fix in
+     * ApproveVendorApplicationAction) the vendor's own real documents can
+     * depend on it. Pending/Rejected applications have nothing else
+     * referencing them, so deleting is safe.
+     */
     public function delete(User $user, VendorApplication $application): bool
     {
-        return false;
+        return $user->can('vendors.approve')
+            && $application->status !== VendorApplicationStatus::Approved;
     }
 }

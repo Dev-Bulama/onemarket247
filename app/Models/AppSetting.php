@@ -9,7 +9,7 @@ class AppSetting extends Model
 {
     protected $fillable = [
         'active_environment', 'local_api_url', 'production_api_url', 'force_production',
-        'app_name', 'logo_url', 'splash_logo_url', 'min_app_version',
+        'app_name', 'logo_url', 'splash_logo_url', 'min_app_version', 'product_grid_columns',
     ];
 
     protected function casts(): array
@@ -17,6 +17,7 @@ class AppSetting extends Model
         return [
             'active_environment' => AppEnvironment::class,
             'force_production' => 'boolean',
+            'product_grid_columns' => 'integer',
         ];
     }
 

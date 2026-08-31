@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Enums\AppEnvironment;
 use App\Models\AppSetting;
+use App\Support\AuditLogger;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -47,7 +48,7 @@ class AppSettings extends Page implements HasForms
 
         $this->form->fill($settings->only([
             'active_environment', 'local_api_url', 'production_api_url', 'force_production',
-            'app_name', 'logo_url', 'splash_logo_url', 'min_app_version',
+            'app_name', 'logo_url', 'splash_logo_url', 'min_app_version', 'product_grid_columns',
         ]));
     }
 
@@ -96,6 +97,15 @@ class AppSettings extends Page implements HasForms
                             ->url()
                             ->columnSpanFull(),
                     ]),
+                Section::make('Storefront')
+                    ->description('Read by the mobile app on every product grid (Home, Search, Category, Store, Wishlist).')
+                    ->schema([
+                        Select::make('product_grid_columns')
+                            ->label('Products per row')
+                            ->options([2 => '2', 3 => '3', 4 => '4', 5 => '5'])
+                            ->default(4)
+                            ->required(),
+                    ]),
             ]);
     }
 
@@ -103,7 +113,11 @@ class AppSettings extends Page implements HasForms
     {
         $data = $this->form->getState();
 
-        AppSetting::current()->update($data);
+        $setting = AppSetting::current();
+        $before = $setting->only(array_keys($data));
+        $setting->update($data);
+
+        AuditLogger::record('app_settings.updated', $setting, $before, $data);
 
         Notification::make()->title('App settings saved')->success()->send();
     }

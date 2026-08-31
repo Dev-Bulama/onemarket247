@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Administrators\Pages;
 use App\Enums\UserStatus;
 use App\Filament\Resources\Administrators\AdministratorResource;
 use App\Models\User;
+use App\Support\AuditLogger;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
 
@@ -30,5 +31,15 @@ class CreateAdministrator extends CreateRecord
         $user->forceFill(['email_verified_at' => now()])->save();
 
         return $user;
+    }
+
+    protected function afterCreate(): void
+    {
+        AuditLogger::record('administrator.created', $this->record, null, [
+            'name' => $this->record->name,
+            'email' => $this->record->email,
+            'user_type' => $this->record->user_type->value,
+            'roles' => $this->record->roles()->pluck('name')->all(),
+        ]);
     }
 }

@@ -57,3 +57,17 @@ test('bootstrap returns branding and app name, falling back to config app name w
         ->and($response->json('data.splash_logo_url'))->toBe('https://onemarket247.com/splash.png')
         ->and($response->json('data.min_app_version'))->toBe('1.2.0');
 });
+
+test('bootstrap returns the configured product grid column count, defaulting to 4', function () {
+    AppSetting::current()->update(['production_api_url' => 'https://onemarket247.com/api/v1']);
+
+    $this->getJson('/api/v1/bootstrap')
+        ->assertOk()
+        ->assertJsonPath('data.product_grid_columns', 4);
+
+    AppSetting::current()->update(['product_grid_columns' => 3]);
+
+    $this->getJson('/api/v1/bootstrap')
+        ->assertOk()
+        ->assertJsonPath('data.product_grid_columns', 3);
+});

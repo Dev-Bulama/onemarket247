@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\MailSetting;
+use App\Support\AuditLogger;
 use Filament\Actions\Action;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Select;
@@ -119,7 +120,11 @@ class MailSettings extends Page implements HasForms
             unset($data['password']);
         }
 
-        MailSetting::current()->update($data);
+        $setting = MailSetting::current();
+        $before = $setting->only(array_keys($data));
+        $setting->update($data);
+
+        AuditLogger::record('mail_settings.updated', $setting, static::redactPassword($before), static::redactPassword($data));
 
         Notification::make()->title('Mail settings saved')->success()->send();
     }
@@ -158,5 +163,18 @@ class MailSettings extends Page implements HasForms
                     }
                 }),
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private static function redactPassword(array $data): array
+    {
+        if (array_key_exists('password', $data)) {
+            $data['password'] = '[redacted]';
+        }
+
+        return $data;
     }
 }

@@ -20,6 +20,9 @@ use Filament\Tables\Table;
  * Read-only + action-driven, like AuditLogResource: applications are never
  * created or free-form edited by admins, only reviewed (approve/reject) via
  * table/page actions — see App\Actions\Vendor\{Approve,Reject}VendorApplicationAction.
+ * Deletion is allowed (see VendorApplicationPolicy::delete()) but only
+ * while Pending/Rejected — an Approved application backs a live vendor
+ * account and can't be safely removed.
  */
 class VendorApplicationResource extends Resource
 {
@@ -116,11 +119,6 @@ class VendorApplicationResource extends Resource
     }
 
     public static function canEdit($record): bool
-    {
-        return false;
-    }
-
-    public static function canDelete($record): bool
     {
         return false;
     }

@@ -97,6 +97,37 @@ test('a vendor can list and update their own products, but not another vendor\'s
         ->assertForbidden();
 });
 
+test('a vendor can submit a draft product for review, moving it out of Draft', function () {
+    [$vendor, $token] = vendorToken();
+    $product = Product::factory()->create(['vendor_id' => $vendor->id, 'status' => 'draft']);
+
+    $response = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson("/api/v1/vendor/products/{$product->id}/submit")
+        ->assertOk();
+
+    expect($response->json('data.status'))->not->toBe('draft');
+    expect($product->fresh()->status->value)->not->toBe('draft');
+});
+
+test('a vendor cannot submit an already-published product for review', function () {
+    [$vendor, $token] = vendorToken();
+    $product = Product::factory()->create(['vendor_id' => $vendor->id, 'status' => 'published']);
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson("/api/v1/vendor/products/{$product->id}/submit")
+        ->assertStatus(422);
+});
+
+test('a vendor cannot submit another vendor\'s product for review', function () {
+    [$vendor, $token] = vendorToken();
+    $otherVendor = Vendor::factory()->create();
+    $otherProduct = Product::factory()->create(['vendor_id' => $otherVendor->id, 'status' => 'draft']);
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson("/api/v1/vendor/products/{$otherProduct->id}/submit")
+        ->assertForbidden();
+});
+
 test('a vendor can view and adjust their own inventory', function () {
     [$vendor, $token] = vendorToken();
     $warehouse = Warehouse::factory()->create(['vendor_id' => $vendor->id]);

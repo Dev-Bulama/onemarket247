@@ -35,6 +35,7 @@ test('an admin can load and save app settings', function () {
             'logo_url' => 'https://onemarket247.com/logo.png',
             'splash_logo_url' => 'https://onemarket247.com/splash.png',
             'min_app_version' => '1.0.0',
+            'product_grid_columns' => 3,
         ])
         ->call('save')
         ->assertHasNoFormErrors();
@@ -43,7 +44,8 @@ test('an admin can load and save app settings', function () {
     expect($settings->active_environment->value)->toBe('local')
         ->and($settings->force_production)->toBeFalse()
         ->and($settings->local_api_url)->toBe('http://192.168.1.50:8000/api/v1')
-        ->and($settings->app_name)->toBe('OneMarket 24/7');
+        ->and($settings->app_name)->toBe('OneMarket 24/7')
+        ->and($settings->product_grid_columns)->toBe(3);
 });
 
 test('an admin without settings.manage cannot access app settings', function () {
