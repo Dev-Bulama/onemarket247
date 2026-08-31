@@ -7,6 +7,7 @@ import { vendorProductsApi } from '../../api/vendor';
 import { apiErrorMessage } from '../../api/client';
 import { VendorProductItem } from '../../types/vendor';
 import StatusBadge from '../../components/StatusBadge';
+import { useToastStore } from '../../store/toastStore';
 
 const FILTERS: { label: string; value?: string }[] = [
   { label: 'All' },
@@ -46,7 +47,10 @@ export default function VendorProductsScreen({ navigation }: any) {
 
   const handleDelete = (product: VendorProductItem) => {
     vendorProductsApi.destroy(product.id)
-      .then(() => setProducts(prev => prev.filter(p => p.id !== product.id)))
+      .then(() => {
+        setProducts(prev => prev.filter(p => p.id !== product.id));
+        useToastStore.getState().show('Product deleted');
+      })
       .catch(e => setError(apiErrorMessage(e, 'Could not delete this product.')));
   };
 
@@ -55,7 +59,10 @@ export default function VendorProductsScreen({ navigation }: any) {
   const handleSubmitForReview = (product: VendorProductItem) => {
     setSubmittingId(product.id);
     vendorProductsApi.submit(product.id)
-      .then(res => setProducts(prev => prev.map(p => (p.id === product.id ? res.data.data : p))))
+      .then(res => {
+        setProducts(prev => prev.map(p => (p.id === product.id ? res.data.data : p)));
+        useToastStore.getState().show('Product submitted for review');
+      })
       .catch(e => setError(apiErrorMessage(e, 'Could not submit this product for review.')))
       .finally(() => setSubmittingId(null));
   };

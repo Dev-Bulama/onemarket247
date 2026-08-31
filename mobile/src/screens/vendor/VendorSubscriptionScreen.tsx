@@ -8,6 +8,7 @@ import { apiErrorMessage } from '../../api/client';
 import { useAuthStore } from '../../store/authStore';
 import { VendorSubscriptionItem, VendorSubscriptionPlanItem } from '../../types/vendor';
 import StatusBadge from '../../components/StatusBadge';
+import { useToastStore } from '../../store/toastStore';
 
 export default function VendorSubscriptionScreen({ navigation }: any) {
   const { user } = useAuthStore();
@@ -41,6 +42,7 @@ export default function VendorSubscriptionScreen({ navigation }: any) {
         setInfo(res.data.message ?? 'Contact support to upgrade to a paid plan.');
       } else if (res.data.data.switched) {
         setInfo(res.data.message ?? 'Subscription plan updated.');
+        useToastStore.getState().show(res.data.message ?? 'Subscription plan updated.');
         load();
       }
     } catch (e) {

@@ -6,6 +6,7 @@ import { COLORS, SIZES } from '../../constants';
 import { vendorInventoryApi } from '../../api/vendor';
 import { apiErrorMessage } from '../../api/client';
 import { VendorInventoryItem } from '../../types/vendor';
+import { useToastStore } from '../../store/toastStore';
 
 export default function VendorInventoryScreen({ navigation }: any) {
   const [items, setItems] = useState<VendorInventoryItem[]>([]);
@@ -122,6 +123,7 @@ function AdjustSheet({ item, onClose, onAdjusted }: { item: VendorInventoryItem;
     try {
       const res = await vendorInventoryApi.adjust(item.id, parsedDelta, reason.trim());
       onAdjusted(res.data.data);
+      useToastStore.getState().show('Stock adjusted');
     } catch (e) {
       setError(apiErrorMessage(e, 'Could not adjust stock.'));
     } finally {

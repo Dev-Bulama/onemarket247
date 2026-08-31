@@ -6,6 +6,7 @@ import { addressesApi } from '../../api/addresses';
 import { referenceApi } from '../../api/config';
 import { apiErrorMessage } from '../../api/client';
 import { City, Country, State } from '../../types';
+import { useToastStore } from '../../store/toastStore';
 
 export default function AddAddressScreen({ navigation }: any) {
   const [fullName, setFullName] = useState('');
@@ -62,6 +63,7 @@ export default function AddAddressScreen({ navigation }: any) {
         is_default_shipping: isDefault,
         is_default_billing: isDefault,
       });
+      useToastStore.getState().show('Address saved');
       navigation.goBack();
     } catch (e) {
       setError(apiErrorMessage(e, 'Could not save this address.'));

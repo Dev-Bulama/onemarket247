@@ -4,6 +4,7 @@ import IonIcon from 'react-native-vector-icons/Ionicons';
 import { COLORS, SIZES } from '../../constants';
 import { useAuthStore } from '../../store/authStore';
 import { useCartStore } from '../../store/cartStore';
+import { useToastStore } from '../../store/toastStore';
 import { apiErrorMessage } from '../../api/client';
 
 export default function RegisterScreen({ navigation }: any) {
@@ -28,11 +29,20 @@ export default function RegisterScreen({ navigation }: any) {
     }
     try {
       await register({ name, email, phone: phone || undefined, password, password_confirmation: confirmPassword });
-      await mergeIntoAccount();
-      navigation.getParent()?.goBack();
     } catch (e) {
       setError(apiErrorMessage(e, 'Could not create your account. Please try again.'));
+      return;
     }
+    // The account is already created and the user is already logged in at
+    // this point — a cart-merge failure here must not be reported as a
+    // registration failure (it isn't one), so it's handled separately.
+    try {
+      await mergeIntoAccount();
+    } catch {
+      // best-effort — the guest cart simply won't have merged in
+    }
+    useToastStore.getState().show('Account created — welcome to OneMarket 24/7!');
+    navigation.getParent()?.goBack();
   };
 
   return (

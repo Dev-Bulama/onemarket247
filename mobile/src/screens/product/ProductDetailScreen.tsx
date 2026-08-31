@@ -13,6 +13,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useWishlistStore } from '../../store/wishlistStore';
 import { compareApi, ProductQuestion, questionsApi } from '../../api/wishlist';
 import { useLocaleStore } from '../../store/localeStore';
+import { useToastStore } from '../../store/toastStore';
 
 const { width } = Dimensions.get('window');
 
@@ -55,7 +56,9 @@ export default function ProductDetailScreen({ route, navigation }: any) {
       navigation.getParent()?.getParent()?.navigate('Auth', { screen: 'Login' });
       return;
     }
+    const wasWishlisted = wishlistIds.has(product.id);
     toggleWishlist(product.id);
+    useToastStore.getState().show(wasWishlisted ? 'Removed from wishlist' : 'Added to wishlist');
   };
 
   const handleAddToCompare = async () => {
@@ -63,6 +66,7 @@ export default function ProductDetailScreen({ route, navigation }: any) {
     try {
       await compareApi.add(product.id);
       setAddedToCompare(true);
+      useToastStore.getState().show('Added to compare list');
     } catch {
       // silently ignore — compare list simply won't include this item
     }
@@ -143,6 +147,7 @@ export default function ProductDetailScreen({ route, navigation }: any) {
     try {
       await addItem(product.id, quantity, matchedVariation?.id);
       setAddedMessage(thenBuy ? '' : 'Added to cart!');
+      useToastStore.getState().show('Added to cart!');
       if (thenBuy) navigation.getParent()?.navigate('CartTab');
     } catch (e) {
       setAddedMessage(apiErrorMessage(e, 'Could not add to cart.'));

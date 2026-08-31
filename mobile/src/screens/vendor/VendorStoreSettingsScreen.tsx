@@ -4,6 +4,7 @@ import IonIcon from 'react-native-vector-icons/Ionicons';
 import { COLORS, SIZES } from '../../constants';
 import { vendorStoreApi } from '../../api/vendor';
 import { apiErrorMessage } from '../../api/client';
+import { useToastStore } from '../../store/toastStore';
 
 export default function VendorStoreSettingsScreen({ navigation }: any) {
   const [loading, setLoading] = useState(true);
@@ -58,6 +59,7 @@ export default function VendorStoreSettingsScreen({ navigation }: any) {
         seo_description: seoDescription.trim() || undefined,
       });
       setSaved(true);
+      useToastStore.getState().show('Store settings saved');
     } catch (e) {
       setError(apiErrorMessage(e, 'Could not save your store settings.'));
     } finally {

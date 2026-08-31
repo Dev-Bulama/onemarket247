@@ -7,6 +7,7 @@ import { vendorOrdersApi } from '../../api/vendor';
 import { apiErrorMessage } from '../../api/client';
 import { VendorOrder } from '../../types/vendor';
 import StatusBadge from '../../components/StatusBadge';
+import { useToastStore } from '../../store/toastStore';
 
 // Every App\Enums\VendorOrderStatus case is offered as a possible next
 // status — the backend's real allowed-transition map
@@ -150,6 +151,7 @@ function StatusUpdateSheet({ order, onClose, onUpdated }: { order: VendorOrder; 
     try {
       const res = await vendorOrdersApi.updateStatus(order.id, selected, note.trim() || undefined);
       onUpdated(res.data.data);
+      useToastStore.getState().show('Order status updated');
     } catch (e) {
       setError(apiErrorMessage(e, 'Could not update the order status.'));
     } finally {
@@ -204,6 +206,7 @@ function CancelSheet({ order, onClose, onCancelled }: { order: VendorOrder; onCl
     try {
       const res = await vendorOrdersApi.cancel(order.id, reason.trim());
       onCancelled(res.data.data);
+      useToastStore.getState().show('Order cancelled');
     } catch (e) {
       setError(apiErrorMessage(e, 'Could not cancel this order.'));
     } finally {

@@ -8,6 +8,7 @@ import { apiErrorMessage } from '../../api/client';
 import { useAuthStore } from '../../store/authStore';
 import { VendorStaffMember } from '../../types/vendor';
 import StatusBadge from '../../components/StatusBadge';
+import { useToastStore } from '../../store/toastStore';
 
 export default function VendorStaffScreen({ navigation }: any) {
   const { user } = useAuthStore();
@@ -46,7 +47,10 @@ export default function VendorStaffScreen({ navigation }: any) {
       {
         text: 'Remove', style: 'destructive', onPress: () => {
           vendorStaffApi.destroy(member.id)
-            .then(() => setStaff(prev => prev.filter(s => s.id !== member.id)))
+            .then(() => {
+              setStaff(prev => prev.filter(s => s.id !== member.id));
+              useToastStore.getState().show('Staff member removed');
+            })
             .catch(e => setError(apiErrorMessage(e, 'Could not remove this staff member.')));
         },
       },
@@ -175,6 +179,7 @@ function InviteSheet({ onClose, onInvited }: { onClose: () => void; onInvited: (
     try {
       const res = await vendorStaffApi.invite({ name: name.trim(), email: email.trim(), permissions });
       onInvited(res.data.data);
+      useToastStore.getState().show('Invite sent');
     } catch (e) {
       setError(apiErrorMessage(e, 'Could not invite this staff member.'));
     } finally {
@@ -215,6 +220,7 @@ function EditSheet({ member, onClose, onUpdated }: { member: VendorStaffMember; 
     try {
       const res = await vendorStaffApi.update(member.id, { status, permissions });
       onUpdated(res.data.data);
+      useToastStore.getState().show('Staff member updated');
     } catch (e) {
       setError(apiErrorMessage(e, 'Could not update this staff member.'));
     } finally {

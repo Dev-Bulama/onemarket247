@@ -7,6 +7,7 @@ import { vendorWithdrawalsApi } from '../../api/vendor';
 import { apiErrorMessage } from '../../api/client';
 import { VendorWithdrawal, VendorWithdrawalMethod } from '../../types/vendor';
 import StatusBadge from '../../components/StatusBadge';
+import { useToastStore } from '../../store/toastStore';
 
 const toMinorUnits = (text: string): number => Math.round((parseFloat(text) || 0) * 100);
 
@@ -46,7 +47,10 @@ export default function VendorWithdrawalsScreen({ navigation }: any) {
 
   const handleCancel = (withdrawal: VendorWithdrawal) => {
     vendorWithdrawalsApi.cancel(Number(withdrawal.id))
-      .then(res => setWithdrawals(prev => prev.map(w => (w.id === withdrawal.id ? res.data.data : w))))
+      .then(res => {
+        setWithdrawals(prev => prev.map(w => (w.id === withdrawal.id ? res.data.data : w)));
+        useToastStore.getState().show('Withdrawal cancelled');
+      })
       .catch(e => setError(apiErrorMessage(e, 'Could not cancel this withdrawal.')));
   };
 
@@ -152,6 +156,7 @@ function AddMethodSheet({ onClose, onAdded }: { onClose: () => void; onAdded: (m
         account_number: accountNumber.trim(),
       });
       onAdded(res.data.data);
+      useToastStore.getState().show('Bank account added');
     } catch (e) {
       setError(apiErrorMessage(e, 'Could not add this bank account.'));
     } finally {
@@ -198,6 +203,7 @@ function RequestWithdrawalSheet({ methods, onClose, onRequested, onAddAccount }:
     try {
       const res = await vendorWithdrawalsApi.request(methodId, minorAmount);
       onRequested(res.data.data);
+      useToastStore.getState().show('Withdrawal requested');
     } catch (e) {
       setError(apiErrorMessage(e, 'Could not request this withdrawal.'));
     } finally {

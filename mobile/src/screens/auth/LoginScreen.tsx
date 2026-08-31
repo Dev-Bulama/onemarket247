@@ -4,6 +4,7 @@ import IonIcon from 'react-native-vector-icons/Ionicons';
 import { COLORS, SIZES } from '../../constants';
 import { useAuthStore } from '../../store/authStore';
 import { useCartStore } from '../../store/cartStore';
+import { useToastStore } from '../../store/toastStore';
 import { apiErrorMessage } from '../../api/client';
 
 export default function LoginScreen({ navigation }: any) {
@@ -22,11 +23,19 @@ export default function LoginScreen({ navigation }: any) {
     }
     try {
       await login(email, password);
-      await mergeIntoAccount();
-      navigation.getParent()?.goBack();
     } catch (e) {
       setError(apiErrorMessage(e, 'Could not log in. Please check your credentials.'));
+      return;
     }
+    // Already logged in successfully at this point — a cart-merge failure
+    // must not be reported as a login failure (it isn't one).
+    try {
+      await mergeIntoAccount();
+    } catch {
+      // best-effort — the guest cart simply won't have merged in
+    }
+    useToastStore.getState().show('Welcome back!');
+    navigation.getParent()?.goBack();
   };
 
   return (

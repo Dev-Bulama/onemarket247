@@ -5,6 +5,7 @@ import IonIcon from 'react-native-vector-icons/Ionicons';
 import { COLORS, SIZES } from '../../constants';
 import { productsApi } from '../../api/products';
 import { apiErrorMessage } from '../../api/client';
+import { useToastStore } from '../../store/toastStore';
 
 const MAX_IMAGES = 5;
 
@@ -48,6 +49,7 @@ export default function WriteReviewScreen({ route, navigation }: any) {
           type: img.type ?? 'image/jpeg',
         })),
       });
+      useToastStore.getState().show('Review submitted — thanks for your feedback!');
       navigation.goBack();
     } catch (e) {
       setError(apiErrorMessage(e, 'Could not submit your review. Please try again.'));

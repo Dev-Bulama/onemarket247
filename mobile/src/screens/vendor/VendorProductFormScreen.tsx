@@ -6,6 +6,7 @@ import { COLORS, SIZES, STOCK_STATUSES } from '../../constants';
 import { vendorProductsApi } from '../../api/vendor';
 import { productsApi } from '../../api/products';
 import { apiErrorMessage } from '../../api/client';
+import { useToastStore } from '../../store/toastStore';
 import { Brand, Category } from '../../types';
 
 const MAX_IMAGES = 8;
@@ -155,6 +156,7 @@ export default function VendorProductFormScreen({ route, navigation }: any) {
           images: images.map((img, idx) => ({ uri: img.uri!, name: img.fileName ?? `product-${idx}.jpg`, type: img.type ?? 'image/jpeg' })),
         });
       }
+      useToastStore.getState().show(isEdit ? 'Product updated' : 'Product created');
       navigation.goBack();
     } catch (e) {
       setError(apiErrorMessage(e, 'Could not save this product.'));

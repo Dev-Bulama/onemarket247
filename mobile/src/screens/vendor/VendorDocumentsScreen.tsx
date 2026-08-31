@@ -8,6 +8,7 @@ import { apiErrorMessage } from '../../api/client';
 import { PickedFile } from '../../api/vendor';
 import { VendorDocumentItem } from '../../types/vendor';
 import StatusBadge from '../../components/StatusBadge';
+import { useToastStore } from '../../store/toastStore';
 import { pickDocumentFile, takeDocumentPhoto } from '../../utils/documentPicker';
 
 const DOCUMENT_TYPES: { value: string; label: string }[] = [
@@ -130,6 +131,7 @@ function UploadSheet({ onClose, onUploaded }: { onClose: () => void; onUploaded:
     try {
       const res = await vendorDocumentsApi.upload(type, file);
       onUploaded(res.data.data);
+      useToastStore.getState().show('Document uploaded');
     } catch (e) {
       setError(apiErrorMessage(e, 'Could not upload this document.'));
     } finally {
