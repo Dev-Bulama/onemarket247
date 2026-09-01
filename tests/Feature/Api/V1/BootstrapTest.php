@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\AppSetting;
+use App\Models\PushSetting;
 
 test('bootstrap defaults to the production API URL when force_production is on', function () {
     AppSetting::current()->update([
@@ -70,4 +71,30 @@ test('bootstrap returns the configured product grid column count, defaulting to 
     $this->getJson('/api/v1/bootstrap')
         ->assertOk()
         ->assertJsonPath('data.product_grid_columns', 3);
+});
+
+test('bootstrap returns the OneSignal App ID only when push is active and configured', function () {
+    AppSetting::current()->update(['production_api_url' => 'https://onemarket247.com/api/v1']);
+
+    $this->getJson('/api/v1/bootstrap')
+        ->assertOk()
+        ->assertJsonPath('data.onesignal_app_id', null);
+
+    PushSetting::current()->update(['is_active' => true, 'app_id' => null]);
+
+    $this->getJson('/api/v1/bootstrap')
+        ->assertOk()
+        ->assertJsonPath('data.onesignal_app_id', null);
+
+    PushSetting::current()->update(['is_active' => false, 'app_id' => 'abc-123']);
+
+    $this->getJson('/api/v1/bootstrap')
+        ->assertOk()
+        ->assertJsonPath('data.onesignal_app_id', null);
+
+    PushSetting::current()->update(['is_active' => true, 'app_id' => 'abc-123']);
+
+    $this->getJson('/api/v1/bootstrap')
+        ->assertOk()
+        ->assertJsonPath('data.onesignal_app_id', 'abc-123');
 });

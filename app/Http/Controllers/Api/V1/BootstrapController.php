@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\AppSetting;
+use App\Models\PushSetting;
 use App\Support\Api\ApiResponse;
 use Illuminate\Http\JsonResponse;
 
@@ -21,6 +22,7 @@ class BootstrapController extends Controller
     public function __invoke(): JsonResponse
     {
         $settings = AppSetting::current();
+        $push = PushSetting::current();
 
         return ApiResponse::success([
             'api_base_url' => $settings->resolveApiBaseUrl(),
@@ -29,6 +31,14 @@ class BootstrapController extends Controller
             'splash_logo_url' => $settings->splash_logo_url,
             'min_app_version' => $settings->min_app_version,
             'product_grid_columns' => $settings->product_grid_columns,
+            // The OneSignal App ID is a public identifier (safe to ship to
+            // every client, unlike the REST API key which never leaves the
+            // server — see PushSettings). Sourced from the admin panel so
+            // push can be turned on/off and re-keyed without a mobile
+            // rebuild. Null while inactive or unset — the app must never
+            // touch the native OneSignal SDK in that case (see mobile's
+            // pushStore.ts for why calling in uninitialized crashes natively).
+            'onesignal_app_id' => ($push->is_active && filled($push->app_id)) ? $push->app_id : null,
         ]);
     }
 }

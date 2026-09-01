@@ -42,7 +42,7 @@ export default function AppNavigator() {
       await Promise.all([fetchCart(), loadLocale()]);
       setIsLoading(false);
 
-      initializePush();
+      initializePush(useBootstrapStore.getState().oneSignalAppId);
       if (useAuthStore.getState().isAuthenticated) registerCurrentDevice();
     })();
   }, [loadBootstrap, loadUser, fetchCart, loadLocale, initializePush, registerCurrentDevice]);

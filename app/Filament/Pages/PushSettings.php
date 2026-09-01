@@ -70,7 +70,7 @@ class PushSettings extends Page implements HasForms
                             ->columnSpanFull(),
                         TextInput::make('app_id')
                             ->label('OneSignal App ID')
-                            ->helperText('This is also the value the mobile app itself is built with — see mobile/src/config/api.ts.'),
+                            ->helperText('The mobile app fetches this automatically on startup — no rebuild needed after saving.'),
                         TextInput::make('rest_api_key')
                             ->label('REST API Key')
                             ->password()

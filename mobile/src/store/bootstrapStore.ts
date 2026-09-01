@@ -16,6 +16,13 @@ interface BootstrapState {
    * product_grid_columns) — defaults to 4 before bootstrap resolves, same
    * as the backend column default. */
   productGridColumns: number;
+  /** Admin-configured OneSignal App ID (App\Models\PushSetting, entered via
+   * Admin → Settings → Push Notifications) — null whenever push is turned
+   * off or unconfigured. Sourced from the backend, never hardcoded, so an
+   * admin can turn push on/off or rotate the App ID without a mobile
+   * rebuild — see pushStore.ts, which must never touch the native OneSignal
+   * SDK while this is null. */
+  oneSignalAppId: string | null;
   /** Call once, before anything else on app start (see AppNavigator).
    * Resolves the real API base URL and applies it to apiClient, then
    * loads branding — falling back to a cached last-known-good result
@@ -41,6 +48,7 @@ export const useBootstrapStore = create<BootstrapState>((set) => ({
   updateRequired: false,
   isLoading: true,
   productGridColumns: 4,
+  oneSignalAppId: null,
 
   load: async () => {
     let payload = null;
@@ -65,6 +73,7 @@ export const useBootstrapStore = create<BootstrapState>((set) => ({
       splashLogoUrl: payload?.splash_logo_url ?? null,
       updateRequired: !!payload?.min_app_version && !isVersionAtLeast(APP_VERSION, payload.min_app_version),
       productGridColumns: payload?.product_grid_columns && payload.product_grid_columns >= 2 ? payload.product_grid_columns : 4,
+      oneSignalAppId: payload?.onesignal_app_id || null,
       isLoading: false,
     });
   },

@@ -49,10 +49,9 @@ export const BOOTSTRAP_URL = PRODUCTION_API_URL;
 export const API_TIMEOUT = 20000;
 export const APP_VERSION = '1.0.0';
 
-/**
- * The App ID from your OneSignal dashboard (Settings → Keys & IDs) — this
- * is a public identifier, safe to ship inside the app (unlike the REST
- * API key, which stays server-side only — see App\Filament\Pages\PushSettings
- * in the Laravel repo). Must match the App ID entered there for push to work.
- */
-export const ONESIGNAL_APP_ID = 'YOUR-ONESIGNAL-APP-ID';
+// The OneSignal App ID is NOT configured here — it's entered by the admin
+// in Admin → Settings → Push Notifications (App\Filament\Pages\PushSettings)
+// and fetched at runtime via /bootstrap (see bootstrapStore's oneSignalAppId).
+// This lets push be turned on/off or re-keyed without a mobile rebuild, and
+// means the app can never accidentally ship with a placeholder value that
+// gets treated as real — see pushStore.ts.
