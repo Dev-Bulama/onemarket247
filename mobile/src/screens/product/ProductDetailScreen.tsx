@@ -221,7 +221,7 @@ export default function ProductDetailScreen({ route, navigation }: any) {
 
           <View style={styles.ratingRow}>
             <IonIcon name="star" size={14} color={COLORS.star} />
-            <Text style={styles.ratingText}>{product.rating.toFixed(1)}</Text>
+            <Text style={styles.ratingText}>{(Number(product.rating) || 0).toFixed(1)}</Text>
             <Text style={styles.reviewCount}>({product.review_count} reviews)</Text>
           </View>
 

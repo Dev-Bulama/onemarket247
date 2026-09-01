@@ -9,7 +9,7 @@ import { Product } from '../../types';
 const ROWS: { label: string; render: (p: Product) => string }[] = [
   { label: 'Price', render: p => p.price?.formatted ?? p.price_range?.min.formatted ?? '—' },
   { label: 'Brand', render: p => p.brand?.name ?? '—' },
-  { label: 'Rating', render: p => `${p.rating.toFixed(1)} (${p.review_count})` },
+  { label: 'Rating', render: p => `${(Number(p.rating) || 0).toFixed(1)} (${p.review_count})` },
   { label: 'Stock', render: p => (p.in_stock ? 'In Stock' : 'Out of Stock') },
   { label: 'Sold by', render: p => p.vendor?.store_name ?? '—' },
 ];

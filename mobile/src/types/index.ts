@@ -78,7 +78,7 @@ export interface Product {
   on_flash_sale: boolean;
   stock_status: string;
   in_stock: boolean;
-  rating: number;
+  rating: number | null;
   review_count: number;
   vendor?: VendorSummary | null;
 }
@@ -120,7 +120,7 @@ export interface ProductDetail {
   in_stock: boolean;
   manage_stock: boolean;
   stock_quantity?: number | null;
-  rating: number;
+  rating: number | null;
   review_count: number;
   variations: ProductVariation[];
   vendor?: VendorSummary | null;
