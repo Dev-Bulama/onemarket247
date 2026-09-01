@@ -467,7 +467,7 @@ const styles = StyleSheet.create({
 
   noReviews: { fontSize: 13, color: COLORS.textMuted },
   askRow: { flexDirection: 'row', gap: 8, marginBottom: 12 },
-  askInput: { flex: 1, borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, backgroundColor: COLORS.grayLight },
+  askInput: { flex: 1, borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, color: COLORS.text, backgroundColor: COLORS.grayLight },
   askBtn: { backgroundColor: COLORS.primary, borderRadius: SIZES.borderRadiusSm, width: 40, alignItems: 'center', justifyContent: 'center' },
   questionText: { fontSize: 13, fontWeight: '700', color: COLORS.text, marginBottom: 4 },
   answerText: { fontSize: 12, color: COLORS.textSecondary, marginLeft: 8, marginTop: 2, lineHeight: 17 },

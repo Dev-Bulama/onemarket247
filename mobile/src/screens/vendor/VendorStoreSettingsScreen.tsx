@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
   saved: { color: COLORS.accent, marginBottom: 12, fontSize: 13 },
   label: { fontSize: 13, fontWeight: '600', color: COLORS.text, marginBottom: 6, marginTop: 12 },
   hint: { fontSize: 11, color: COLORS.textMuted, marginTop: 2 },
-  input: { borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, backgroundColor: COLORS.grayLight },
+  input: { borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, color: COLORS.text, backgroundColor: COLORS.grayLight },
   textArea: { height: 90, textAlignVertical: 'top' },
   switchRow: { flexDirection: 'row', alignItems: 'center', marginTop: 18 },
   saveBtn: { backgroundColor: COLORS.primary, borderRadius: SIZES.borderRadius, paddingVertical: 14, alignItems: 'center', marginTop: 28 },

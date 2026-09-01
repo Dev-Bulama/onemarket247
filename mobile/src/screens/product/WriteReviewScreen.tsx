@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
   error: { color: COLORS.danger, marginBottom: 12, fontSize: 13 },
   label: { fontSize: 13, fontWeight: '700', color: COLORS.text, marginBottom: 8, marginTop: 16 },
   starsRow: { flexDirection: 'row' },
-  input: { borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, backgroundColor: COLORS.grayLight },
+  input: { borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, color: COLORS.text, backgroundColor: COLORS.grayLight },
   textArea: { height: 120, textAlignVertical: 'top' },
   imagesRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   imageThumb: { width: 72, height: 72, borderRadius: 8, position: 'relative' },

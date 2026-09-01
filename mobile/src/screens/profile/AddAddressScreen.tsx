@@ -9,6 +9,7 @@ import { City, Country, State } from '../../types';
 import { useToastStore } from '../../store/toastStore';
 
 export default function AddAddressScreen({ navigation }: any) {
+  const [label, setLabel] = useState('');
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [addressLine1, setAddressLine1] = useState('');
@@ -44,14 +45,15 @@ export default function AddAddressScreen({ navigation }: any) {
   }, [stateId]);
 
   const handleSave = async () => {
-    if (!fullName || !addressLine1 || !countryId) {
-      setError('Please fill in your name, address, and country.');
+    if (!label || !fullName || !addressLine1 || !countryId) {
+      setError('Please fill in the label, your name, address, and country.');
       return;
     }
     setSaving(true);
     setError('');
     try {
       await addressesApi.store({
+        label,
         full_name: fullName,
         phone: phone || undefined,
         address_line_1: addressLine1,
@@ -86,6 +88,9 @@ export default function AddAddressScreen({ navigation }: any) {
 
       <ScrollView contentContainerStyle={styles.content}>
         {error ? <Text style={styles.error}>{error}</Text> : null}
+
+        <Text style={styles.label}>Label</Text>
+        <TextInput style={styles.input} value={label} onChangeText={setLabel} placeholder="Home, Office, ..." placeholderTextColor={COLORS.placeholder} />
 
         <Text style={styles.label}>Full Name</Text>
         <TextInput style={styles.input} value={fullName} onChangeText={setFullName} placeholder="Jane Doe" placeholderTextColor={COLORS.placeholder} />
@@ -174,7 +179,7 @@ const styles = StyleSheet.create({
   content: { padding: SIZES.screenPadding, paddingBottom: 40 },
   error: { color: COLORS.danger, marginBottom: 12, fontSize: 13 },
   label: { fontSize: 13, fontWeight: '600', color: COLORS.text, marginBottom: 6, marginTop: 12 },
-  input: { borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, backgroundColor: COLORS.grayLight },
+  input: { borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, color: COLORS.text, backgroundColor: COLORS.grayLight },
   selectInput: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 12, backgroundColor: COLORS.grayLight },
   selectValue: { fontSize: 13, color: COLORS.text },
   selectPlaceholder: { fontSize: 13, color: COLORS.placeholder },

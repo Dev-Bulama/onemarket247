@@ -205,8 +205,8 @@ const styles = StyleSheet.create({
   hint: { fontSize: 11, color: COLORS.textMuted, marginBottom: 8 },
   deltaRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   deltaBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: COLORS.grayLight, alignItems: 'center', justifyContent: 'center' },
-  deltaInput: { flex: 1, borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 10, fontSize: 15, textAlign: 'center', backgroundColor: COLORS.grayLight },
-  input: { borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, backgroundColor: COLORS.grayLight },
+  deltaInput: { flex: 1, borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 10, fontSize: 15, textAlign: 'center', color: COLORS.text, backgroundColor: COLORS.grayLight },
+  input: { borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, color: COLORS.text, backgroundColor: COLORS.grayLight },
   saveBtn: { backgroundColor: COLORS.primary, borderRadius: SIZES.borderRadius, paddingVertical: 14, alignItems: 'center', marginTop: 20 },
   saveBtnText: { color: COLORS.white, fontWeight: 'bold', fontSize: 15 },
 });

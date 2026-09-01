@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
   error: { color: COLORS.danger, marginBottom: 8, fontSize: 12 },
   hint: { fontSize: 12, color: COLORS.textSecondary, marginBottom: 12, textAlign: 'center' },
   label: { fontSize: 13, fontWeight: '600', color: COLORS.text, marginBottom: 6, marginTop: 12 },
-  input: { borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, backgroundColor: COLORS.grayLight },
+  input: { borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, color: COLORS.text, backgroundColor: COLORS.grayLight },
   saveBtn: { backgroundColor: COLORS.primary, borderRadius: SIZES.borderRadius, paddingVertical: 14, alignItems: 'center', marginTop: 20 },
   saveBtnText: { color: COLORS.white, fontWeight: 'bold', fontSize: 15 },
   noMethodBox: { alignItems: 'center', paddingVertical: 12 },

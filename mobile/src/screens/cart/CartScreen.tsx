@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
 
   couponBox: { marginTop: 4 },
   couponRow: { flexDirection: 'row', gap: 8 },
-  couponInput: { flex: 1, borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, backgroundColor: COLORS.white },
+  couponInput: { flex: 1, borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, color: COLORS.text, backgroundColor: COLORS.white },
   couponBtn: { backgroundColor: COLORS.secondary, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 18, alignItems: 'center', justifyContent: 'center' },
   couponBtnText: { color: COLORS.white, fontWeight: 'bold', fontSize: 13 },
   couponError: { color: COLORS.danger, fontSize: 12, marginTop: 6 },

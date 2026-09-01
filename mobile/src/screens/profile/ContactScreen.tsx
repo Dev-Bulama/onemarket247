@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
   content: { padding: SIZES.screenPadding, paddingBottom: 40 },
   error: { color: COLORS.danger, marginBottom: 12, fontSize: 13 },
   label: { fontSize: 13, fontWeight: '700', color: COLORS.text, marginBottom: 6, marginTop: 14 },
-  input: { borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, backgroundColor: COLORS.grayLight },
+  input: { borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, color: COLORS.text, backgroundColor: COLORS.grayLight },
   textArea: { height: 120, textAlignVertical: 'top' },
   submitBtn: { backgroundColor: COLORS.primary, borderRadius: SIZES.borderRadius, paddingVertical: 14, alignItems: 'center', marginTop: 24 },
   submitBtnText: { color: COLORS.white, fontWeight: 'bold', fontSize: 15 },

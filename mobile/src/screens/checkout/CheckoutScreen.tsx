@@ -484,7 +484,7 @@ const styles = StyleSheet.create({
   addAddressRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8 },
   addAddressText: { color: COLORS.primary, fontWeight: '600', fontSize: 13 },
 
-  input: { borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, marginBottom: 10, backgroundColor: COLORS.grayLight },
+  input: { borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, marginBottom: 10, color: COLORS.text, backgroundColor: COLORS.grayLight },
   selectInput: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 12, marginBottom: 10, backgroundColor: COLORS.grayLight },
   selectValue: { fontSize: 13, color: COLORS.text },
   selectPlaceholder: { fontSize: 13, color: COLORS.placeholder },
