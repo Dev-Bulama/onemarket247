@@ -48,7 +48,14 @@ class OrderController extends Controller
     {
         Gate::forUser($request->user('sanctum'))->authorize('view', $order);
 
-        $order->load(['vendorOrders.vendor.store', 'vendorOrders.shipments.carrier', 'vendorOrders.shipments.events', 'vendorOrders.shipments.pickupStation']);
+        $order->load([
+            'vendorOrders.orderItems',
+            'vendorOrders.statusHistories',
+            'vendorOrders.vendor.store',
+            'vendorOrders.shipments.carrier',
+            'vendorOrders.shipments.events',
+            'vendorOrders.shipments.pickupStation',
+        ]);
 
         return ApiResponse::success(new OrderResource($order));
     }

@@ -204,6 +204,13 @@ export interface ShipmentEvent {
   occurred_at: string;
 }
 
+export interface VendorOrderStatusHistoryEntry {
+  status: string;
+  status_label: string;
+  note?: string | null;
+  changed_at: string;
+}
+
 export interface VendorOrder {
   id: number;
   vendor_order_number: string;
@@ -214,6 +221,7 @@ export interface VendorOrder {
   shipping_amount: Money;
   total: Money;
   items?: OrderItem[];
+  status_histories?: VendorOrderStatusHistoryEntry[];
   shipment: {
     tracking_number?: string | null;
     carrier?: string | null;

@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Api\V1;
 
+use App\Enums\VendorOrderStatus;
 use App\Support\Api\Money;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -25,6 +26,20 @@ class VendorOrderResource extends JsonResource
             'shipping_amount' => Money::make($this->shipping_amount),
             'total' => Money::make($this->total),
             'items' => $this->whenLoaded('orderItems', fn () => OrderItemResource::collection($this->orderItems)),
+            // The step-by-step fulfilment timeline ("Order Tracking") — every
+            // status transition UpdateVendorOrderStatusAction/CancelVendorOrderAction
+            // records, oldest first, distinct from the shipment carrier's own
+            // events below (a vendor order can have a full status history with
+            // no shipment yet, e.g. before it's dispatched).
+            'status_histories' => $this->whenLoaded('statusHistories', fn () => $this->statusHistories
+                ->sortBy('created_at')
+                ->values()
+                ->map(fn ($history) => [
+                    'status' => $history->status,
+                    'status_label' => VendorOrderStatus::tryFrom($history->status)?->getLabel() ?? $history->status,
+                    'note' => $history->note,
+                    'changed_at' => $history->created_at,
+                ])),
             'shipment' => $shipment ? [
                 'tracking_number' => $shipment->tracking_number,
                 'carrier' => $shipment->relationLoaded('carrier') ? $shipment->carrier?->name : null,

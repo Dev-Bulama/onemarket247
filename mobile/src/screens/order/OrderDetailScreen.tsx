@@ -13,7 +13,9 @@ export default function OrderDetailScreen({ route, navigation }: any) {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    ordersApi.show(orderId)
+    // track() returns everything show() does plus the fulfilment timeline
+    // and shipment carrier details — safe to use as the single load here.
+    ordersApi.track(orderId)
       .then(res => setOrder(res.data.data))
       .catch(e => setError(apiErrorMessage(e, 'Could not load this order.')))
       .finally(() => setLoading(false));
@@ -76,6 +78,27 @@ export default function OrderDetailScreen({ route, navigation }: any) {
                 <Text style={styles.trackingText}>
                   {vo.shipment.carrier ?? 'Carrier'}: {vo.shipment.tracking_number} — {vo.shipment.status_label}
                 </Text>
+              </View>
+            )}
+            {vo.status_histories && vo.status_histories.length > 0 && (
+              <View style={styles.timeline}>
+                <Text style={styles.timelineHeading}>Order Tracking</Text>
+                {vo.status_histories.map((entry, idx) => {
+                  const isLast = idx === vo.status_histories!.length - 1;
+                  return (
+                    <View key={`${entry.status}-${entry.changed_at}`} style={styles.timelineRow}>
+                      <View style={styles.timelineMarkerCol}>
+                        <View style={[styles.timelineDot, isLast && styles.timelineDotActive]} />
+                        {idx < vo.status_histories!.length - 1 && <View style={styles.timelineLine} />}
+                      </View>
+                      <View style={styles.timelineContent}>
+                        <Text style={[styles.timelineStatus, isLast && styles.timelineStatusActive]}>{entry.status_label}</Text>
+                        <Text style={styles.timelineDate}>{new Date(entry.changed_at).toLocaleString()}</Text>
+                        {entry.note ? <Text style={styles.timelineNote}>{entry.note}</Text> : null}
+                      </View>
+                    </View>
+                  );
+                })}
               </View>
             )}
           </View>
@@ -145,6 +168,19 @@ const styles = StyleSheet.create({
   itemPrice: { fontSize: 12, fontWeight: '700', color: COLORS.text },
   trackingBox: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10, backgroundColor: COLORS.grayLight, padding: 10, borderRadius: SIZES.borderRadiusSm },
   trackingText: { fontSize: 11, color: COLORS.textSecondary, flex: 1 },
+
+  timeline: { marginTop: 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: COLORS.divider },
+  timelineHeading: { fontSize: 12, fontWeight: '700', color: COLORS.text, marginBottom: 10 },
+  timelineRow: { flexDirection: 'row' },
+  timelineMarkerCol: { alignItems: 'center', width: 16 },
+  timelineDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: COLORS.border },
+  timelineDotActive: { backgroundColor: COLORS.accent },
+  timelineLine: { width: 2, flex: 1, minHeight: 24, backgroundColor: COLORS.border, marginVertical: 2 },
+  timelineContent: { flex: 1, paddingLeft: 10, paddingBottom: 14 },
+  timelineStatus: { fontSize: 12, fontWeight: '700', color: COLORS.textSecondary },
+  timelineStatusActive: { color: COLORS.accent },
+  timelineDate: { fontSize: 10, color: COLORS.textMuted, marginTop: 2 },
+  timelineNote: { fontSize: 11, color: COLORS.textSecondary, marginTop: 3, fontStyle: 'italic' },
 
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
   summaryLabel: { fontSize: 12, color: COLORS.textSecondary },
