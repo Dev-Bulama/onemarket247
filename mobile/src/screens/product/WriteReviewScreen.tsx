@@ -17,7 +17,6 @@ export default function WriteReviewScreen({ route, navigation }: any) {
   const [body, setBody] = useState('');
   const [images, setImages] = useState<Asset[]>([]);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
 
   const pickImages = () => {
     launchImageLibrary({ mediaType: 'photo', selectionLimit: MAX_IMAGES - images.length }, response => {
@@ -29,15 +28,14 @@ export default function WriteReviewScreen({ route, navigation }: any) {
 
   const handleSubmit = async () => {
     if (rating === 0) {
-      setError('Please select a star rating.');
+      useToastStore.getState().show('Please select a star rating.', 'error');
       return;
     }
     if (!body.trim()) {
-      setError('Please write a review.');
+      useToastStore.getState().show('Please write a review.', 'error');
       return;
     }
     setSubmitting(true);
-    setError('');
     try {
       await productsApi.storeReview(slug, {
         rating,
@@ -52,7 +50,7 @@ export default function WriteReviewScreen({ route, navigation }: any) {
       useToastStore.getState().show('Review submitted — thanks for your feedback!');
       navigation.goBack();
     } catch (e) {
-      setError(apiErrorMessage(e, 'Could not submit your review. Please try again.'));
+      useToastStore.getState().show(apiErrorMessage(e, 'Could not submit your review. Please try again.'), 'error');
     } finally {
       setSubmitting(false);
     }
@@ -68,8 +66,6 @@ export default function WriteReviewScreen({ route, navigation }: any) {
 
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.productName} numberOfLines={2}>{productName}</Text>
-
-        {error ? <Text style={styles.error}>{error}</Text> : null}
 
         <Text style={styles.label}>Your Rating</Text>
         <View style={styles.starsRow}>
@@ -131,7 +127,6 @@ const styles = StyleSheet.create({
   backSpacer: { width: 24 },
   content: { padding: SIZES.screenPadding, paddingBottom: 40 },
   productName: { fontSize: 14, fontWeight: '600', color: COLORS.textSecondary, marginBottom: 16 },
-  error: { color: COLORS.danger, marginBottom: 12, fontSize: 13 },
   label: { fontSize: 13, fontWeight: '700', color: COLORS.text, marginBottom: 8, marginTop: 16 },
   starsRow: { flexDirection: 'row' },
   input: { borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, color: COLORS.text, backgroundColor: COLORS.grayLight },

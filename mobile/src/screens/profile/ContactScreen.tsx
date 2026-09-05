@@ -5,6 +5,7 @@ import { COLORS, SIZES } from '../../constants';
 import { pagesApi } from '../../api/content';
 import { apiErrorMessage } from '../../api/client';
 import { useAuthStore } from '../../store/authStore';
+import { useToastStore } from '../../store/toastStore';
 
 export default function ContactScreen({ navigation }: any) {
   const { user } = useAuthStore();
@@ -13,23 +14,21 @@ export default function ContactScreen({ navigation }: any) {
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
   const [sent, setSent] = useState(false);
 
   const handleSubmit = async () => {
     if (!name || !email || !subject || !message) {
-      setError('Please fill in every field.');
+      useToastStore.getState().show('Please fill in every field.', 'error');
       return;
     }
     setSubmitting(true);
-    setError('');
     try {
       await pagesApi.contact({ name, email, subject, message });
       setSent(true);
       setSubject('');
       setMessage('');
     } catch (e) {
-      setError(apiErrorMessage(e, 'Could not send your message. Please try again.'));
+      useToastStore.getState().show(apiErrorMessage(e, 'Could not send your message. Please try again.'), 'error');
     } finally {
       setSubmitting(false);
     }
@@ -55,8 +54,6 @@ export default function ContactScreen({ navigation }: any) {
           </View>
         ) : (
           <>
-            {error ? <Text style={styles.error}>{error}</Text> : null}
-
             <Text style={styles.label}>Your Name</Text>
             <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Jane Doe" placeholderTextColor={COLORS.placeholder} />
 
@@ -96,7 +93,6 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 16, fontWeight: 'bold', color: COLORS.text },
   backSpacer: { width: 22 },
   content: { padding: SIZES.screenPadding, paddingBottom: 40 },
-  error: { color: COLORS.danger, marginBottom: 12, fontSize: 13 },
   label: { fontSize: 13, fontWeight: '700', color: COLORS.text, marginBottom: 6, marginTop: 14 },
   input: { borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, color: COLORS.text, backgroundColor: COLORS.grayLight },
   textArea: { height: 120, textAlignVertical: 'top' },

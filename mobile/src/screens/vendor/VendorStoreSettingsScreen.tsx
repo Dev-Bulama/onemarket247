@@ -9,8 +9,6 @@ import { useToastStore } from '../../store/toastStore';
 export default function VendorStoreSettingsScreen({ navigation }: any) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [saved, setSaved] = useState(false);
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -37,15 +35,13 @@ export default function VendorStoreSettingsScreen({ navigation }: any) {
         setOnVacation(store.status === 'vacation');
         setVacationMessage(store.vacation_message ?? '');
       })
-      .catch(e => setError(apiErrorMessage(e, 'Could not load your store settings.')))
+      .catch(e => useToastStore.getState().show(apiErrorMessage(e, 'Could not load your store settings.'), 'error'))
       .finally(() => setLoading(false));
   }, []);
 
   const handleSave = async () => {
-    if (!name.trim()) { setError('Please enter your store name.'); return; }
+    if (!name.trim()) { useToastStore.getState().show('Please enter your store name.', 'error'); return; }
     setSaving(true);
-    setError('');
-    setSaved(false);
     try {
       await vendorStoreApi.update({
         name: name.trim(),
@@ -58,10 +54,9 @@ export default function VendorStoreSettingsScreen({ navigation }: any) {
         seo_title: seoTitle.trim() || undefined,
         seo_description: seoDescription.trim() || undefined,
       });
-      setSaved(true);
       useToastStore.getState().show('Store settings saved');
     } catch (e) {
-      setError(apiErrorMessage(e, 'Could not save your store settings.'));
+      useToastStore.getState().show(apiErrorMessage(e, 'Could not save your store settings.'), 'error');
     } finally {
       setSaving(false);
     }
@@ -80,9 +75,6 @@ export default function VendorStoreSettingsScreen({ navigation }: any) {
       </View>
 
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        {error ? <Text style={styles.error}>{error}</Text> : null}
-        {saved ? <Text style={styles.saved}>Store settings saved.</Text> : null}
-
         <Text style={styles.label}>Store Name</Text>
         <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Store name" placeholderTextColor={COLORS.placeholder} />
 
@@ -136,8 +128,6 @@ const styles = StyleSheet.create({
   },
   headerTitle: { fontSize: 16, fontWeight: 'bold', color: COLORS.text },
   content: { padding: SIZES.screenPadding, paddingBottom: 40 },
-  error: { color: COLORS.danger, marginBottom: 12, fontSize: 13 },
-  saved: { color: COLORS.accent, marginBottom: 12, fontSize: 13 },
   label: { fontSize: 13, fontWeight: '600', color: COLORS.text, marginBottom: 6, marginTop: 12 },
   hint: { fontSize: 11, color: COLORS.textMuted, marginTop: 2 },
   input: { borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, color: COLORS.text, backgroundColor: COLORS.grayLight },

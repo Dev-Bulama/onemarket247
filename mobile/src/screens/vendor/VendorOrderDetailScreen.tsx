@@ -142,18 +142,16 @@ function StatusUpdateSheet({ order, onClose, onUpdated }: { order: VendorOrder; 
   const [selected, setSelected] = useState<string | null>(null);
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
 
   const handleSubmit = async () => {
-    if (!selected) { setError('Please choose a status.'); return; }
+    if (!selected) { useToastStore.getState().show('Please choose a status.', 'error'); return; }
     setSaving(true);
-    setError('');
     try {
       const res = await vendorOrdersApi.updateStatus(order.id, selected, note.trim() || undefined);
       onUpdated(res.data.data);
       useToastStore.getState().show('Order status updated');
     } catch (e) {
-      setError(apiErrorMessage(e, 'Could not update the order status.'));
+      useToastStore.getState().show(apiErrorMessage(e, 'Could not update the order status.'), 'error');
     } finally {
       setSaving(false);
     }
@@ -163,7 +161,6 @@ function StatusUpdateSheet({ order, onClose, onUpdated }: { order: VendorOrder; 
     <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={onClose}>
       <View style={styles.sheet} onStartShouldSetResponder={() => true}>
         <Text style={styles.sheetTitle}>Update Order Status</Text>
-        {error ? <Text style={styles.error}>{error}</Text> : null}
 
         <ScrollView style={{ maxHeight: 220 }}>
           <View style={styles.chipRow}>
@@ -197,18 +194,16 @@ function StatusUpdateSheet({ order, onClose, onUpdated }: { order: VendorOrder; 
 function CancelSheet({ order, onClose, onCancelled }: { order: VendorOrder; onClose: () => void; onCancelled: (order: VendorOrder) => void }) {
   const [reason, setReason] = useState('');
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
 
   const handleSubmit = async () => {
-    if (!reason.trim()) { setError('Please give a reason for cancelling.'); return; }
+    if (!reason.trim()) { useToastStore.getState().show('Please give a reason for cancelling.', 'error'); return; }
     setSaving(true);
-    setError('');
     try {
       const res = await vendorOrdersApi.cancel(order.id, reason.trim());
       onCancelled(res.data.data);
       useToastStore.getState().show('Order cancelled');
     } catch (e) {
-      setError(apiErrorMessage(e, 'Could not cancel this order.'));
+      useToastStore.getState().show(apiErrorMessage(e, 'Could not cancel this order.'), 'error');
     } finally {
       setSaving(false);
     }
@@ -218,7 +213,6 @@ function CancelSheet({ order, onClose, onCancelled }: { order: VendorOrder; onCl
     <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={onClose}>
       <View style={styles.sheet} onStartShouldSetResponder={() => true}>
         <Text style={styles.sheetTitle}>Cancel Order</Text>
-        {error ? <Text style={styles.error}>{error}</Text> : null}
         <Text style={styles.label}>Reason</Text>
         <TextInput
           style={[styles.input, styles.textArea]}
@@ -291,7 +285,6 @@ const styles = StyleSheet.create({
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
   sheet: { backgroundColor: COLORS.white, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: SIZES.screenPadding, paddingBottom: 32 },
   sheetTitle: { fontSize: 16, fontWeight: 'bold', color: COLORS.text, marginBottom: 12 },
-  error: { color: COLORS.danger, marginBottom: 8, fontSize: 12 },
   label: { fontSize: 13, fontWeight: '600', color: COLORS.text, marginBottom: 6, marginTop: 12 },
   input: { borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, color: COLORS.text, backgroundColor: COLORS.grayLight },
   textArea: { height: 90, textAlignVertical: 'top' },

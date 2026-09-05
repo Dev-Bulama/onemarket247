@@ -7,13 +7,13 @@ import { useAuthStore } from '../../store/authStore';
 import { useLocaleStore } from '../../store/localeStore';
 import { CartItem } from '../../types';
 import { apiErrorMessage } from '../../api/client';
+import { useToastStore } from '../../store/toastStore';
 
 export default function CartScreen({ navigation }: any) {
   const { cart, fetchCart, updateItem, removeItem, applyCoupon, removeCoupon, isLoading } = useCartStore();
   const { isAuthenticated } = useAuthStore();
   const { language, currency } = useLocaleStore();
   const [couponCode, setCouponCode] = useState('');
-  const [couponError, setCouponError] = useState('');
   const [applyingCoupon, setApplyingCoupon] = useState(false);
 
   useEffect(() => {
@@ -23,12 +23,11 @@ export default function CartScreen({ navigation }: any) {
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) return;
     setApplyingCoupon(true);
-    setCouponError('');
     try {
       await applyCoupon(couponCode.trim());
       setCouponCode('');
     } catch (e) {
-      setCouponError(apiErrorMessage(e, 'That coupon code is invalid.'));
+      useToastStore.getState().show(apiErrorMessage(e, 'That coupon code is invalid.'), 'error');
     } finally {
       setApplyingCoupon(false);
     }
@@ -97,7 +96,6 @@ export default function CartScreen({ navigation }: any) {
                 </TouchableOpacity>
               </View>
             )}
-            {couponError ? <Text style={styles.couponError}>{couponError}</Text> : null}
           </View>
         }
       />
@@ -193,7 +191,6 @@ const styles = StyleSheet.create({
   couponInput: { flex: 1, borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, color: COLORS.text, backgroundColor: COLORS.white },
   couponBtn: { backgroundColor: COLORS.secondary, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 18, alignItems: 'center', justifyContent: 'center' },
   couponBtnText: { color: COLORS.white, fontWeight: 'bold', fontSize: 13 },
-  couponError: { color: COLORS.danger, fontSize: 12, marginTop: 6 },
   couponApplied: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#EAFBF0', borderRadius: SIZES.borderRadiusSm, padding: 12 },
   couponAppliedText: { color: COLORS.accent, fontSize: 12, fontWeight: '600', flex: 1 },
 

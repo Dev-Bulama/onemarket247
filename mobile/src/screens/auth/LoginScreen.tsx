@@ -13,18 +13,16 @@ export default function LoginScreen({ navigation }: any) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
 
   const handleLogin = async () => {
-    setError('');
     if (!email || !password) {
-      setError('Please enter your email and password.');
+      useToastStore.getState().show('Please enter your email and password.', 'error');
       return;
     }
     try {
       await login(email, password);
     } catch (e) {
-      setError(apiErrorMessage(e, 'Could not log in. Please check your credentials.'));
+      useToastStore.getState().show(apiErrorMessage(e, 'Could not log in. Please check your credentials.'), 'error');
       return;
     }
     // Already logged in successfully at this point — a cart-merge failure
@@ -47,8 +45,6 @@ export default function LoginScreen({ navigation }: any) {
 
         <Text style={styles.title}>Welcome back</Text>
         <Text style={styles.subtitle}>Log in to continue shopping on OneMarket 24/7</Text>
-
-        {error ? <Text style={styles.error}>{error}</Text> : null}
 
         <Text style={styles.label}>Email</Text>
         <TextInput
@@ -94,7 +90,6 @@ const styles = StyleSheet.create({
   closeBtn: { position: 'absolute', top: 16, right: 16, zIndex: 1 },
   title: { fontSize: 24, fontWeight: 'bold', color: COLORS.text, marginBottom: 6 },
   subtitle: { fontSize: 14, color: COLORS.textSecondary, marginBottom: SIZES.xl },
-  error: { color: COLORS.danger, marginBottom: 12, fontSize: 13 },
   label: { fontSize: 13, fontWeight: '600', color: COLORS.text, marginBottom: 6, marginTop: 14 },
   input: {
     borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadius,

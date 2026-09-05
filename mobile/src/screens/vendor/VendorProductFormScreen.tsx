@@ -41,7 +41,6 @@ export default function VendorProductFormScreen({ route, navigation }: any) {
 
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
 
   // Create-only fields
   const [name, setName] = useState('');
@@ -96,7 +95,7 @@ export default function VendorProductFormScreen({ route, navigation }: any) {
         setStockStatus((product.stock_status as any) ?? 'in_stock');
         setLowStockThreshold(product.low_stock_threshold != null ? String(product.low_stock_threshold) : '');
       })
-      .catch(e => setError(apiErrorMessage(e, 'Could not load this product.')))
+      .catch(e => useToastStore.getState().show(apiErrorMessage(e, 'Could not load this product.'), 'error'))
       .finally(() => setLoading(false));
   }, [isEdit, productId]);
 
@@ -115,10 +114,9 @@ export default function VendorProductFormScreen({ route, navigation }: any) {
   const selectedBrand = brands.find(b => b.id === brandId);
 
   const handleSubmit = async () => {
-    if (!isEdit && !name.trim()) { setError('Please enter a product name.'); return; }
-    if (!price.trim()) { setError('Please enter a price.'); return; }
+    if (!isEdit && !name.trim()) { useToastStore.getState().show('Please enter a product name.', 'error'); return; }
+    if (!price.trim()) { useToastStore.getState().show('Please enter a price.', 'error'); return; }
     setSaving(true);
-    setError('');
     try {
       if (isEdit) {
         await vendorProductsApi.update(productId!, {
@@ -159,7 +157,7 @@ export default function VendorProductFormScreen({ route, navigation }: any) {
       useToastStore.getState().show(isEdit ? 'Product updated' : 'Product created');
       navigation.goBack();
     } catch (e) {
-      setError(apiErrorMessage(e, 'Could not save this product.'));
+      useToastStore.getState().show(apiErrorMessage(e, 'Could not save this product.'), 'error');
     } finally {
       setSaving(false);
     }
@@ -178,8 +176,6 @@ export default function VendorProductFormScreen({ route, navigation }: any) {
       </View>
 
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        {error ? <Text style={styles.error}>{error}</Text> : null}
-
         {isEdit ? (
           <View style={styles.readonlyHeader}>
             {existingThumbnail ? <Image source={{ uri: existingThumbnail }} style={styles.readonlyThumb} /> : null}
@@ -362,7 +358,6 @@ const styles = StyleSheet.create({
   },
   headerTitle: { fontSize: 16, fontWeight: 'bold', color: COLORS.text },
   content: { padding: SIZES.screenPadding, paddingBottom: 40 },
-  error: { color: COLORS.danger, marginBottom: 12, fontSize: 13 },
   label: { fontSize: 13, fontWeight: '600', color: COLORS.text, marginBottom: 6, marginTop: 12 },
   input: { borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, color: COLORS.text, backgroundColor: COLORS.grayLight },
   textArea: { height: 100, textAlignVertical: 'top' },

@@ -51,7 +51,7 @@ export default function VendorWithdrawalsScreen({ navigation }: any) {
         setWithdrawals(prev => prev.map(w => (w.id === withdrawal.id ? res.data.data : w)));
         useToastStore.getState().show('Withdrawal cancelled');
       })
-      .catch(e => setError(apiErrorMessage(e, 'Could not cancel this withdrawal.')));
+      .catch(e => useToastStore.getState().show(apiErrorMessage(e, 'Could not cancel this withdrawal.'), 'error'));
   };
 
   return (
@@ -140,15 +140,13 @@ function AddMethodSheet({ onClose, onAdded }: { onClose: () => void; onAdded: (m
   const [accountName, setAccountName] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
 
   const handleSubmit = async () => {
     if (!bankName.trim() || !accountName.trim() || !accountNumber.trim()) {
-      setError('Please fill in all fields.');
+      useToastStore.getState().show('Please fill in all fields.', 'error');
       return;
     }
     setSaving(true);
-    setError('');
     try {
       const res = await vendorWithdrawalsApi.addMethod({
         bank_name: bankName.trim(),
@@ -158,7 +156,7 @@ function AddMethodSheet({ onClose, onAdded }: { onClose: () => void; onAdded: (m
       onAdded(res.data.data);
       useToastStore.getState().show('Bank account added');
     } catch (e) {
-      setError(apiErrorMessage(e, 'Could not add this bank account.'));
+      useToastStore.getState().show(apiErrorMessage(e, 'Could not add this bank account.'), 'error');
     } finally {
       setSaving(false);
     }
@@ -168,7 +166,6 @@ function AddMethodSheet({ onClose, onAdded }: { onClose: () => void; onAdded: (m
     <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={onClose}>
       <View style={styles.sheet} onStartShouldSetResponder={() => true}>
         <Text style={styles.sheetTitle}>Add Bank Account</Text>
-        {error ? <Text style={styles.error}>{error}</Text> : null}
         <Text style={styles.label}>Bank Name</Text>
         <TextInput style={styles.input} value={bankName} onChangeText={setBankName} placeholder="First Bank" placeholderTextColor={COLORS.placeholder} />
         <Text style={styles.label}>Account Name</Text>
@@ -192,20 +189,18 @@ function RequestWithdrawalSheet({ methods, onClose, onRequested, onAddAccount }:
   const [methodId, setMethodId] = useState<number | null>(methods[0]?.id ?? null);
   const [amount, setAmount] = useState('');
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
 
   const handleSubmit = async () => {
-    if (!methodId) { setError('Please add and select a bank account first.'); return; }
+    if (!methodId) { useToastStore.getState().show('Please add and select a bank account first.', 'error'); return; }
     const minorAmount = toMinorUnits(amount);
-    if (minorAmount <= 0) { setError('Please enter a valid amount.'); return; }
+    if (minorAmount <= 0) { useToastStore.getState().show('Please enter a valid amount.', 'error'); return; }
     setSaving(true);
-    setError('');
     try {
       const res = await vendorWithdrawalsApi.request(methodId, minorAmount);
       onRequested(res.data.data);
       useToastStore.getState().show('Withdrawal requested');
     } catch (e) {
-      setError(apiErrorMessage(e, 'Could not request this withdrawal.'));
+      useToastStore.getState().show(apiErrorMessage(e, 'Could not request this withdrawal.'), 'error');
     } finally {
       setSaving(false);
     }
@@ -215,7 +210,6 @@ function RequestWithdrawalSheet({ methods, onClose, onRequested, onAddAccount }:
     <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={onClose}>
       <View style={styles.sheet} onStartShouldSetResponder={() => true}>
         <Text style={styles.sheetTitle}>Request Withdrawal</Text>
-        {error ? <Text style={styles.error}>{error}</Text> : null}
 
         {methods.length === 0 ? (
           <View style={styles.noMethodBox}>
@@ -281,7 +275,6 @@ const styles = StyleSheet.create({
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
   sheet: { backgroundColor: COLORS.white, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: SIZES.screenPadding, paddingBottom: 32 },
   sheetTitle: { fontSize: 16, fontWeight: 'bold', color: COLORS.text, marginBottom: 12 },
-  error: { color: COLORS.danger, marginBottom: 8, fontSize: 12 },
   hint: { fontSize: 12, color: COLORS.textSecondary, marginBottom: 12, textAlign: 'center' },
   label: { fontSize: 13, fontWeight: '600', color: COLORS.text, marginBottom: 6, marginTop: 12 },
   input: { borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, color: COLORS.text, backgroundColor: COLORS.grayLight },

@@ -106,34 +106,30 @@ function UploadSheet({ onClose, onUploaded }: { onClose: () => void; onUploaded:
   const [type, setType] = useState('identity');
   const [file, setFile] = useState<PickedFile | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState('');
 
   const handlePickFile = async () => {
-    setError('');
     try {
       const picked = await pickDocumentFile();
       if (picked) setFile(picked);
     } catch {
-      setError('Could not open the file picker. Please try again.');
+      useToastStore.getState().show('Could not open the file picker. Please try again.', 'error');
     }
   };
 
   const handleTakePhoto = async () => {
-    setError('');
     const picked = await takeDocumentPhoto();
     if (picked) setFile(picked);
   };
 
   const handleSubmit = async () => {
-    if (!file) { setError('Please choose a file or take a photo of the document.'); return; }
+    if (!file) { useToastStore.getState().show('Please choose a file or take a photo of the document.', 'error'); return; }
     setUploading(true);
-    setError('');
     try {
       const res = await vendorDocumentsApi.upload(type, file);
       onUploaded(res.data.data);
       useToastStore.getState().show('Document uploaded');
     } catch (e) {
-      setError(apiErrorMessage(e, 'Could not upload this document.'));
+      useToastStore.getState().show(apiErrorMessage(e, 'Could not upload this document.'), 'error');
     } finally {
       setUploading(false);
     }
@@ -143,7 +139,6 @@ function UploadSheet({ onClose, onUploaded }: { onClose: () => void; onUploaded:
     <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={onClose}>
       <View style={styles.sheet} onStartShouldSetResponder={() => true}>
         <Text style={styles.sheetTitle}>Upload Document</Text>
-        {error ? <Text style={styles.error}>{error}</Text> : null}
 
         <Text style={styles.label}>Document Type</Text>
         <View style={styles.chipRow}>
@@ -195,7 +190,6 @@ const styles = StyleSheet.create({
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
   sheet: { backgroundColor: COLORS.white, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: SIZES.screenPadding, paddingBottom: 32 },
   sheetTitle: { fontSize: 16, fontWeight: 'bold', color: COLORS.text, marginBottom: 12 },
-  error: { color: COLORS.danger, marginBottom: 8, fontSize: 12 },
   label: { fontSize: 13, fontWeight: '600', color: COLORS.text, marginBottom: 6, marginTop: 12 },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { borderWidth: 1, borderColor: COLORS.border, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 7 },

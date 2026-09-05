@@ -107,7 +107,6 @@ function AdjustSheet({ item, onClose, onAdjusted }: { item: VendorInventoryItem;
   const [delta, setDelta] = useState('');
   const [reason, setReason] = useState('');
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
 
   const applyDelta = (sign: 1 | -1) => {
     const n = parseInt(delta, 10);
@@ -116,16 +115,15 @@ function AdjustSheet({ item, onClose, onAdjusted }: { item: VendorInventoryItem;
 
   const handleSubmit = async () => {
     const parsedDelta = parseInt(delta, 10);
-    if (!Number.isFinite(parsedDelta) || parsedDelta === 0) { setError('Enter a non-zero adjustment.'); return; }
-    if (!reason.trim()) { setError('Please give a reason for this adjustment.'); return; }
+    if (!Number.isFinite(parsedDelta) || parsedDelta === 0) { useToastStore.getState().show('Enter a non-zero adjustment.', 'error'); return; }
+    if (!reason.trim()) { useToastStore.getState().show('Please give a reason for this adjustment.', 'error'); return; }
     setSaving(true);
-    setError('');
     try {
       const res = await vendorInventoryApi.adjust(item.id, parsedDelta, reason.trim());
       onAdjusted(res.data.data);
       useToastStore.getState().show('Stock adjusted');
     } catch (e) {
-      setError(apiErrorMessage(e, 'Could not adjust stock.'));
+      useToastStore.getState().show(apiErrorMessage(e, 'Could not adjust stock.'), 'error');
     } finally {
       setSaving(false);
     }
@@ -136,8 +134,6 @@ function AdjustSheet({ item, onClose, onAdjusted }: { item: VendorInventoryItem;
       <View style={styles.sheet} onStartShouldSetResponder={() => true}>
         <Text style={styles.sheetTitle}>Adjust Stock</Text>
         <Text style={styles.sheetSubtitle}>{item.product?.name ?? `Variation #${item.variation_id}`} · Currently {item.on_hand} on hand</Text>
-
-        {error ? <Text style={styles.error}>{error}</Text> : null}
 
         <Text style={styles.label}>Adjustment</Text>
         <Text style={styles.hint}>Enter a positive number to add stock, negative to remove.</Text>
@@ -200,7 +196,6 @@ const styles = StyleSheet.create({
   sheet: { backgroundColor: COLORS.white, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: SIZES.screenPadding, paddingBottom: 32 },
   sheetTitle: { fontSize: 16, fontWeight: 'bold', color: COLORS.text },
   sheetSubtitle: { fontSize: 12, color: COLORS.textSecondary, marginTop: 4, marginBottom: 12 },
-  error: { color: COLORS.danger, marginBottom: 8, fontSize: 12 },
   label: { fontSize: 13, fontWeight: '600', color: COLORS.text, marginBottom: 4, marginTop: 8 },
   hint: { fontSize: 11, color: COLORS.textMuted, marginBottom: 8 },
   deltaRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },

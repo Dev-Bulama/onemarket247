@@ -8,6 +8,7 @@ import { apiErrorMessage } from '../../api/client';
 import { pickDocumentFile, takeDocumentPhoto } from '../../utils/documentPicker';
 import { City, Country, State } from '../../types';
 import { VendorApplicationReceipt } from '../../types/vendor';
+import { useToastStore } from '../../store/toastStore';
 
 const STEPS = ['Business', 'Store', 'Banking', 'Documents'] as const;
 
@@ -60,7 +61,6 @@ export default function VendorOnboardingScreen({ navigation }: any) {
   const [taxDoc, setTaxDoc] = useState<PickedFile | null>(null);
 
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
   const [receipt, setReceipt] = useState<VendorApplicationReceipt | null>(null);
   const [receiptMessage, setReceiptMessage] = useState('');
 
@@ -79,17 +79,15 @@ export default function VendorOnboardingScreen({ navigation }: any) {
   }, [form.stateId]);
 
   const pickFile = async (onPicked: (file: PickedFile) => void) => {
-    setError('');
     try {
       const file = await pickDocumentFile();
       if (file) onPicked(file);
     } catch {
-      setError('Could not open the file picker. Please try again.');
+      useToastStore.getState().show('Could not open the file picker. Please try again.', 'error');
     }
   };
 
   const takePhoto = async (onPicked: (file: PickedFile) => void) => {
-    setError('');
     const file = await takeDocumentPhoto();
     if (file) onPicked(file);
   };
@@ -117,22 +115,19 @@ export default function VendorOnboardingScreen({ navigation }: any) {
 
   const goNext = () => {
     const validationError = validateStep();
-    if (validationError) { setError(validationError); return; }
-    setError('');
+    if (validationError) { useToastStore.getState().show(validationError, 'error'); return; }
     setStep(prev => Math.min(prev + 1, STEPS.length - 1));
   };
 
   const goBack = () => {
     if (step === 0) { navigation.goBack(); return; }
-    setError('');
     setStep(prev => prev - 1);
   };
 
   const handleSubmit = async () => {
     const validationError = validateStep();
-    if (validationError) { setError(validationError); return; }
+    if (validationError) { useToastStore.getState().show(validationError, 'error'); return; }
     setSubmitting(true);
-    setError('');
     try {
       const res = await vendorApplicationApi.apply({
         full_name: form.fullName.trim(),
@@ -164,7 +159,7 @@ export default function VendorOnboardingScreen({ navigation }: any) {
       setReceipt(res.data.data);
       setReceiptMessage(res.data.message ?? 'Your application has been submitted.');
     } catch (e) {
-      setError(apiErrorMessage(e, 'Could not submit your application. Please try again.'));
+      useToastStore.getState().show(apiErrorMessage(e, 'Could not submit your application. Please try again.'), 'error');
     } finally {
       setSubmitting(false);
     }
@@ -180,7 +175,20 @@ export default function VendorOnboardingScreen({ navigation }: any) {
           </View>
           <Text style={styles.confirmTitle}>{approved ? 'Application Approved' : 'Application Submitted'}</Text>
           <Text style={styles.confirmMessage}>{receiptMessage}</Text>
-          <Text style={styles.confirmRef}>Reference #{receipt.id}</Text>
+          <View style={styles.confirmRefPill}>
+            <Text style={styles.confirmRefLabel}>Reference</Text>
+            <Text style={styles.confirmRefValue}>#{receipt.id}</Text>
+          </View>
+
+          {!approved && (
+            <View style={styles.nextStepsBox}>
+              <Text style={styles.nextStepsHeading}>What happens next</Text>
+              <NextStep icon="document-text-outline" text="Our team reviews your application and documents." />
+              <NextStep icon="mail-outline" text="You'll get an email as soon as a decision is made." />
+              <NextStep icon="storefront-outline" text="Once approved, you can set up your store and start listing products." />
+            </View>
+          )}
+
           <TouchableOpacity style={styles.primaryBtn} onPress={() => navigation.goBack()}>
             <Text style={styles.primaryBtnText}>{approved ? 'Go to Login' : 'Done'}</Text>
           </TouchableOpacity>
@@ -213,8 +221,6 @@ export default function VendorOnboardingScreen({ navigation }: any) {
       </View>
 
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        {error ? <Text style={styles.error}>{error}</Text> : null}
-
         {step === 0 && (
           <>
             <Field label="Full Name" value={form.fullName} onChangeText={t => set('fullName', t)} placeholder="Jane Doe" />
@@ -401,6 +407,17 @@ function DocumentPicker({ label, required, file, onPickFile, onTakePhoto, onRemo
   );
 }
 
+function NextStep({ icon, text }: { icon: string; text: string }) {
+  return (
+    <View style={styles.nextStepRow}>
+      <View style={styles.nextStepIconBox}>
+        <IonIcon name={icon} size={16} color={COLORS.primary} />
+      </View>
+      <Text style={styles.nextStepText}>{text}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: COLORS.white },
   header: {
@@ -417,7 +434,6 @@ const styles = StyleSheet.create({
   progressLabel: { fontSize: 10, color: COLORS.textMuted, marginTop: 4 },
   progressLabelActive: { color: COLORS.primary, fontWeight: '700' },
   content: { padding: SIZES.screenPadding, paddingBottom: 40 },
-  error: { color: COLORS.danger, marginBottom: 12, fontSize: 13 },
   sectionLabel: { fontSize: 12, fontWeight: '700', color: COLORS.textMuted, textTransform: 'uppercase', marginTop: 16, marginBottom: 4 },
   label: { fontSize: 13, fontWeight: '600', color: COLORS.text, marginBottom: 6, marginTop: 12 },
   input: { borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, color: COLORS.text, backgroundColor: COLORS.grayLight },
@@ -444,5 +460,15 @@ const styles = StyleSheet.create({
   confirmIconBox: { width: 96, height: 96, borderRadius: 48, alignItems: 'center', justifyContent: 'center', marginBottom: SIZES.lg },
   confirmTitle: { fontSize: 18, fontWeight: 'bold', color: COLORS.text, marginBottom: 8, textAlign: 'center' },
   confirmMessage: { fontSize: 14, color: COLORS.textSecondary, textAlign: 'center', lineHeight: 20 },
-  confirmRef: { fontSize: 12, color: COLORS.textMuted, marginTop: 12 },
+  confirmRefPill: {
+    flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: COLORS.grayLight,
+    borderRadius: 999, paddingHorizontal: 14, paddingVertical: 6, marginTop: 14,
+  },
+  confirmRefLabel: { fontSize: 11, color: COLORS.textMuted, fontWeight: '600' },
+  confirmRefValue: { fontSize: 12, color: COLORS.text, fontWeight: '700' },
+  nextStepsBox: { width: '100%', backgroundColor: COLORS.grayLight, borderRadius: SIZES.borderRadius, padding: 16, marginTop: 24 },
+  nextStepsHeading: { fontSize: 12, fontWeight: '700', color: COLORS.text, marginBottom: 12, textTransform: 'uppercase' },
+  nextStepRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 12 },
+  nextStepIconBox: { width: 28, height: 28, borderRadius: 14, backgroundColor: COLORS.white, alignItems: 'center', justifyContent: 'center' },
+  nextStepText: { flex: 1, fontSize: 12, color: COLORS.textSecondary, lineHeight: 17, marginTop: 5 },
 });

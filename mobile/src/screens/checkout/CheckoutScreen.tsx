@@ -14,6 +14,7 @@ import { addressesApi } from '../../api/addresses';
 import { configApi, referenceApi } from '../../api/config';
 import { apiErrorMessage } from '../../api/client';
 import { Address, City, Country, State } from '../../types';
+import { useToastStore } from '../../store/toastStore';
 
 const PAYSTACK_HOST = 'paystack.com';
 
@@ -44,7 +45,6 @@ export default function CheckoutScreen({ navigation }: any) {
   const [paymentMethod, setPaymentMethod] = useState<'paystack' | 'bank_transfer'>('bank_transfer');
 
   const [placing, setPlacing] = useState(false);
-  const [placeError, setPlaceError] = useState('');
 
   const [webviewUrl, setWebviewUrl] = useState<string | null>(null);
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
@@ -97,7 +97,6 @@ export default function CheckoutScreen({ navigation }: any) {
   const handlePlaceOrder = async () => {
     if (!sessionKey || !canPlaceOrder) return;
     setPlacing(true);
-    setPlaceError('');
     try {
       const payload = isAuthenticated && selectedAddress
         ? {
@@ -138,7 +137,7 @@ export default function CheckoutScreen({ navigation }: any) {
         navigation.replace('OrderSuccess', { orderId: order.id });
       }
     } catch (e) {
-      setPlaceError(apiErrorMessage(e, 'Could not place your order. Please try again.'));
+      useToastStore.getState().show(apiErrorMessage(e, 'Could not place your order. Please try again.'), 'error');
     } finally {
       setPlacing(false);
     }
@@ -296,8 +295,6 @@ export default function CheckoutScreen({ navigation }: any) {
             </TouchableOpacity>
           ))}
         </View>
-
-        {placeError ? <Text style={styles.placeError}>{placeError}</Text> : null}
       </ScrollView>
 
       <View style={styles.bottomBar}>
@@ -508,8 +505,6 @@ const styles = StyleSheet.create({
 
   paymentRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: COLORS.divider },
   paymentLabel: { flex: 1, fontSize: 13, color: COLORS.text },
-
-  placeError: { color: COLORS.danger, fontSize: 12, textAlign: 'center', marginTop: 4 },
 
   bottomBar: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',

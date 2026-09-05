@@ -26,7 +26,6 @@ export default function AddAddressScreen({ navigation }: any) {
   const [pickerFor, setPickerFor] = useState<'country' | 'state' | 'city' | null>(null);
 
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
 
   useEffect(() => {
     referenceApi.countries().then(res => setCountries(res.data.data)).catch(() => {});
@@ -46,11 +45,10 @@ export default function AddAddressScreen({ navigation }: any) {
 
   const handleSave = async () => {
     if (!label || !fullName || !addressLine1 || !countryId) {
-      setError('Please fill in the label, your name, address, and country.');
+      useToastStore.getState().show('Please fill in the label, your name, address, and country.', 'error');
       return;
     }
     setSaving(true);
-    setError('');
     try {
       await addressesApi.store({
         label,
@@ -68,7 +66,7 @@ export default function AddAddressScreen({ navigation }: any) {
       useToastStore.getState().show('Address saved');
       navigation.goBack();
     } catch (e) {
-      setError(apiErrorMessage(e, 'Could not save this address.'));
+      useToastStore.getState().show(apiErrorMessage(e, 'Could not save this address.'), 'error');
     } finally {
       setSaving(false);
     }
@@ -87,8 +85,6 @@ export default function AddAddressScreen({ navigation }: any) {
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
-        {error ? <Text style={styles.error}>{error}</Text> : null}
-
         <Text style={styles.label}>Label</Text>
         <TextInput style={styles.input} value={label} onChangeText={setLabel} placeholder="Home, Office, ..." placeholderTextColor={COLORS.placeholder} />
 
@@ -177,7 +173,6 @@ const styles = StyleSheet.create({
   },
   headerTitle: { fontSize: 16, fontWeight: 'bold', color: COLORS.text },
   content: { padding: SIZES.screenPadding, paddingBottom: 40 },
-  error: { color: COLORS.danger, marginBottom: 12, fontSize: 13 },
   label: { fontSize: 13, fontWeight: '600', color: COLORS.text, marginBottom: 6, marginTop: 12 },
   input: { borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, color: COLORS.text, backgroundColor: COLORS.grayLight },
   selectInput: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 12, backgroundColor: COLORS.grayLight },

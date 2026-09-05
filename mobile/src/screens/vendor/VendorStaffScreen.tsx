@@ -51,7 +51,7 @@ export default function VendorStaffScreen({ navigation }: any) {
               setStaff(prev => prev.filter(s => s.id !== member.id));
               useToastStore.getState().show('Staff member removed');
             })
-            .catch(e => setError(apiErrorMessage(e, 'Could not remove this staff member.')));
+            .catch(e => useToastStore.getState().show(apiErrorMessage(e, 'Could not remove this staff member.'), 'error'));
         },
       },
     ]);
@@ -168,20 +168,18 @@ function InviteSheet({ onClose, onInvited }: { onClose: () => void; onInvited: (
   const [email, setEmail] = useState('');
   const [permissions, setPermissions] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
 
   const togglePermission = (perm: string) => setPermissions(prev => (prev.includes(perm) ? prev.filter(p => p !== perm) : [...prev, perm]));
 
   const handleSubmit = async () => {
-    if (!name.trim() || !email.trim()) { setError('Please fill in name and email.'); return; }
+    if (!name.trim() || !email.trim()) { useToastStore.getState().show('Please fill in name and email.', 'error'); return; }
     setSaving(true);
-    setError('');
     try {
       const res = await vendorStaffApi.invite({ name: name.trim(), email: email.trim(), permissions });
       onInvited(res.data.data);
       useToastStore.getState().show('Invite sent');
     } catch (e) {
-      setError(apiErrorMessage(e, 'Could not invite this staff member.'));
+      useToastStore.getState().show(apiErrorMessage(e, 'Could not invite this staff member.'), 'error');
     } finally {
       setSaving(false);
     }
@@ -191,7 +189,6 @@ function InviteSheet({ onClose, onInvited }: { onClose: () => void; onInvited: (
     <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={onClose}>
       <View style={styles.sheet} onStartShouldSetResponder={() => true}>
         <Text style={styles.sheetTitle}>Invite Staff</Text>
-        {error ? <Text style={styles.error}>{error}</Text> : null}
         <Text style={styles.label}>Name</Text>
         <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Full name" placeholderTextColor={COLORS.placeholder} />
         <Text style={styles.label}>Email</Text>
@@ -210,19 +207,17 @@ function EditSheet({ member, onClose, onUpdated }: { member: VendorStaffMember; 
   const [status, setStatus] = useState<'active' | 'suspended'>(member.status === 'suspended' ? 'suspended' : 'active');
   const [permissions, setPermissions] = useState<string[]>(member.permissions);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
 
   const togglePermission = (perm: string) => setPermissions(prev => (prev.includes(perm) ? prev.filter(p => p !== perm) : [...prev, perm]));
 
   const handleSubmit = async () => {
     setSaving(true);
-    setError('');
     try {
       const res = await vendorStaffApi.update(member.id, { status, permissions });
       onUpdated(res.data.data);
       useToastStore.getState().show('Staff member updated');
     } catch (e) {
-      setError(apiErrorMessage(e, 'Could not update this staff member.'));
+      useToastStore.getState().show(apiErrorMessage(e, 'Could not update this staff member.'), 'error');
     } finally {
       setSaving(false);
     }
@@ -232,7 +227,6 @@ function EditSheet({ member, onClose, onUpdated }: { member: VendorStaffMember; 
     <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={onClose}>
       <View style={styles.sheet} onStartShouldSetResponder={() => true}>
         <Text style={styles.sheetTitle}>{member.name ?? 'Staff member'}</Text>
-        {error ? <Text style={styles.error}>{error}</Text> : null}
 
         <Text style={styles.label}>Status</Text>
         <View style={styles.statusToggleRow}>
@@ -277,7 +271,6 @@ const styles = StyleSheet.create({
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
   sheet: { backgroundColor: COLORS.white, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: SIZES.screenPadding, paddingBottom: 32 },
   sheetTitle: { fontSize: 16, fontWeight: 'bold', color: COLORS.text, marginBottom: 12 },
-  error: { color: COLORS.danger, marginBottom: 8, fontSize: 12 },
   label: { fontSize: 13, fontWeight: '600', color: COLORS.text, marginBottom: 6, marginTop: 12 },
   input: { borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, color: COLORS.text, backgroundColor: COLORS.grayLight },
   permRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: COLORS.divider },

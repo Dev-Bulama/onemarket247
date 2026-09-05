@@ -15,22 +15,20 @@ export default function RegisterScreen({ navigation }: any) {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
 
   const handleRegister = async () => {
-    setError('');
     if (!name || !email || !password) {
-      setError('Please fill in your name, email, and password.');
+      useToastStore.getState().show('Please fill in your name, email, and password.', 'error');
       return;
     }
     if (password !== confirmPassword) {
-      setError('Passwords do not match.');
+      useToastStore.getState().show('Passwords do not match.', 'error');
       return;
     }
     try {
       await register({ name, email, phone: phone || undefined, password, password_confirmation: confirmPassword });
     } catch (e) {
-      setError(apiErrorMessage(e, 'Could not create your account. Please try again.'));
+      useToastStore.getState().show(apiErrorMessage(e, 'Could not create your account. Please try again.'), 'error');
       return;
     }
     // The account is already created and the user is already logged in at
@@ -54,8 +52,6 @@ export default function RegisterScreen({ navigation }: any) {
 
         <Text style={styles.title}>Create your account</Text>
         <Text style={styles.subtitle}>Join OneMarket 24/7 to start shopping</Text>
-
-        {error ? <Text style={styles.error}>{error}</Text> : null}
 
         <Text style={styles.label}>Full Name</Text>
         <TextInput style={styles.input} placeholder="Jane Doe" placeholderTextColor={COLORS.placeholder} value={name} onChangeText={setName} />
@@ -90,7 +86,6 @@ const styles = StyleSheet.create({
   closeBtn: { position: 'absolute', top: 16, right: 16, zIndex: 1 },
   title: { fontSize: 24, fontWeight: 'bold', color: COLORS.text, marginBottom: 6 },
   subtitle: { fontSize: 14, color: COLORS.textSecondary, marginBottom: SIZES.xl },
-  error: { color: COLORS.danger, marginBottom: 12, fontSize: 13 },
   label: { fontSize: 13, fontWeight: '600', color: COLORS.text, marginBottom: 6, marginTop: 14 },
   input: {
     borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadius,
