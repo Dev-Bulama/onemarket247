@@ -35,9 +35,15 @@ export default function VendorStoreSettingsScreen({ navigation }: any) {
         setOnVacation(store.status === 'vacation');
         setVacationMessage(store.vacation_message ?? '');
       })
-      .catch(e => useToastStore.getState().show(apiErrorMessage(e, 'Could not load your store settings.'), 'error'))
+      .catch(e => {
+        // Don't fall through to a blank, still-submittable form — that
+        // risks the vendor unknowingly saving empty values over their
+        // real store settings.
+        useToastStore.getState().show(apiErrorMessage(e, 'Could not load your store settings.'), 'error');
+        navigation.goBack();
+      })
       .finally(() => setLoading(false));
-  }, []);
+  }, [navigation]);
 
   const handleSave = async () => {
     if (!name.trim()) { useToastStore.getState().show('Please enter your store name.', 'error'); return; }

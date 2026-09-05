@@ -95,9 +95,15 @@ export default function VendorProductFormScreen({ route, navigation }: any) {
         setStockStatus((product.stock_status as any) ?? 'in_stock');
         setLowStockThreshold(product.low_stock_threshold != null ? String(product.low_stock_threshold) : '');
       })
-      .catch(e => useToastStore.getState().show(apiErrorMessage(e, 'Could not load this product.'), 'error'))
+      .catch(e => {
+        // Don't fall through to a blank, still-submittable edit form —
+        // that risks the vendor unknowingly saving empty values over
+        // their real product.
+        useToastStore.getState().show(apiErrorMessage(e, 'Could not load this product.'), 'error');
+        navigation.goBack();
+      })
       .finally(() => setLoading(false));
-  }, [isEdit, productId]);
+  }, [isEdit, productId, navigation]);
 
   const pickImages = () => {
     launchImageLibrary({ mediaType: 'photo', selectionLimit: MAX_IMAGES - images.length }, response => {
