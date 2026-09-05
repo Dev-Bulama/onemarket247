@@ -21,6 +21,18 @@ test('seeds 25 categories with icons, 25 brands, and 25 products with images', f
     expect($product->getFirstMediaUrl('images'))->not->toBe('');
 });
 
+test('every demo product has real warehouse stock backing its stock_quantity, so it can actually be checked out', function () {
+    Artisan::call('db:seed', ['--class' => DemoCatalogSeeder::class]);
+
+    Product::where('sku', 'like', 'DEMO-%')->get()->each(function (Product $product) {
+        $stock = $product->warehouseStocks()->first();
+
+        expect($stock)->not->toBeNull()
+            ->and($stock->on_hand)->toBe($product->stock_quantity)
+            ->and($stock->warehouse->vendor_id)->toBe($product->vendor_id);
+    });
+});
+
 test('the product thumbnail conversion never touches the queue, so a down queue backend cannot crash the seeder', function () {
     Queue::fake();
 

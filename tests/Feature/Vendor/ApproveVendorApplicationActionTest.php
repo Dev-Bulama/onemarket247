@@ -39,6 +39,13 @@ test('approving an application provisions user, vendor, store, subscription, and
         ->and($vendor->user->hasRole('Vendor Owner'))->toBeTrue()
         ->and($vendor->currentSubscription())->not->toBeNull();
 
+    // Without this, the vendor would have no warehouse to stock a single
+    // product in and could never actually sell anything.
+    $warehouse = $vendor->warehouses()->first();
+    expect($warehouse)->not->toBeNull()
+        ->and($warehouse->is_default)->toBeTrue()
+        ->and($warehouse->is_active)->toBeTrue();
+
     $application->refresh();
     expect($application->status)->toBe(VendorApplicationStatus::Approved)
         ->and($application->vendor_id)->toBe($vendor->id)

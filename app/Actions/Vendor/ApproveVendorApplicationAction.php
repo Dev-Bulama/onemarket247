@@ -17,6 +17,7 @@ use App\Models\VendorApplication;
 use App\Models\VendorDocument;
 use App\Models\VendorSubscription;
 use App\Models\VendorSubscriptionPlan;
+use App\Models\Warehouse;
 use App\Notifications\VendorApplicationApprovedNotification;
 use App\Support\AuditLogger;
 use Illuminate\Support\Facades\DB;
@@ -87,6 +88,23 @@ class ApproveVendorApplicationAction
                 'state_id' => $application->state_id,
                 'city_id' => $application->city_id,
                 'status' => StoreStatus::Active,
+            ]);
+
+            // Without a warehouse, this vendor could never actually stock a
+            // product — the vendor panel's "Add stock" action only offers a
+            // choice of the vendor's own existing warehouses, and nothing
+            // else in the app ever creates one. Every vendor needs at least
+            // this default one from day one.
+            Warehouse::create([
+                'vendor_id' => $vendor->id,
+                'name' => 'Main Warehouse',
+                'code' => 'MAIN',
+                'address' => $application->address,
+                'country_id' => $application->country_id,
+                'state_id' => $application->state_id,
+                'city_id' => $application->city_id,
+                'is_default' => true,
+                'is_active' => true,
             ]);
 
             $user->assignRole(

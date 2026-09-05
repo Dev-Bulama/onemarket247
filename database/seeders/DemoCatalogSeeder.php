@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Actions\Inventory\AdjustStockAction;
 use App\Enums\OrderStatus;
 use App\Enums\ProductStatus;
 use App\Enums\ProductType;
@@ -24,6 +25,7 @@ use App\Models\Store;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Models\VendorOrder;
+use App\Models\Warehouse;
 use App\Support\StockImageDownloader;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
@@ -193,7 +195,21 @@ class DemoCatalogSeeder extends Seeder
                 'is_featured' => $i < 2,
             ]);
 
-            return $vendor;
+            // Every demo product below is marked manage_stock + in-stock, but
+            // that's just a denormalized display flag — checkout actually
+            // requires a real WarehouseStock row (see
+            // CompleteCheckoutAction::selectWarehouseStock()). Without this,
+            // every demo product would look purchasable but fail at checkout
+            // with "No single warehouse has enough stock to fulfil this item."
+            $warehouse = Warehouse::create([
+                'vendor_id' => $vendor->id,
+                'name' => $name.' Main Warehouse',
+                'code' => 'WH-'.str_pad((string) ($i + 1), 4, '0', STR_PAD_LEFT),
+                'is_default' => true,
+                'is_active' => true,
+            ]);
+
+            return [$vendor, $warehouse];
         });
 
         $reviewer = User::create([
@@ -209,7 +225,7 @@ class DemoCatalogSeeder extends Seeder
         $currency = Currency::where('is_default', true)->first() ?? Currency::first();
 
         collect(self::PRODUCTS)->values()->each(function (string $name, int $i) use ($categories, $brands, $vendors, $reviewer, $country, $currency) {
-            $vendor = $vendors[$i % $vendors->count()];
+            [$vendor, $warehouse] = $vendors[$i % $vendors->count()];
             // Naira-scale minor units (kobo) — realistic ₦1,500-₦450,000 range,
             // not the old USD-cents-scale numbers left over from before NGN
             // became the default/settlement currency.
@@ -222,6 +238,7 @@ class DemoCatalogSeeder extends Seeder
             $isFlashSale = $i % 2 === 0;
             $isExpiredFlashSale = $i === (count(self::PRODUCTS) - 1);
             $flashSalePrice = $isFlashSale ? (int) round($price * 0.75) : $price;
+            $stockQuantity = random_int(5, 200);
 
             $product = Product::create([
                 'vendor_id' => $vendor->id,
@@ -242,7 +259,7 @@ class DemoCatalogSeeder extends Seeder
                     default => null,
                 },
                 'manage_stock' => true,
-                'stock_quantity' => random_int(5, 200),
+                'stock_quantity' => $stockQuantity,
                 'stock_status' => StockStatus::InStock,
                 'published_at' => now(),
                 'is_featured' => $i % 3 === 0,
@@ -250,6 +267,8 @@ class DemoCatalogSeeder extends Seeder
             ]);
 
             $product->categories()->attach($categories[$i % $categories->count()]->id, ['is_primary' => true]);
+
+            app(AdjustStockAction::class)->handle($warehouse, $product, $stockQuantity, 'Initial demo catalog stock');
 
             $this->attachPlaceholderImage($product, 'images', $name, self::PALETTE[$i % count(self::PALETTE)]);
 
