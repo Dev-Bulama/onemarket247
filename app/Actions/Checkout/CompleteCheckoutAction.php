@@ -155,6 +155,16 @@ class CompleteCheckoutAction
                     'status' => VendorOrderStatus::PendingPayment,
                 ]);
 
+                // Seeds the order tracking timeline with a first entry right
+                // away — without this, a freshly placed order has zero
+                // status_histories rows until the vendor/admin makes the
+                // first explicit status change, leaving the customer's
+                // tracking view completely empty in the meantime.
+                $vendorOrder->statusHistories()->create([
+                    'status' => VendorOrderStatus::PendingPayment->value,
+                    'note' => 'Order placed',
+                ]);
+
                 foreach ($vendorItems as $item) {
                     $sellable = $item->variation ?? $item->product;
                     $stock = $sellable->manage_stock ? $this->selectWarehouseStock($sellable, $item->quantity) : null;

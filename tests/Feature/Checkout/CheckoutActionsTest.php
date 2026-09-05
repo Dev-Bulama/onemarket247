@@ -100,6 +100,10 @@ test('completing checkout creates one order split by vendor with reserved stock'
         ->and($voA->status)->toBe(VendorOrderStatus::PendingPayment)
         ->and($voB->total)->toBe(2000);
 
+    // The customer's order-tracking timeline must never start empty.
+    expect($voA->statusHistories)->toHaveCount(1)
+        ->and($voA->statusHistories->first()->status)->toBe(VendorOrderStatus::PendingPayment->value);
+
     expect($warehouseA->stocks()->first()->reserved)->toBe(2)
         ->and($warehouseB->stocks()->first()->reserved)->toBe(1);
 

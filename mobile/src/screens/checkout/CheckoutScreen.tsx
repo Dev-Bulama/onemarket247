@@ -1,8 +1,9 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator, Image, Modal, ScrollView, StyleSheet, Text,
   TextInput, TouchableOpacity, View,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { WebView, WebViewNavigation } from 'react-native-webview';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { COLORS, PAYMENT_METHOD_LABELS, SIZES } from '../../constants';
@@ -63,17 +64,37 @@ export default function CheckoutScreen({ navigation }: any) {
       if (res.data.data.payment_methods.length > 0) setPaymentMethod(res.data.data.payment_methods[0] as any);
     }).catch(() => {});
 
-    if (isAuthenticated) {
-      addressesApi.list().then(res => {
-        setAddresses(res.data.data);
-        const def = res.data.data.find(a => a.is_default_shipping) ?? res.data.data[0];
-        if (def) setSelectedAddressId(def.id);
-      }).catch(() => {});
-    } else {
+    if (!isAuthenticated) {
       referenceApi.countries().then(res => setCountries(res.data.data)).catch(() => {});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // A separate focus-driven refresh (not part of the run-once init above)
+  // so returning from "Add a delivery address" — pushed on top of this
+  // screen, which never unmounts — picks up the address just created
+  // instead of showing the stale pre-add list.
+  useFocusEffect(
+    useCallback(() => {
+      if (!isAuthenticated) return;
+      addressesApi.list().then(res => {
+        const fetched = res.data.data;
+        setAddresses(prevAddresses => {
+          setSelectedAddressId(prevSelected => {
+            // A newly added address wasn't in the list before this fetch —
+            // prefer it (it's also the new default, per AddAddressScreen)
+            // over whatever was previously selected.
+            const justAdded = fetched.find(a => !prevAddresses.some(p => p.id === a.id));
+            if (justAdded) return justAdded.id;
+            if (prevSelected && fetched.some(a => a.id === prevSelected)) return prevSelected;
+            const def = fetched.find(a => a.is_default_shipping) ?? fetched[0];
+            return def ? def.id : null;
+          });
+          return fetched;
+        });
+      }).catch(() => {});
+    }, [isAuthenticated])
+  );
 
   useEffect(() => {
     if (guestCountryId) referenceApi.states(guestCountryId).then(res => setStates(res.data.data)).catch(() => {});
