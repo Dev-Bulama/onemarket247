@@ -3,6 +3,9 @@
 namespace App\Filament\Resources\ProductReviews\Tables;
 
 use App\Enums\ReviewStatus;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -43,6 +46,12 @@ class ProductReviewsTable
             ])
             ->recordActions([
                 ViewAction::make(),
+                DeleteAction::make(),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
             ]);
     }
 }

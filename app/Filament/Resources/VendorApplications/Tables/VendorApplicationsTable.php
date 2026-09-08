@@ -8,7 +8,9 @@ use App\Enums\VendorApplicationStatus;
 use App\Exceptions\VendorApplicationConflictException;
 use App\Models\VendorApplication;
 use Filament\Actions\Action;
+use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
@@ -90,6 +92,16 @@ class VendorApplicationsTable
                     }),
                 DeleteAction::make()
                     ->visible(fn (VendorApplication $record) => auth()->user()?->can('delete', $record) ?? false),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    // authorizeIndividualRecords() is required here (unlike
+                    // most other resources' bare DeleteBulkAction) because
+                    // VendorApplicationPolicy::delete() is conditional — an
+                    // Approved application must never be deletable, even if
+                    // it's selected alongside others in a bulk action.
+                    DeleteBulkAction::make()->authorizeIndividualRecords('delete'),
+                ]),
             ]);
     }
 }
