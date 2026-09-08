@@ -98,11 +98,14 @@ test('an admin can delete a pending or rejected application', function () {
         ->and(VendorApplication::find($rejected->id))->toBeNull();
 });
 
-test('the delete action is hidden for an approved application', function () {
+test('an admin can also delete an approved application — it only removes the historical application record', function () {
     $admin = superAdminForApplications();
     $application = VendorApplication::factory()->approved()->create();
 
     Livewire::actingAs($admin, 'admin')
         ->test(ListVendorApplications::class)
-        ->assertTableActionHidden('delete', $application);
+        ->assertTableActionVisible('delete', $application)
+        ->callTableAction('delete', $application);
+
+    expect(VendorApplication::find($application->id))->toBeNull();
 });

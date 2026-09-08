@@ -95,11 +95,6 @@ class VendorApplicationsTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    // authorizeIndividualRecords() is required here (unlike
-                    // most other resources' bare DeleteBulkAction) because
-                    // VendorApplicationPolicy::delete() is conditional — an
-                    // Approved application must never be deletable, even if
-                    // it's selected alongside others in a bulk action.
                     DeleteBulkAction::make()->authorizeIndividualRecords('delete'),
                 ]),
             ]);

@@ -2,7 +2,6 @@
 
 namespace App\Policies;
 
-use App\Enums\VendorApplicationStatus;
 use App\Models\User;
 use App\Models\VendorApplication;
 
@@ -34,15 +33,15 @@ class VendorApplicationPolicy
     }
 
     /**
-     * Never for an Approved application — a live vendor account, store,
-     * and (as of the vendor_application_id fix in
-     * ApproveVendorApplicationAction) the vendor's own real documents can
-     * depend on it. Pending/Rejected applications have nothing else
-     * referencing them, so deleting is safe.
+     * Deleting an Approved application is safe even though a live vendor
+     * account/store exists from it: ApproveVendorApplicationAction already
+     * migrates every vendor_document off vendor_application_id onto
+     * vendor_id at approval time, and nothing else references this row, so
+     * this only ever removes the historical "how they applied" record —
+     * the vendor, store, and their documents are untouched.
      */
     public function delete(User $user, VendorApplication $application): bool
     {
-        return $user->can('vendors.approve')
-            && $application->status !== VendorApplicationStatus::Approved;
+        return $user->can('vendors.approve');
     }
 }
