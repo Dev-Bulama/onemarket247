@@ -1,10 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import RenderHTML from 'react-native-render-html';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { COLORS, SIZES } from '../../constants';
-import { pagesApi, StaticPage } from '../../api/content';
+import { pagesApi, LegalPageContent, StaticPage } from '../../api/content';
 
-const LOADERS: Record<string, () => Promise<{ data: { data: StaticPage } }>> = {
+const { width } = Dimensions.get('window');
+
+// terms/privacy are admin-edited HTML (App\Models\LegalPage) rendered with
+// react-native-render-html, same as blog post bodies — the rest are still
+// the plain heading/body "sections" shape from config('static_pages').
+const HTML_PAGES = ['terms', 'privacy'] as const;
+type PageKey = 'about-us' | 'partnership' | 'privacy' | 'terms';
+
+const LOADERS: Record<PageKey, () => Promise<{ data: { data: StaticPage | LegalPageContent } }>> = {
   'about-us': pagesApi.aboutUs,
   partnership: pagesApi.partnership,
   privacy: pagesApi.privacy,
@@ -12,8 +21,9 @@ const LOADERS: Record<string, () => Promise<{ data: { data: StaticPage } }>> = {
 };
 
 export default function PageScreen({ route, navigation }: any) {
-  const { page } = route.params as { page: keyof typeof LOADERS };
-  const [content, setContent] = useState<StaticPage | null>(null);
+  const { page } = route.params as { page: PageKey };
+  const isHtml = (HTML_PAGES as readonly string[]).includes(page);
+  const [content, setContent] = useState<StaticPage | LegalPageContent | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,12 +43,20 @@ export default function PageScreen({ route, navigation }: any) {
         <ActivityIndicator size="large" color={COLORS.primary} style={styles.loader} />
       ) : (
         <ScrollView contentContainerStyle={styles.content}>
-          {content?.sections.map((section, idx) => (
-            <View key={idx} style={styles.section}>
-              {section.heading ? <Text style={styles.sectionHeading}>{section.heading}</Text> : null}
-              <Text style={styles.sectionBody}>{section.body}</Text>
-            </View>
-          ))}
+          {isHtml && content ? (
+            <RenderHTML
+              contentWidth={width - SIZES.screenPadding * 2}
+              source={{ html: (content as LegalPageContent).body }}
+              baseStyle={styles.sectionBody}
+            />
+          ) : (
+            (content as StaticPage)?.sections.map((section, idx) => (
+              <View key={idx} style={styles.section}>
+                {section.heading ? <Text style={styles.sectionHeading}>{section.heading}</Text> : null}
+                <Text style={styles.sectionBody}>{section.body}</Text>
+              </View>
+            ))
+          )}
         </ScrollView>
       )}
     </View>

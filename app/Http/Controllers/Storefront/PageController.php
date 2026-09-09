@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Storefront;
 
 use App\Http\Controllers\Controller;
+use App\Models\LegalPage;
 use App\Notifications\ContactMessageSubmittedNotification;
+use App\Support\LegalPageKeys;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
@@ -51,12 +53,12 @@ class PageController extends Controller
 
     public function terms(): View
     {
-        return view('storefront.pages.terms');
+        return view('storefront.pages.terms', ['page' => LegalPage::current(LegalPageKeys::Terms) ?? abort(404)]);
     }
 
     public function privacy(): View
     {
-        return view('storefront.pages.privacy');
+        return view('storefront.pages.privacy', ['page' => LegalPage::current(LegalPageKeys::Privacy) ?? abort(404)]);
     }
 
     public function aboutUs(): View

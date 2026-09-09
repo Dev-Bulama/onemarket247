@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\LegalPage;
 use App\Notifications\ContactMessageSubmittedNotification;
 use App\Support\Api\ApiResponse;
+use App\Support\LegalPageKeys;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
@@ -12,9 +14,12 @@ use Throwable;
 
 /**
  * Serves the same static content shown on the storefront's About/Partnership/
- * Privacy/Terms/FAQ pages (resources/views/storefront/pages/*.blade.php) —
- * both read from config('static_pages') so mobile and web can never drift
- * out of sync. See that config file's own docblock.
+ * Privacy/Terms/FAQ pages (resources/views/storefront/pages/*.blade.php).
+ * About/Partnership/FAQ read from config('static_pages') (see that file's
+ * docblock); Terms/Privacy are admin-editable (App\Models\LegalPage, see
+ * App\Filament\Resources\LegalPages) since they need to change without a
+ * redeploy — see resolveLegalPage()'s docblock for the response shape
+ * difference this causes.
  */
 class PageController extends Controller
 {
@@ -30,12 +35,12 @@ class PageController extends Controller
 
     public function privacy(): JsonResponse
     {
-        return ApiResponse::success($this->resolvePage('privacy'));
+        return ApiResponse::success($this->resolveLegalPage(LegalPageKeys::Privacy));
     }
 
     public function terms(): JsonResponse
     {
-        return ApiResponse::success($this->resolvePage('terms'));
+        return ApiResponse::success($this->resolveLegalPage(LegalPageKeys::Terms));
     }
 
     public function faq(): JsonResponse
@@ -84,6 +89,25 @@ class PageController extends Controller
                 'heading' => $section['heading'] !== null ? str_replace(':app_name', $appName, $section['heading']) : null,
                 'body' => str_replace(':app_name', $appName, $section['body']),
             ], $page['sections']),
+        ];
+    }
+
+    /**
+     * Terms/Privacy return {title, body} (body is a single HTML string
+     * the admin edited directly) rather than resolvePage()'s {title,
+     * sections} shape — the mobile app renders this with
+     * react-native-render-html (see PageScreen.tsx) the same way it
+     * already renders blog post bodies.
+     *
+     * @return array{title: string, body: string}
+     */
+    private function resolveLegalPage(string $key): array
+    {
+        $page = LegalPage::current($key) ?? abort(404);
+
+        return [
+            'title' => $page->title,
+            'body' => str_replace(':app_name', config('app.name'), $page->body),
         ];
     }
 }

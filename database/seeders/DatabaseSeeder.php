@@ -30,6 +30,7 @@ class DatabaseSeeder extends Seeder
             CommissionRuleSeeder::class,
             ShippingSeeder::class,
             EmailTemplateSeeder::class,
+            LegalPageSeeder::class,
         ]);
 
         // HeroImageSeeder is intentionally NOT in this list: it pulls a

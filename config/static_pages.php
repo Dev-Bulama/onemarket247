@@ -1,11 +1,16 @@
 <?php
 
-// Single source of truth for the platform's static content pages —
-// both the storefront Blade views (resources/views/storefront/pages/*)
-// and the mobile app's /api/v1/pages/* endpoints read from here, so the
-// two can never drift out of sync. app('app.name') strings are resolved
-// at read time by App\Http\Controllers\Api\V1\PageController /
-// the Blade views themselves, not baked in here.
+// Single source of truth for the platform's static content pages that
+// don't need admin editing — both the storefront Blade views
+// (resources/views/storefront/pages/*) and the mobile app's
+// /api/v1/pages/* endpoints read from here, so the two can never drift
+// out of sync. app('app.name') strings are resolved at read time by
+// App\Http\Controllers\Api\V1\PageController / the Blade views
+// themselves, not baked in here.
+//
+// Terms of Service and Privacy Policy are NOT here — they're
+// admin-editable (see App\Models\LegalPage / App\Filament\Resources\
+// LegalPages), since legal content needs to change without a redeploy.
 
 return [
 
@@ -43,33 +48,6 @@ return [
                 'heading' => null,
                 'body' => 'If you run a store and want to sell here, start with our vendor registration page.',
             ],
-        ],
-    ],
-
-    'privacy' => [
-        'title' => 'Privacy Policy',
-        'sections' => [
-            ['heading' => '1. Information We Collect', 'body' => 'We collect information you provide directly (account details, shipping addresses, order and payment information) and information collected automatically (device, browser, and usage data) when you use :app_name.'],
-            ['heading' => '2. How We Use Information', 'body' => 'We use your information to process orders, communicate with you, operate and improve the platform, prevent fraud, and comply with legal obligations.'],
-            ['heading' => '3. Sharing with Vendors', 'body' => 'When you place an order, we share the information necessary to fulfil it (such as your name, shipping address, and order contents) with the relevant vendor.'],
-            ['heading' => '4. Data Security', 'body' => 'We use industry-standard safeguards to protect your information, including encrypted storage of sensitive fields and secure transmission of data.'],
-            ['heading' => '5. Your Rights', 'body' => 'You may access, correct, or request deletion of your personal information from your account settings, or by contacting us directly.'],
-            ['heading' => '6. Cookies', 'body' => 'We use cookies and similar technologies to keep you signed in, remember your preferences, and understand how the platform is used.'],
-            ['heading' => '7. Contact', 'body' => 'Questions about this policy can be sent through our contact page.'],
-        ],
-    ],
-
-    'terms' => [
-        'title' => 'Terms of Service',
-        'sections' => [
-            ['heading' => '1. About :app_name', 'body' => ':app_name is a marketplace that connects independent vendors with customers. Vendors are independently owned and operated businesses; :app_name is not the seller of record for vendor-listed products unless stated otherwise.'],
-            ['heading' => '2. Accounts', 'body' => 'You are responsible for maintaining the confidentiality of your account credentials and for all activity under your account. Notify us immediately of any unauthorized use.'],
-            ['heading' => '3. Orders and Payment', 'body' => 'Placing an order is an offer to purchase, subject to acceptance and stock availability. Prices and availability are set by the selling vendor and may change without notice until an order is confirmed.'],
-            ['heading' => '4. Vendor Conduct', 'body' => "Vendors must list products accurately, fulfil orders promptly, and comply with applicable law. :app_name may suspend or terminate a vendor's store for violations of these terms."],
-            ['heading' => '5. Returns and Refunds', 'body' => 'Return and refund eligibility is shown at checkout and in your order details, and may vary by vendor and product category.'],
-            ['heading' => '6. Limitation of Liability', 'body' => ":app_name facilitates transactions between customers and vendors and, to the fullest extent permitted by law, is not liable for indirect or consequential damages arising from a vendor's products or conduct."],
-            ['heading' => '7. Changes to These Terms', 'body' => 'We may update these terms from time to time. Continued use of the platform after a change constitutes acceptance of the updated terms.'],
-            ['heading' => '8. Contact', 'body' => 'Questions about these terms can be sent through our contact page.'],
         ],
     ],
 

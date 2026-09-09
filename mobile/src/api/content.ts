@@ -27,6 +27,12 @@ export interface StaticPage {
   sections: StaticPageSection[];
 }
 
+/** Terms/Privacy: admin-edited HTML body, rendered via react-native-render-html. */
+export interface LegalPageContent {
+  title: string;
+  body: string;
+}
+
 export interface FaqPage {
   title: string;
   questions: { question: string; answer: string }[];
@@ -40,8 +46,8 @@ export const blogApi = {
 export const pagesApi = {
   aboutUs: () => apiClient.get<ApiResponse<StaticPage>>('/pages/about-us'),
   partnership: () => apiClient.get<ApiResponse<StaticPage>>('/pages/partnership'),
-  privacy: () => apiClient.get<ApiResponse<StaticPage>>('/pages/privacy'),
-  terms: () => apiClient.get<ApiResponse<StaticPage>>('/pages/terms'),
+  privacy: () => apiClient.get<ApiResponse<LegalPageContent>>('/pages/privacy'),
+  terms: () => apiClient.get<ApiResponse<LegalPageContent>>('/pages/terms'),
   faq: () => apiClient.get<ApiResponse<FaqPage>>('/pages/faq'),
   contact: (data: { name: string; email: string; subject: string; message: string }) =>
     apiClient.post<ApiResponse<null>>('/contact', data),

@@ -1,6 +1,7 @@
 <?php
 
 use App\Notifications\ContactMessageSubmittedNotification;
+use Database\Seeders\LegalPageSeeder;
 use Illuminate\Support\Facades\Notification;
 
 test('the contact page loads', function () {
@@ -35,6 +36,8 @@ test('the contact form validates the email format', function () {
 });
 
 test('faq, terms, and privacy pages load', function () {
+    (new LegalPageSeeder)->run();
+
     $this->get('/faq')->assertOk();
     $this->get('/terms')->assertOk();
     $this->get('/privacy-policy')->assertOk();
