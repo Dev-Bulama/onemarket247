@@ -10,6 +10,8 @@ namespace App\Support\Mail;
  */
 final class EmailTemplateKeys
 {
+    public const string VendorApplicationReceived = 'vendor_application_received';
+
     public const string VendorApplicationApproved = 'vendor_application_approved';
 
     public const string VendorApplicationRejected = 'vendor_application_rejected';

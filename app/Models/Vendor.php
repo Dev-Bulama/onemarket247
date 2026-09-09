@@ -89,6 +89,18 @@ class Vendor extends Model
         return $this->hasMany(Warehouse::class);
     }
 
+    /**
+     * Where a newly created product's initial stock should be seeded —
+     * see ApproveVendorApplicationAction, which guarantees this exists for
+     * every vendor going forward. Falls back to the oldest warehouse for
+     * any vendor with more than one but none marked default.
+     */
+    public function defaultWarehouse(): ?Warehouse
+    {
+        return $this->warehouses()->where('is_default', true)->first()
+            ?? $this->warehouses()->oldest()->first();
+    }
+
     public function vendorOrders(): HasMany
     {
         return $this->hasMany(VendorOrder::class);

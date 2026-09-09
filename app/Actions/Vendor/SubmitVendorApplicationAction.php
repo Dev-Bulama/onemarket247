@@ -6,8 +6,11 @@ use App\Enums\VendorDocumentType;
 use App\Models\Setting;
 use App\Models\VendorApplication;
 use App\Models\VendorDocument;
+use App\Notifications\VendorApplicationReceivedNotification;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
+use Throwable;
 
 /**
  * Creates the VendorApplication + its VendorDocument rows from the public
@@ -26,7 +29,9 @@ class SubmitVendorApplicationAction
      */
     public function handle(array $data, array $documents): VendorApplication
     {
-        return DB::transaction(function () use ($data, $documents) {
+        $autoApproved = false;
+
+        $application = DB::transaction(function () use ($data, $documents, &$autoApproved) {
             $application = VendorApplication::create($data);
 
             foreach ($documents as $type => $file) {
@@ -44,11 +49,28 @@ class SubmitVendorApplicationAction
             }
 
             if ($this->isAutoApproved()) {
+                $autoApproved = true;
                 $this->approve->handle($application->fresh());
             }
 
             return $application->fresh();
         });
+
+        // Only when NOT auto-approved — an auto-approved application
+        // already gets ApproveVendorApplicationAction's own "you're
+        // approved" email, so a "we received it" email right after would
+        // be redundant. Sent after the transaction commits, and never
+        // allowed to turn a successful submission into a 500.
+        if (! $autoApproved) {
+            try {
+                Notification::route('mail', $application->email)
+                    ->notify(new VendorApplicationReceivedNotification($application));
+            } catch (Throwable $exception) {
+                report($exception);
+            }
+        }
+
+        return $application;
     }
 
     private function isAutoApproved(): bool

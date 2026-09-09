@@ -23,10 +23,11 @@ function emailTemplateAdmin(): User
 }
 
 test('the seeder creates one template per key, all inactive by default', function () {
-    expect(EmailTemplate::count())->toBe(5)
+    expect(EmailTemplate::count())->toBe(6)
         ->and(EmailTemplate::where('is_active', true)->count())->toBe(0)
         ->and(EmailTemplate::where('key', EmailTemplateKeys::CustomerWelcome)->exists())->toBeTrue()
         ->and(EmailTemplate::where('key', EmailTemplateKeys::OrderConfirmation)->exists())->toBeTrue()
+        ->and(EmailTemplate::where('key', EmailTemplateKeys::VendorApplicationReceived)->exists())->toBeTrue()
         ->and(EmailTemplate::where('key', EmailTemplateKeys::VendorApplicationApproved)->exists())->toBeTrue()
         ->and(EmailTemplate::where('key', EmailTemplateKeys::VendorApplicationRejected)->exists())->toBeTrue()
         ->and(EmailTemplate::where('key', EmailTemplateKeys::MarketingSample)->exists())->toBeTrue();

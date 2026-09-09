@@ -17,9 +17,13 @@ use Illuminate\Notifications\Notification;
  * other notification gets, and — for a recipient with a registered mobile
  * device and an admin-configured OneSignal account (see
  * App\Filament\Pages\PushSettings) — as a native push notification.
- * Queued: a broadcast can target thousands of users at once, and each
- * send must never block the admin's request or one failed mailbox/push
- * from affecting the rest of the run.
+ * Queued: a broadcast can target thousands of users at once. By default
+ * QUEUE_CONNECTION=sync (see .env.example), so this still runs inline
+ * within the admin's request — no worker process required — but switching
+ * to a real queue connection plus `php artisan queue:work` moves the work
+ * off-request for large audiences without any other code change.
+ * SendAdminMessageAction sends to each recipient individually so one
+ * failed mailbox/push can never block the rest of the run either way.
  */
 class AdminBroadcastNotification extends Notification implements ShouldQueue
 {

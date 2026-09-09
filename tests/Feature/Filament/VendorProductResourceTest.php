@@ -15,6 +15,7 @@ use App\Models\Product;
 use App\Models\ProductTag;
 use App\Models\Store;
 use App\Models\Vendor;
+use App\Models\Warehouse;
 use Database\Seeders\RolePermissionSeeder;
 use Filament\Facades\Filament;
 use Illuminate\Http\UploadedFile;
@@ -55,6 +56,7 @@ test('a vendor can create a product with categories, tags and images through the
 
     $vendor = Vendor::factory()->create();
     Store::factory()->for($vendor)->create();
+    $warehouse = Warehouse::create(['vendor_id' => $vendor->id, 'name' => 'Main', 'code' => 'MAIN', 'is_default' => true]);
 
     $categoryA = Category::factory()->create();
     $categoryB = Category::factory()->create();
@@ -85,6 +87,14 @@ test('a vendor can create a product with categories, tags and images through the
         ->toEqual(collect([$categoryA->id, $categoryB->id])->sort()->values()->all())
         ->and($product->tags()->pluck('product_tags.id')->all())->toEqual([$tag->id])
         ->and($product->getMedia('images'))->toHaveCount(1);
+
+    // Without this, the product's stock_quantity/stock_status are just
+    // whatever the form fields said, with no real WarehouseStock backing
+    // them — every "add to cart" attempt on it would fail.
+    $stock = $product->warehouseStocks()->first();
+    expect($stock)->not->toBeNull()
+        ->and($stock->warehouse_id)->toBe($warehouse->id)
+        ->and($stock->on_hand)->toBe(5);
 });
 
 test('a vendor can submit a draft product for review from the table', function () {

@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\StockStatus;
 use App\Enums\StoreStaffStatus;
 use App\Enums\UserType;
 use App\Models\Category;
@@ -9,6 +10,7 @@ use App\Models\Store;
 use App\Models\StoreStaff;
 use App\Models\User;
 use App\Models\Vendor;
+use App\Models\Warehouse;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -47,6 +49,58 @@ test('a vendor can create a product with images, categories and tags', function 
         ->and($product->categories->pluck('id')->all())->toBe([$category->id])
         ->and($product->tags->pluck('id')->all())->toBe([$tag->id])
         ->and($product->getMedia('images'))->toHaveCount(1);
+});
+
+test('a new product is seeded with a real WarehouseStock row matching its requested initial stock quantity', function () {
+    $vendor = Vendor::factory()->create();
+    Store::factory()->create(['vendor_id' => $vendor->id]);
+    $warehouse = Warehouse::create(['vendor_id' => $vendor->id, 'name' => 'Main', 'code' => 'MAIN', 'is_default' => true]);
+    $token = $vendor->user->createToken('t', ['vendor:*'])->plainTextToken;
+
+    $response = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/vendor/products', [
+            'name' => 'Well Stocked Product',
+            'price' => 1500,
+            'stock_status' => 'in_stock',
+            'stock_quantity' => 25,
+        ]);
+
+    $response->assertCreated();
+
+    $product = Product::where('name', 'Well Stocked Product')->firstOrFail();
+    $stock = $product->warehouseStocks()->first();
+
+    expect($stock)->not->toBeNull()
+        ->and($stock->warehouse_id)->toBe($warehouse->id)
+        ->and($stock->on_hand)->toBe(25)
+        ->and($product->stock_quantity)->toBe(25)
+        ->and($product->stock_status)->toBe(StockStatus::InStock);
+});
+
+test('leaving stock quantity blank on a new manage_stock product never leaves it null — it becomes a real, consistent zero', function () {
+    $vendor = Vendor::factory()->create();
+    Store::factory()->create(['vendor_id' => $vendor->id]);
+    Warehouse::create(['vendor_id' => $vendor->id, 'name' => 'Main', 'code' => 'MAIN', 'is_default' => true]);
+    $token = $vendor->user->createToken('t', ['vendor:*'])->plainTextToken;
+
+    // The exact real-world scenario that broke "Add to Cart": a vendor
+    // leaves the stock quantity field blank but the status defaults to
+    // "in_stock" — before this fix, stock_quantity stayed null while
+    // stock_status stayed in_stock, so the product looked purchasable but
+    // every add-to-cart attempt failed with "Only  left in stock."
+    $response = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/vendor/products', [
+            'name' => 'Blank Quantity Product',
+            'price' => 1500,
+            'stock_status' => 'in_stock',
+        ]);
+
+    $response->assertCreated();
+
+    $product = Product::where('name', 'Blank Quantity Product')->firstOrFail();
+
+    expect($product->stock_quantity)->toBe(0)
+        ->and($product->stock_status)->toBe(StockStatus::OutOfStock);
 });
 
 test('an omitted slug is auto-derived and de-duplicated', function () {

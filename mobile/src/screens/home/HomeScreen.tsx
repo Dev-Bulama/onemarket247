@@ -44,7 +44,8 @@ function categoryIcon(name: string): string {
 
 export default function HomeScreen({ navigation }: any) {
   const { user, isAuthenticated } = useAuthStore();
-  const { addItem } = useCartStore();
+  const { addItem, cart } = useCartStore();
+  const cartCount = cart?.items?.length ?? 0;
   const { unreadCount, fetchUnreadCount } = useNotificationStore();
   const { ids: wishlistIds, toggle: toggleWishlist, fetchWishlist } = useWishlistStore();
   const gridColumns = useBootstrapStore(s => s.productGridColumns);
@@ -157,7 +158,12 @@ export default function HomeScreen({ navigation }: any) {
             <IonIcon name="search-outline" size={22} color={COLORS.text} />
           </TouchableOpacity>
           <TouchableOpacity onPress={() => navigation.getParent()?.navigate('CartTab')} style={styles.iconBtn}>
-            <IonIcon name="cart-outline" size={22} color={COLORS.text} />
+            <View>
+              <IonIcon name="cart-outline" size={22} color={COLORS.text} />
+              {cartCount > 0 && (
+                <View style={styles.notifBadge}><Text style={styles.notifBadgeText}>{cartCount > 9 ? '9+' : cartCount}</Text></View>
+              )}
+            </View>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => navigation.navigate('Notifications')} style={styles.iconBtn}>
             <View>

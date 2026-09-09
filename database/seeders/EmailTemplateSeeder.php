@@ -48,6 +48,15 @@ class EmailTemplateSeeder extends Seeder
                 'is_active' => false,
             ],
             [
+                'key' => EmailTemplateKeys::VendorApplicationReceived,
+                'name' => 'Vendor application received',
+                'description' => 'Sent once, right after someone submits a vendor application (skipped if vendor.approval_mode is automatic, since the approval email covers it instead).',
+                'subject' => 'We received your OneMarket247 vendor application',
+                'body' => "Hello {{applicant_name}},\n\nThanks for applying to sell on OneMarket247 as \"{{store_name}}\".\n\nOur team will review your application and documents, and you'll get another email as soon as a decision is made.",
+                'placeholders' => ['applicant_name', 'store_name'],
+                'is_active' => false,
+            ],
+            [
                 'key' => EmailTemplateKeys::VendorApplicationApproved,
                 'name' => 'Vendor application approved',
                 'description' => 'Sent once, right after an admin approves a vendor application.',

@@ -4,10 +4,12 @@ use App\Enums\VendorApplicationStatus;
 use App\Models\Setting;
 use App\Models\User;
 use App\Models\VendorApplication;
+use App\Notifications\VendorApplicationReceivedNotification;
 use Database\Seeders\RolePermissionSeeder;
 use Database\Seeders\SettingsSeeder;
 use Database\Seeders\VendorSubscriptionPlanSeeder;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Testing\TestResponse;
 
@@ -63,6 +65,23 @@ test('automatic approval mode provisions the vendor immediately and tells the ap
     expect($application->status)->toBe(VendorApplicationStatus::Approved)
         ->and($application->vendor_id)->not->toBeNull()
         ->and($application->vendor->store)->not->toBeNull();
+});
+
+test('submitting an application under manual approval sends a "we received it" email', function () {
+    Notification::fake();
+
+    submitVendorApplicationApi();
+
+    Notification::assertSentOnDemand(VendorApplicationReceivedNotification::class);
+});
+
+test('an auto-approved application does not also get the "we received it" email — the approval email covers it', function () {
+    Setting::where('key', 'vendor.approval_mode')->update(['value' => 'automatic']);
+    Notification::fake();
+
+    submitVendorApplicationApi(['email' => 'auto2@example.com']);
+
+    Notification::assertSentOnDemandTimes(VendorApplicationReceivedNotification::class, 0);
 });
 
 test('an application without accepting terms is rejected with a validation error', function () {

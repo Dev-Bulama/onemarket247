@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1\Vendor;
 
+use App\Actions\Inventory\AdjustStockAction;
 use App\Actions\Product\SubmitProductForApprovalAction;
 use App\Enums\ProductStatus;
 use App\Enums\ProductType;
@@ -9,6 +10,7 @@ use App\Enums\StockStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\VendorProductResource;
 use App\Models\Product;
+use App\Models\Vendor;
 use App\Support\Api\ApiResponse;
 use App\Support\Api\Paginated;
 use Illuminate\Http\JsonResponse;
@@ -115,11 +117,31 @@ class ProductController extends Controller
         $validated['slug'] = $validated['slug'] ?? $this->uniqueSlug($validated['name']);
         $validated['type'] = $validated['type'] ?? ProductType::Simple->value;
         $validated['manage_stock'] = $validated['manage_stock'] ?? true;
-        $validated['vendor_id'] = $request->user()->actingVendorId();
+        $vendorId = $request->user()->actingVendorId();
+        $validated['vendor_id'] = $vendorId;
         $validated['status'] = ProductStatus::Draft->value;
+
+        // stock_quantity/stock_status above are just the vendor's requested
+        // *initial* stock — warehouse_stocks is the real source of truth
+        // (see RecalculatesSellableStock's docblock). Without seeding a real
+        // WarehouseStock row here, a product created with, say,
+        // stock_quantity left blank ends up with manage_stock=true,
+        // stock_status=in_stock, but stock_quantity=null — which silently
+        // fails every "add to cart" attempt with a nonsensical "Only  left
+        // in stock" error, since it looks purchasable but never actually
+        // has stock backing it.
+        $initialQuantity = $validated['stock_quantity'] ?? 0;
 
         /** @var Product $product */
         $product = Product::create($validated);
+
+        if ($validated['manage_stock']) {
+            $warehouse = Vendor::find($vendorId)?->defaultWarehouse();
+
+            if ($warehouse) {
+                app(AdjustStockAction::class)->handle($warehouse, $product, $initialQuantity, 'Initial stock at product creation');
+            }
+        }
 
         if ($categories !== null) {
             $product->categories()->sync($categories);
