@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Enums\UserStatus;
 use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
@@ -47,6 +48,12 @@ class ApiLoginRequest extends FormRequest
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages(['email' => 'This account cannot sign in through the API.']);
+        }
+
+        if ($user->status === UserStatus::Deleted) {
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages(['email' => __('auth.failed')]);
         }
 
         if (in_array($user->status->value, ['suspended', 'banned'], true)) {

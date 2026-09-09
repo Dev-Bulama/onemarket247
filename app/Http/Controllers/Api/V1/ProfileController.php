@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Actions\Account\DeleteAccountAction;
 use App\Enums\Gender;
+use App\Enums\UserType;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Support\Api\ApiResponse;
@@ -11,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
 
 class ProfileController extends Controller
 {
@@ -62,6 +65,40 @@ class ProfileController extends Controller
         $request->user()->update(['password' => Hash::make($validated['password'])]);
 
         return ApiResponse::success(message: 'Password updated.');
+    }
+
+    /**
+     * Self-service account deletion — see DeleteAccountAction's docblock
+     * for exactly what this does and doesn't remove. Vendor accounts have
+     * their own business considerations (active store, orders, wallet
+     * balance) and are deliberately not covered by this endpoint; they're
+     * pointed to support instead.
+     */
+    public function destroy(Request $request, DeleteAccountAction $action): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($user->user_type !== UserType::Customer) {
+            return ApiResponse::error(
+                'Vendor accounts can\'t be deleted here — contact support to close a vendor account.',
+                status: 422,
+            );
+        }
+
+        // A social-login-only account never had a password it could
+        // confirm — being authenticated at all (a valid Sanctum token) is
+        // the only confirmation it's able to give.
+        if (! $user->socialAccounts()->exists()) {
+            $validated = $request->validate(['current_password' => ['required', 'string']]);
+
+            if (! Hash::check($validated['current_password'], $user->password)) {
+                throw ValidationException::withMessages(['current_password' => 'The password is incorrect.']);
+            }
+        }
+
+        $action->handle($user);
+
+        return ApiResponse::success(message: 'Your account has been deleted.');
     }
 
     /**

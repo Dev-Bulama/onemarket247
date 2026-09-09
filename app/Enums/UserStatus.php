@@ -10,6 +10,7 @@ enum UserStatus: string implements HasColor, HasLabel
     case Active = 'active';
     case Suspended = 'suspended';
     case Banned = 'banned';
+    case Deleted = 'deleted';
 
     public function getLabel(): string
     {
@@ -17,6 +18,7 @@ enum UserStatus: string implements HasColor, HasLabel
             self::Active => 'Active',
             self::Suspended => 'Suspended',
             self::Banned => 'Banned',
+            self::Deleted => 'Deleted',
         };
     }
 
@@ -26,6 +28,7 @@ enum UserStatus: string implements HasColor, HasLabel
             self::Active => 'success',
             self::Suspended => 'warning',
             self::Banned => 'danger',
+            self::Deleted => 'gray',
         };
     }
 }

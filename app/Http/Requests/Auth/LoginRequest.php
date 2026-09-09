@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Enums\UserStatus;
 use App\Models\LoginHistory;
 use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
@@ -37,6 +38,12 @@ class LoginRequest extends FormRequest
         $this->ensureIsNotRateLimited();
 
         $user = User::where('email', $this->string('email'))->first();
+
+        if ($user && $user->status === UserStatus::Deleted) {
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages(['email' => __('auth.failed')]);
+        }
 
         if ($user && in_array($user->status->value, ['suspended', 'banned'], true)) {
             RateLimiter::hit($this->throttleKey());

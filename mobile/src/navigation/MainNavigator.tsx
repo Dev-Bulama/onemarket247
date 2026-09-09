@@ -30,6 +30,7 @@ import FaqScreen from '../screens/profile/FaqScreen';
 import ContactScreen from '../screens/profile/ContactScreen';
 import PageScreen from '../screens/profile/PageScreen';
 import PreferencesScreen from '../screens/profile/PreferencesScreen';
+import DeleteAccountScreen from '../screens/profile/DeleteAccountScreen';
 import VendorOnboardingScreen from '../screens/vendor/VendorOnboardingScreen';
 
 const Tab = createBottomTabNavigator();
@@ -115,6 +116,7 @@ function ProfileStackNav() {
       <ProfileStack.Screen name="Contact" component={ContactScreen} />
       <ProfileStack.Screen name="Page" component={PageScreen} />
       <ProfileStack.Screen name="Preferences" component={PreferencesScreen} />
+      <ProfileStack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
       <ProfileStack.Screen name="VendorOnboarding" component={VendorOnboardingScreen} />
     </ProfileStack.Navigator>
   );

@@ -104,6 +104,12 @@ export default function ProfileScreen({ navigation }: any) {
           <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
       )}
+
+      {isAuthenticated && !isVendor && (
+        <TouchableOpacity style={styles.deleteAccountBtn} onPress={() => navigation.navigate('DeleteAccount')}>
+          <Text style={styles.deleteAccountText}>Delete Account</Text>
+        </TouchableOpacity>
+      )}
     </ScrollView>
   );
 }
@@ -128,4 +134,6 @@ const styles = StyleSheet.create({
   menuLabel: { flex: 1, fontSize: 14, color: COLORS.text },
   logoutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 24, marginHorizontal: SIZES.screenPadding, borderWidth: 1, borderColor: COLORS.danger, borderRadius: SIZES.borderRadius, paddingVertical: 14 },
   logoutText: { color: COLORS.danger, fontWeight: 'bold', fontSize: 14 },
+  deleteAccountBtn: { alignItems: 'center', marginTop: 16, paddingVertical: 8 },
+  deleteAccountText: { color: COLORS.textMuted, fontSize: 12, textDecorationLine: 'underline' },
 });

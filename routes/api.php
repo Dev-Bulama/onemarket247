@@ -171,6 +171,7 @@ Route::prefix('v1')->group(function () {
         Route::get('profile', [ProfileController::class, 'show']);
         Route::patch('profile', [ProfileController::class, 'update']);
         Route::post('profile/password', [ProfileController::class, 'updatePassword']);
+        Route::delete('profile', [ProfileController::class, 'destroy']);
 
         Route::get('notifications', [NotificationController::class, 'index']);
         Route::patch('notifications/{notification}/read', [NotificationController::class, 'markRead']);

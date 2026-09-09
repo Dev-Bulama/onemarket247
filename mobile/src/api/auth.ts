@@ -27,4 +27,7 @@ export const authApi = {
 
   updatePassword: (data: { current_password: string; password: string; password_confirmation: string }) =>
     apiClient.post('/profile/password', data),
+
+  deleteAccount: (currentPassword?: string) =>
+    apiClient.delete('/profile', { data: currentPassword ? { current_password: currentPassword } : {} }),
 };
