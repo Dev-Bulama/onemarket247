@@ -13,3 +13,7 @@ Artisan::command('inspire', function () {
 // etc. — see docs/architecture/12-deployment-roadmap.md §6) are added as
 // their owning phases land.
 Schedule::command('queue:prune-failed --hours=48')->daily();
+
+// Requires the server's crontab to run `php artisan schedule:run` every
+// minute — see ResolveSiteVisitCountries's docblock.
+Schedule::command('analytics:resolve-site-visit-countries')->hourly();

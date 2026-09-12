@@ -10,7 +10,14 @@ use App\Http\Controllers\Storefront\LocaleController;
 use App\Http\Controllers\VendorDocumentDownloadController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [HomeController::class, 'index'])->name('home');
+// track.visit is scoped to these storefront-facing routes only (see
+// TrackSiteVisit's docblock) — never applied to the admin/vendor Filament
+// panels or the API/mobile app.
+Route::middleware('track.visit')->group(function () {
+    Route::get('/', [HomeController::class, 'index'])->name('home');
+
+    require __DIR__.'/storefront.php';
+});
 
 Route::post('locale/{code}', [LocaleController::class, 'switch'])->name('locale.switch');
 Route::post('currency/{code}', [CurrencyController::class, 'switch'])->name('currency.switch');
@@ -38,4 +45,3 @@ Route::get('admin/translation-report/export', ProductTranslationExportController
 
 require __DIR__.'/auth.php';
 require __DIR__.'/vendor.php';
-require __DIR__.'/storefront.php';

@@ -7,6 +7,7 @@ use App\Http\Middleware\SetDeliveryLocation;
 use App\Http\Middleware\SetDisplayCurrency;
 use App\Http\Middleware\SetLocale;
 use App\Http\Middleware\ShareStorefrontNavigation;
+use App\Http\Middleware\TrackSiteVisit;
 use App\Support\Api\ApiResponse;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -33,7 +34,10 @@ return Application::configure(basePath: dirname(__DIR__))
             SetApiLocale::class,
             SetApiDisplayCurrency::class,
         ]);
-        $middleware->alias(['vendor.access' => EnsureVendorAccess::class]);
+        $middleware->alias([
+            'vendor.access' => EnsureVendorAccess::class,
+            'track.visit' => TrackSiteVisit::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
