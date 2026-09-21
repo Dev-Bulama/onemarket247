@@ -200,6 +200,35 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
             && ($staff->store?->vendor?->canAccessDashboard() ?? false);
     }
 
+    /**
+     * A specific reason canAccessVendorDashboard() returned false, shown on
+     * the vendor login form instead of a generic "can't access right now" —
+     * see AuthenticatedSessionController::store() and
+     * VendorStatus::loginDeniedMessage().
+     */
+    public function vendorLoginDeniedMessage(): string
+    {
+        $fallback = 'Your store account cannot access the dashboard right now. Contact support for assistance.';
+
+        if ($this->user_type === UserType::VendorOwner) {
+            return $this->vendor?->status->loginDeniedMessage() ?? $fallback;
+        }
+
+        $staff = $this->storeStaff()
+            ->with(['store' => fn ($query) => $query->withoutGlobalScopes()->with('vendor')])
+            ->first();
+
+        if ($staff?->status === StoreStaffStatus::Suspended) {
+            return 'Your staff access has been suspended. Contact your store owner for assistance.';
+        }
+
+        if ($staff?->status === StoreStaffStatus::Invited) {
+            return 'Your staff invitation has not been activated yet. Check your email for the invitation link.';
+        }
+
+        return $staff?->store?->vendor?->status->loginDeniedMessage() ?? $fallback;
+    }
+
     public function sendPasswordResetNotification($token): void
     {
         if (in_array($this->user_type, [UserType::VendorOwner, UserType::VendorStaff], true)) {

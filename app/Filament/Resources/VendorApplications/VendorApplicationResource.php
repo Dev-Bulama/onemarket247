@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\VendorApplications;
 
+use App\Filament\RelationManagers\VendorDocumentsRelationManager;
 use App\Filament\Resources\VendorApplications\Pages\ListVendorApplications;
 use App\Filament\Resources\VendorApplications\Pages\ViewVendorApplication;
 use App\Filament\Resources\VendorApplications\Tables\VendorApplicationsTable;
@@ -103,6 +104,13 @@ class VendorApplicationResource extends Resource
                     TextEntry::make('rejection_reason')->placeholder('—')->columnSpanFull(),
                 ]),
         ]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            VendorDocumentsRelationManager::class,
+        ];
     }
 
     public static function getPages(): array

@@ -23,8 +23,14 @@ class PasswordResetLinkController extends Controller
             $request->only('email'),
         );
 
-        return $status === Password::RESET_LINK_SENT
-            ? back()->with('status', __($status))
-            : back()->withErrors(['email' => __($status)]);
+        // Only a genuine throttle is surfaced as an error. An unknown email
+        // (Password::INVALID_USER) gets the exact same generic success
+        // message as a real send, so a prober can never learn whether a
+        // given address has a vendor account from this form's response.
+        if ($status === Password::RESET_THROTTLED) {
+            return back()->withErrors(['email' => __($status)]);
+        }
+
+        return back()->with('status', __(Password::RESET_LINK_SENT));
     }
 }

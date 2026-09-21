@@ -6,6 +6,7 @@ use App\Enums\VendorDocumentType;
 use App\Models\Setting;
 use App\Models\VendorApplication;
 use App\Models\VendorDocument;
+use App\Notifications\NewVendorApplicationNotification;
 use App\Notifications\VendorApplicationReceivedNotification;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -68,6 +69,13 @@ class SubmitVendorApplicationAction
             } catch (Throwable $exception) {
                 report($exception);
             }
+        }
+
+        try {
+            Notification::route('mail', config('mail.from.address'))
+                ->notify(new NewVendorApplicationNotification($application));
+        } catch (Throwable $exception) {
+            report($exception);
         }
 
         return $application;

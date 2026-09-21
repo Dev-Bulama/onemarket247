@@ -13,7 +13,7 @@ class VendorApplication extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'vendor_id', 'vendor_subscription_plan_id', 'full_name', 'email', 'phone',
+        'reference_number', 'user_id', 'vendor_id', 'vendor_subscription_plan_id', 'full_name', 'email', 'phone',
         'business_name', 'store_name', 'store_slug', 'country_id', 'state_id', 'city_id',
         'postal_code', 'address', 'registration_number', 'tax_identification_number',
         'agent_id_number', 'agent_full_name', 'agent_phone',
@@ -71,5 +71,14 @@ class VendorApplication extends Model
     public function documents(): HasMany
     {
         return $this->hasMany(VendorDocument::class);
+    }
+
+    protected static function booted(): void
+    {
+        static::created(function (self $application) {
+            if ($application->reference_number === null) {
+                $application->updateQuietly(['reference_number' => sprintf('VA-%d-%06d', $application->created_at->year, $application->id)]);
+            }
+        });
     }
 }

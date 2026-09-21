@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Vendors;
 
+use App\Filament\RelationManagers\VendorDocumentsRelationManager;
 use App\Filament\Resources\Vendors\Pages\EditVendor;
 use App\Filament\Resources\Vendors\Pages\ListVendors;
 use App\Filament\Resources\Vendors\RelationManagers\WalletTransactionsRelationManager;
@@ -49,6 +50,7 @@ class VendorResource extends Resource
     public static function getRelations(): array
     {
         return [
+            VendorDocumentsRelationManager::class,
             WithdrawalsRelationManager::class,
             WalletTransactionsRelationManager::class,
         ];

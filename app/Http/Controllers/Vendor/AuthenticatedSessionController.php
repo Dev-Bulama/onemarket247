@@ -24,10 +24,12 @@ class AuthenticatedSessionController extends Controller
 
         // Covers both a suspended vendor owner and a staff member whose
         // owning store's vendor is suspended — see User::canAccessVendorDashboard()
-        // and docs/architecture/07-vendor-dashboard.md §3.
+        // and docs/architecture/07-vendor-dashboard.md §3. The message is
+        // specific to *why* (pending review, suspended, rejected,
+        // deactivated, banned) — see User::vendorLoginDeniedMessage().
         if (! $user->canAccessVendorDashboard()) {
             throw ValidationException::withMessages([
-                'email' => 'Your store account cannot access the dashboard right now.',
+                'email' => $user->vendorLoginDeniedMessage(),
             ]);
         }
 

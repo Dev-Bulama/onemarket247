@@ -2,13 +2,16 @@
 
 use App\Enums\VendorApplicationStatus;
 use App\Models\Setting;
+use App\Models\SmsSetting;
 use App\Models\User;
 use App\Models\VendorApplication;
+use App\Notifications\NewVendorApplicationNotification;
 use App\Notifications\VendorApplicationReceivedNotification;
 use Database\Seeders\RolePermissionSeeder;
 use Database\Seeders\SettingsSeeder;
 use Database\Seeders\VendorSubscriptionPlanSeeder;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Testing\TestResponse;
@@ -82,6 +85,43 @@ test('an auto-approved application does not also get the "we received it" email 
     submitVendorApplicationApi(['email' => 'auto2@example.com']);
 
     Notification::assertSentOnDemandTimes(VendorApplicationReceivedNotification::class, 0);
+});
+
+test('a new application always notifies the platform inbox, regardless of approval mode', function () {
+    Notification::fake();
+
+    submitVendorApplicationApi();
+
+    Notification::assertSentOnDemand(
+        NewVendorApplicationNotification::class,
+        fn ($notification, $channels, $notifiable) => $notifiable->routes['mail'] === config('mail.from.address'),
+    );
+});
+
+test('a submitted application is assigned a unique reference number', function () {
+    submitVendorApplicationApi();
+
+    $application = VendorApplication::where('email', 'jane@example.com')->firstOrFail();
+    expect($application->reference_number)->not->toBeNull()
+        ->and($application->reference_number)->toStartWith('VA-'.now()->year.'-');
+});
+
+test('an active SMS gateway sends the applicant a confirmation text', function () {
+    Http::fake(['api.sandbox.africastalking.com/*' => Http::response(['SMSMessageData' => []])]);
+    SmsSetting::current()->update(['is_active' => true, 'sandbox' => true, 'username' => 'sandbox', 'api_key' => 'test-key']);
+
+    submitVendorApplicationApi();
+
+    Http::assertSent(fn ($request) => str_contains($request->url(), 'africastalking.com')
+        && $request['to'] === '+15551234567');
+});
+
+test('an inactive SMS gateway never attempts to send', function () {
+    Http::fake();
+
+    submitVendorApplicationApi();
+
+    Http::assertNothingSent();
 });
 
 test('an application without accepting terms is rejected with a validation error', function () {

@@ -47,4 +47,22 @@ enum VendorStatus: string implements HasColor, HasLabel
     {
         return $this === self::Approved;
     }
+
+    /**
+     * Shown on the vendor login form when this status blocks dashboard
+     * access, so a real (already-provisioned) vendor gets a specific reason
+     * instead of a generic "can't access right now" — see
+     * AuthenticatedSessionController::store().
+     */
+    public function loginDeniedMessage(): string
+    {
+        return match ($this) {
+            self::Draft, self::Pending, self::UnderReview => "Your vendor application is still under review. We'll email you once a decision has been made.",
+            self::Rejected => 'Your vendor application was not approved. Contact support for more information.',
+            self::Suspended => 'Your vendor account has been suspended. Contact support for assistance.',
+            self::Deactivated => 'Your vendor account has been deactivated. Contact support to reactivate it.',
+            self::Banned => 'Your vendor account has been banned from the platform.',
+            self::Approved => 'Your store account cannot access the dashboard right now. Contact support for assistance.',
+        };
+    }
 }
