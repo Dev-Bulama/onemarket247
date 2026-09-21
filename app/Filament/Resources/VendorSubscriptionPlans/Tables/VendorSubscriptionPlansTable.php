@@ -20,7 +20,7 @@ class VendorSubscriptionPlansTable
                 TextColumn::make('name')
                     ->searchable(),
                 TextColumn::make('price')
-                    ->money(PriceDisplay::baseCurrencyCode())
+                    ->money(PriceDisplay::baseCurrencyCode(), divideBy: 100)
                     ->sortable(),
                 TextColumn::make('billing_period')
                     ->badge(),

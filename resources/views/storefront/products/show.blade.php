@@ -28,9 +28,9 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
         <div>
-            <div class="aspect-square bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center">
+            <div id="product-gallery-main" class="aspect-square bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center">
                 @if ($images->isNotEmpty())
-                    <img src="{{ $images->first()->getUrl() }}" alt="{{ $product->translatedName() }}" class="h-full w-full object-cover">
+                    <img id="product-gallery-main-image" src="{{ $images->first()->getUrl() }}" alt="{{ $product->translatedName() }}" class="h-full w-full object-cover">
                 @else
                     <span class="text-gray-300 text-5xl"><i class="fa-solid fa-image" aria-hidden="true"></i></span>
                 @endif
@@ -38,10 +38,15 @@
 
             @if ($images->count() > 1)
                 <div class="mt-3 grid grid-cols-5 gap-2">
-                    @foreach ($images as $image)
-                        <div class="aspect-square bg-gray-100 rounded overflow-hidden">
-                            <img src="{{ $image->getUrl('thumb') ?: $image->getUrl() }}" alt="{{ $product->translatedName() }}" class="h-full w-full object-cover">
-                        </div>
+                    @foreach ($images as $index => $image)
+                        <button
+                            type="button"
+                            onclick="document.getElementById('product-gallery-main-image').src = this.dataset.fullUrl; document.querySelectorAll('.product-gallery-thumb').forEach(el => el.classList.remove('ring-2', 'ring-brand-orange')); this.classList.add('ring-2', 'ring-brand-orange');"
+                            data-full-url="{{ $image->getUrl() }}"
+                            class="product-gallery-thumb aspect-square bg-gray-100 rounded overflow-hidden {{ $index === 0 ? 'ring-2 ring-brand-orange' : '' }}"
+                        >
+                            <img src="{{ $image->getUrl('thumb') ?: $image->getUrl() }}" alt="{{ $product->translatedName() }}" class="h-full w-full object-cover pointer-events-none">
+                        </button>
                     @endforeach
                 </div>
             @endif

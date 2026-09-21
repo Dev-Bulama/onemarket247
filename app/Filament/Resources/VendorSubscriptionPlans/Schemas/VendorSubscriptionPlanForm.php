@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\VendorSubscriptionPlans\Schemas;
 
 use App\Enums\BillingPeriod;
+use App\Support\Filament\MinorUnitsInput;
+use App\Support\PriceDisplay;
 use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -29,7 +31,10 @@ class VendorSubscriptionPlanForm
                     ->required()
                     ->numeric()
                     ->default(0)
-                    ->helperText('Minor currency units (e.g. cents). 0 = free plan.'),
+                    ->prefix(PriceDisplay::baseCurrencyCode())
+                    ->helperText('The plan price, e.g. 29.99. 0 = free plan.')
+                    ->afterStateHydrated(MinorUnitsInput::hydrate())
+                    ->dehydrateStateUsing(MinorUnitsInput::dehydrate()),
                 Select::make('billing_period')
                     ->options(BillingPeriod::class)
                     ->default('monthly')

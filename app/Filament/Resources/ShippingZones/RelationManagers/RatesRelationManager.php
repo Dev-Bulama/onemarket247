@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\ShippingZones\RelationManagers;
 
 use App\Enums\ShippingRateType;
+use App\Support\Filament\MinorUnitsInput;
 use App\Support\PriceDisplay;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
@@ -41,17 +42,26 @@ class RatesRelationManager extends RelationManager
                 ->numeric()
                 ->required()
                 ->default(0)
-                ->helperText('Minor currency units (e.g. cents).')
+                ->prefix(PriceDisplay::baseCurrencyCode())
+                ->helperText('e.g. 4.99.')
+                ->afterStateHydrated(MinorUnitsInput::hydrate())
+                ->dehydrateStateUsing(MinorUnitsInput::dehydrate())
                 ->visible(fn (Get $get) => $get('rate_type') !== ShippingRateType::Free),
             TextInput::make('per_kg_amount')
                 ->label('Per kilogram amount')
                 ->numeric()
-                ->helperText('Minor currency units (e.g. cents), added per kg of shipment weight.')
+                ->prefix(PriceDisplay::baseCurrencyCode())
+                ->helperText('Added per kg of shipment weight, e.g. 1.50.')
+                ->afterStateHydrated(MinorUnitsInput::hydrate())
+                ->dehydrateStateUsing(MinorUnitsInput::dehydrate())
                 ->visible(fn (Get $get) => $get('rate_type') === ShippingRateType::PerWeight),
             TextInput::make('free_shipping_min_amount')
                 ->label('Free shipping threshold (optional)')
                 ->numeric()
-                ->helperText('Order subtotal (minor units) at or above which shipping becomes free, regardless of rate type.'),
+                ->prefix(PriceDisplay::baseCurrencyCode())
+                ->helperText('Order subtotal at or above which shipping becomes free, regardless of rate type, e.g. 50.00.')
+                ->afterStateHydrated(MinorUnitsInput::hydrate())
+                ->dehydrateStateUsing(MinorUnitsInput::dehydrate()),
             Toggle::make('is_active')
                 ->default(true),
             TextInput::make('sort_order')

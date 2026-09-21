@@ -4,6 +4,8 @@ namespace App\Filament\Resources\Products\Schemas;
 
 use App\Enums\ProductType;
 use App\Enums\StockStatus;
+use App\Support\Filament\MinorUnitsInput;
+use App\Support\PriceDisplay;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -54,10 +56,16 @@ class ProductForm
                     ->columnSpanFull(),
                 TextInput::make('price')
                     ->numeric()
-                    ->helperText('Minor currency units (e.g. cents).'),
+                    ->prefix(PriceDisplay::baseCurrencyCode())
+                    ->helperText('The selling price, e.g. 29.99.')
+                    ->afterStateHydrated(MinorUnitsInput::hydrate())
+                    ->dehydrateStateUsing(MinorUnitsInput::dehydrate()),
                 TextInput::make('compare_at_price')
                     ->numeric()
-                    ->helperText('Minor currency units (e.g. cents).'),
+                    ->prefix(PriceDisplay::baseCurrencyCode())
+                    ->helperText('Optional "was" price shown struck through, e.g. 39.99.')
+                    ->afterStateHydrated(MinorUnitsInput::hydrate())
+                    ->dehydrateStateUsing(MinorUnitsInput::dehydrate()),
                 Toggle::make('manage_stock')
                     ->default(true),
                 TextInput::make('stock_quantity')

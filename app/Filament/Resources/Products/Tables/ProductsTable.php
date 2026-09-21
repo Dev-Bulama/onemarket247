@@ -41,7 +41,7 @@ class ProductsTable
                     ->badge()
                     ->sortable(),
                 TextColumn::make('price')
-                    ->money(PriceDisplay::baseCurrencyCode())
+                    ->money(PriceDisplay::baseCurrencyCode(), divideBy: 100)
                     ->placeholder('Varies')
                     ->sortable(),
                 TextColumn::make('stock_status')

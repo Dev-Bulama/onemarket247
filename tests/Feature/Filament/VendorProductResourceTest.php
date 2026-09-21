@@ -71,7 +71,7 @@ test('a vendor can create a product with categories, tags and images through the
             'type' => ProductType::Simple->value,
             'categories' => [$categoryA->id, $categoryB->id],
             'tags' => [$tag->id],
-            'price' => 1999,
+            'price' => 19.99,
             'stock_quantity' => 5,
             'stock_status' => 'in_stock',
             'images' => [UploadedFile::fake()->image('widget.jpg')->store('tmp-product-media', 'public')],
@@ -83,6 +83,7 @@ test('a vendor can create a product with categories, tags and images through the
 
     expect($product->vendor_id)->toBe($vendor->id)
         ->and($product->status)->toBe(ProductStatus::Draft)
+        ->and($product->price)->toBe(1999)
         ->and($product->categories()->pluck('categories.id')->sort()->values()->all())
         ->toEqual(collect([$categoryA->id, $categoryB->id])->sort()->values()->all())
         ->and($product->tags()->pluck('product_tags.id')->all())->toEqual([$tag->id])
@@ -134,12 +135,13 @@ test('a vendor can add a variation with attribute values through the relation ma
         ])
         ->callTableAction('create', data: [
             'sku' => 'VAR-1',
-            'price' => 999,
+            'price' => 9.99,
             'stock_quantity' => 3,
             'attributeValues' => [$value->id],
         ]);
 
     expect($product->variations()->count())->toBe(1)
+        ->and($product->variations()->first()->price)->toBe(999)
         ->and($product->variations()->first()->attributeValues()->pluck('attribute_values.id')->all())
         ->toEqual([$value->id]);
 });

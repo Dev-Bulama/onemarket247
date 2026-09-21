@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\Stores\Schemas;
 
 use App\Enums\StoreStatus;
+use App\Support\Filament\MinorUnitsInput;
+use App\Support\PriceDisplay;
 use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -57,7 +59,10 @@ class StoreForm
                 Toggle::make('is_featured'),
                 TextInput::make('minimum_order_amount')
                     ->numeric()
-                    ->helperText('Minor currency units (e.g. cents).'),
+                    ->prefix(PriceDisplay::baseCurrencyCode())
+                    ->helperText('Optional minimum order amount for this store, e.g. 20.00.')
+                    ->afterStateHydrated(MinorUnitsInput::hydrate())
+                    ->dehydrateStateUsing(MinorUnitsInput::dehydrate()),
                 TextInput::make('seo_title')
                     ->maxLength(255),
                 TextInput::make('seo_description')

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Vendor\Resources\Products\RelationManagers;
 
+use App\Support\Filament\MinorUnitsInput;
 use App\Support\PriceDisplay;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
@@ -32,10 +33,16 @@ class VariationsRelationManager extends RelationManager
                 TextInput::make('price')
                     ->required()
                     ->numeric()
-                    ->helperText('Minor currency units (e.g. cents).'),
+                    ->prefix(PriceDisplay::baseCurrencyCode())
+                    ->helperText('The selling price for this variation, e.g. 29.99.')
+                    ->afterStateHydrated(MinorUnitsInput::hydrate())
+                    ->dehydrateStateUsing(MinorUnitsInput::dehydrate()),
                 TextInput::make('compare_at_price')
                     ->numeric()
-                    ->helperText('Minor currency units (e.g. cents).'),
+                    ->prefix(PriceDisplay::baseCurrencyCode())
+                    ->helperText('Optional "was" price shown struck through, e.g. 39.99.')
+                    ->afterStateHydrated(MinorUnitsInput::hydrate())
+                    ->dehydrateStateUsing(MinorUnitsInput::dehydrate()),
                 TextInput::make('stock_quantity')
                     ->required()
                     ->numeric()
@@ -60,7 +67,7 @@ class VariationsRelationManager extends RelationManager
                     ->badge()
                     ->label('Attributes'),
                 TextColumn::make('price')
-                    ->money(PriceDisplay::baseCurrencyCode()),
+                    ->money(PriceDisplay::baseCurrencyCode(), divideBy: 100),
                 TextColumn::make('stock_quantity')
                     ->numeric(),
                 IconColumn::make('is_active')
