@@ -11,6 +11,7 @@ export interface HomePayload {
   recommended_near_you: Product[];
   brands: Brand[];
   stores: Store[];
+  spotlight_products: Product[];
 }
 
 export const homeApi = {

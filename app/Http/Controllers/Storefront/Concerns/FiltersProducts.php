@@ -6,18 +6,21 @@ use App\Enums\ProductStatus;
 use App\Enums\StockStatus;
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\City;
+use App\Models\Store;
+use App\Models\Vendor;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
 /**
- * Shared category/brand/price/stock filtering, sorting, and pagination for
- * every storefront product listing (shop, category, brand, collection,
- * search, store). Every page using this trait is expected to have already
- * scoped $query to its own concern (e.g. a single category or store)
- * before calling filteredProducts() — this only applies the *shopper*
- * controls that are common across all of them.
+ * Shared category/brand/vendor/location/price/stock filtering, sorting, and
+ * pagination for every storefront product listing (shop, category, brand,
+ * collection, search, store). Every page using this trait is expected to
+ * have already scoped $query to its own concern (e.g. a single category or
+ * store) before calling filteredProducts() — this only applies the
+ * *shopper* controls that are common across all of them.
  */
 trait FiltersProducts
 {
@@ -31,6 +34,28 @@ trait FiltersProducts
 
         if ($brandId = $request->integer('brand_id')) {
             $query->where('brand_id', $brandId);
+        }
+
+        if ($vendorIds = $this->integerArray($request, 'vendor_id')) {
+            $query->whereIn('vendor_id', $vendorIds);
+        }
+
+        $countryIds = $this->integerArray($request, 'country_id');
+        $stateIds = $this->integerArray($request, 'state_id');
+        $cityIds = $this->integerArray($request, 'city_id');
+
+        if ($countryIds || $stateIds || $cityIds) {
+            $query->whereHas('vendor.store', function (Builder $q) use ($countryIds, $stateIds, $cityIds) {
+                if ($countryIds) {
+                    $q->whereIn('country_id', $countryIds);
+                }
+                if ($stateIds) {
+                    $q->whereIn('state_id', $stateIds);
+                }
+                if ($cityIds) {
+                    $q->whereIn('city_id', $cityIds);
+                }
+            });
         }
 
         if ($request->filled('min_price')) {
@@ -70,13 +95,38 @@ trait FiltersProducts
     }
 
     /**
-     * @return array{categories: Collection, brands: Collection}
+     * @return array{categories: Collection, brands: Collection, vendors: Collection, cities: Collection}
      */
     protected function filterOptions(): array
     {
         return [
             'categories' => Category::where('is_active', true)->orderBy('name')->get(),
             'brands' => Brand::where('is_active', true)->orderBy('name')->get(),
+            'vendors' => Vendor::query()
+                ->whereHas('products', fn (Builder $q) => $q->where('status', ProductStatus::Published))
+                ->orderBy('business_name')
+                ->get(['id', 'business_name']),
+            'cities' => City::query()
+                ->whereIn('id', Store::query()
+                    ->whereHas('vendor.products', fn (Builder $q) => $q->where('status', ProductStatus::Published))
+                    ->whereNotNull('city_id')
+                    ->pluck('city_id'))
+                ->orderBy('name')
+                ->get(['id', 'name']),
         ];
+    }
+
+    /**
+     * @return int[]
+     */
+    private function integerArray(Request $request, string $key): array
+    {
+        $value = $request->query($key);
+
+        if (! is_array($value)) {
+            return [];
+        }
+
+        return array_values(array_filter(array_map('intval', $value)));
     }
 }

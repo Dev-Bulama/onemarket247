@@ -1,13 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator, Dimensions, Image, ScrollView, StyleSheet, Text,
+  ActivityIndicator, Dimensions, Image, ScrollView, Share, StyleSheet, Text,
   TextInput, TouchableOpacity, View,
 } from 'react-native';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { WebView } from 'react-native-webview';
 import { COLORS, SIZES } from '../../constants';
 import { productsApi } from '../../api/products';
-import { apiErrorMessage } from '../../api/client';
+import { apiErrorMessage, getWebUrl } from '../../api/client';
 import { ProductDetail, ProductVariation, Review } from '../../types';
 import { useCartStore } from '../../store/cartStore';
 import { useAuthStore } from '../../store/authStore';
@@ -157,6 +157,15 @@ export default function ProductDetailScreen({ route, navigation }: any) {
     }
   };
 
+  const handleShare = async () => {
+    const url = getWebUrl(`products/${product.slug}`);
+    try {
+      await Share.share({ message: `${product.name}\n${url}`, url, title: product.name });
+    } catch {
+      // Share sheet dismissed/cancelled — nothing to do.
+    }
+  };
+
   const images = product.images.length > 0 ? product.images : [{ url: '', thumbnail: '' }];
   const mainImageUrl = matchedVariation?.image || images[activeImage]?.url;
 
@@ -169,6 +178,9 @@ export default function ProductDetailScreen({ route, navigation }: any) {
             <IonIcon name="arrow-back" size={22} color={COLORS.text} />
           </TouchableOpacity>
           <View style={styles.headerRightIcons}>
+            <TouchableOpacity style={styles.headerIconBtn} onPress={handleShare}>
+              <IonIcon name="share-social-outline" size={20} color={COLORS.text} />
+            </TouchableOpacity>
             <TouchableOpacity style={styles.headerIconBtn} onPress={handleAddToCompare}>
               <IonIcon name={addedToCompare ? 'git-compare' : 'git-compare-outline'} size={20} color={addedToCompare ? COLORS.primary : COLORS.text} />
             </TouchableOpacity>

@@ -10,6 +10,7 @@ import { useWishlistStore } from '../../store/wishlistStore';
 import { useBootstrapStore } from '../../store/bootstrapStore';
 import { useLocaleStore } from '../../store/localeStore';
 import ProductCard, { computeGridCardWidth } from '../../components/ProductCard';
+import ProductFilterModal, { AppliedFilters } from '../../components/ProductFilterModal';
 import { apiErrorMessage } from '../../api/client';
 
 const SORT_OPTIONS: { label: string; value: ProductFilters['sort'] }[] = [
@@ -47,12 +48,20 @@ export default function ProductListScreen({ route, navigation }: any) {
   const [error, setError] = useState('');
   const [sort, setSort] = useState<ProductFilters['sort']>('latest');
   const [sortModalVisible, setSortModalVisible] = useState(false);
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [appliedFilters, setAppliedFilters] = useState<AppliedFilters>({});
 
   const load = useCallback(async (targetPage: number) => {
     if (targetPage === 1) setLoading(true); else setLoadingMore(true);
     setError('');
     try {
-      const res = await productsApi.list({ category_id: categoryId, brand_id: brandId, sort, page: targetPage });
+      const res = await productsApi.list({
+        category_id: categoryId,
+        brand_id: brandId,
+        sort,
+        page: targetPage,
+        ...appliedFilters,
+      });
       setProducts(prev => (targetPage === 1 ? res.data.data : [...prev, ...res.data.data]));
       setPage(res.data.meta.pagination.current_page);
       setLastPage(res.data.meta.pagination.last_page);
@@ -62,17 +71,27 @@ export default function ProductListScreen({ route, navigation }: any) {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [categoryId, brandId, sort]);
+  }, [categoryId, brandId, sort, appliedFilters]);
 
   useEffect(() => { load(1); }, [load, language, currency]);
 
   const activeSortLabel = SORT_OPTIONS.find(o => o.value === sort)?.label ?? 'Latest';
+  const activeFilterCount =
+    (appliedFilters.vendor_id?.length ?? 0) +
+    (appliedFilters.city_id?.length ?? 0) +
+    (appliedFilters.min_price != null ? 1 : 0) +
+    (appliedFilters.max_price != null ? 1 : 0) +
+    (appliedFilters.in_stock ? 1 : 0);
 
   return (
     <View style={styles.flex}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}><IonIcon name="arrow-back" size={22} color={COLORS.text} /></TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>{title ?? 'Products'}</Text>
+        <TouchableOpacity onPress={() => setFilterModalVisible(true)} style={styles.sortBtn}>
+          <IonIcon name="filter-outline" size={14} color={COLORS.text} />
+          <Text style={styles.sortBtnText}>Filter{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}</Text>
+        </TouchableOpacity>
         <TouchableOpacity onPress={() => setSortModalVisible(true)} style={styles.sortBtn}>
           <Text style={styles.sortBtnText}>{activeSortLabel}</Text>
           <IonIcon name="chevron-down" size={14} color={COLORS.text} />
@@ -127,6 +146,13 @@ export default function ProductListScreen({ route, navigation }: any) {
           </View>
         </TouchableOpacity>
       )}
+
+      <ProductFilterModal
+        visible={filterModalVisible}
+        onClose={() => setFilterModalVisible(false)}
+        filters={appliedFilters}
+        onApply={setAppliedFilters}
+      />
     </View>
   );
 }

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Storefront;
 
+use App\Actions\Product\SpotlightProductsAction;
+use App\Enums\SpotlightDisplayArea;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Storefront\Concerns\FiltersProducts;
 use App\Models\Category;
@@ -27,7 +29,7 @@ class CategoryController extends Controller
         return view('storefront.categories.index', ['categories' => $categories]);
     }
 
-    public function show(Request $request, Category $category, ?Category $subcategory = null): View
+    public function show(Request $request, Category $category, SpotlightProductsAction $spotlightProducts, ?Category $subcategory = null): View
     {
         if ($subcategory && $subcategory->parent_id !== $category->id) {
             throw new NotFoundHttpException;
@@ -43,11 +45,14 @@ class CategoryController extends Controller
 
         $subcategories = $category->children()->where('is_active', true)->orderBy('sort_order')->get();
 
+        $spotlight = $spotlightProducts->handle(SpotlightDisplayArea::Category, $activeCategory->id);
+
         return view('storefront.categories.show', [
             'category' => $category,
             'subcategory' => $subcategory,
             'subcategories' => $subcategories,
             'products' => $products,
+            'spotlightProducts' => $spotlight,
             ...$this->filterOptions(),
         ]);
     }

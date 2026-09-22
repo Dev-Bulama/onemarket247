@@ -1,6 +1,8 @@
 <?php
 
 use App\Actions\Product\BestSellingProductsAction;
+use App\Actions\Product\SpotlightProductsAction;
+use App\Enums\SpotlightDisplayArea;
 use App\Enums\VendorOrderStatus;
 use App\Models\Brand;
 use App\Models\Category;
@@ -8,6 +10,7 @@ use App\Models\City;
 use App\Models\HeroSlide;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\ProductSpotlight;
 use App\Models\Store;
 use App\Models\Vendor;
 use App\Models\VendorOrder;
@@ -172,4 +175,62 @@ test('a single hero slide renders without carousel dots', function () {
 
 test('the homepage falls back to a placeholder icon when there are no hero slides', function () {
     $this->get('/')->assertOk()->assertSee('fa-bag-shopping', false);
+});
+
+test('an active homepage spotlight product renders in the spotlight section', function () {
+    $product = Product::factory()->create(['name' => 'Spotlighted Widget']);
+    ProductSpotlight::factory()->forArea(SpotlightDisplayArea::Homepage)->create(['product_id' => $product->id]);
+
+    $this->get('/')->assertOk()->assertSeeInOrder(['Spotlight', $product->name]);
+});
+
+test('a spotlight scheduled for the future does not render yet', function () {
+    $product = Product::factory()->create(['name' => 'Future Widget']);
+    ProductSpotlight::factory()->forArea(SpotlightDisplayArea::Homepage)->create([
+        'product_id' => $product->id,
+        'starts_at' => now()->addDay(),
+    ]);
+
+    $spotlight = app(SpotlightProductsAction::class)->handle(SpotlightDisplayArea::Homepage);
+
+    expect($spotlight->pluck('id'))->not->toContain($product->id);
+});
+
+test('an expired spotlight does not render', function () {
+    $product = Product::factory()->create(['name' => 'Expired Spotlight Widget']);
+    ProductSpotlight::factory()->forArea(SpotlightDisplayArea::Homepage)->create([
+        'product_id' => $product->id,
+        'ends_at' => now()->subDay(),
+    ]);
+
+    $spotlight = app(SpotlightProductsAction::class)->handle(SpotlightDisplayArea::Homepage);
+
+    expect($spotlight->pluck('id'))->not->toContain($product->id);
+});
+
+test('an inactive spotlight does not render', function () {
+    $product = Product::factory()->create(['name' => 'Inactive Spotlight Widget']);
+    ProductSpotlight::factory()->forArea(SpotlightDisplayArea::Homepage)->inactive()->create(['product_id' => $product->id]);
+
+    $spotlight = app(SpotlightProductsAction::class)->handle(SpotlightDisplayArea::Homepage);
+
+    expect($spotlight->pluck('id'))->not->toContain($product->id);
+});
+
+test('a spotlight for a different display area does not render on the homepage', function () {
+    $product = Product::factory()->create(['name' => 'Search Only Widget']);
+    ProductSpotlight::factory()->forArea(SpotlightDisplayArea::Search)->create(['product_id' => $product->id]);
+
+    $spotlight = app(SpotlightProductsAction::class)->handle(SpotlightDisplayArea::Homepage);
+
+    expect($spotlight->pluck('id'))->not->toContain($product->id);
+});
+
+test('spotlight products render in admin-chosen position order', function () {
+    $second = Product::factory()->create(['name' => 'Second Spotlight Widget']);
+    $first = Product::factory()->create(['name' => 'First Spotlight Widget']);
+    ProductSpotlight::factory()->forArea(SpotlightDisplayArea::Homepage)->create(['product_id' => $second->id, 'position' => 5]);
+    ProductSpotlight::factory()->forArea(SpotlightDisplayArea::Homepage)->create(['product_id' => $first->id, 'position' => 1]);
+
+    $this->get('/')->assertOk()->assertSeeInOrder([$first->name, $second->name]);
 });

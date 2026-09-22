@@ -88,6 +88,7 @@ Route::prefix('v1')->group(function () {
         Route::get('brands/{slug}', [BrandController::class, 'show']);
 
         Route::get('products', [ProductController::class, 'index']);
+        Route::get('products/filters', [ProductController::class, 'filters']);
         Route::get('products/{product:slug}', [ProductController::class, 'show']);
 
         Route::get('stores', [StoreController::class, 'index']);

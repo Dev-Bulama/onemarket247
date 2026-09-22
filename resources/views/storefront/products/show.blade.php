@@ -9,6 +9,8 @@
 @php
     $images = $product->getMedia('images');
     $videoUrl = $product->getFirstMediaUrl('videos') ?: null;
+    $shareUrl = route('products.show', $product);
+    $shareTitle = $product->translatedName();
     $range = $product->displayPriceRange();
     $price = $product->displayPrice();
     $canOrder = $product->variations->isNotEmpty()
@@ -103,6 +105,50 @@
                     <a href="{{ route('stores.show', $product->vendor->store->slug) }}" class="font-medium text-brand-orange hover:underline">{{ $product->vendor->store->name }}</a>
                 </p>
             @endif
+
+            <div class="mt-4">
+                <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Share this product</p>
+                <div class="flex flex-wrap items-center gap-2">
+                    <a href="https://wa.me/?text={{ urlencode($shareTitle.' '.$shareUrl) }}" target="_blank" rel="noopener" title="Share on WhatsApp" class="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200">
+                        <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
+                    </a>
+                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode($shareUrl) }}" target="_blank" rel="noopener" title="Share on Facebook" class="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200">
+                        <i class="fa-brands fa-facebook-f" aria-hidden="true"></i>
+                    </a>
+                    <a href="https://twitter.com/intent/tweet?url={{ urlencode($shareUrl) }}&text={{ urlencode($shareTitle) }}" target="_blank" rel="noopener" title="Share on X" class="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200">
+                        <i class="fa-brands fa-x-twitter" aria-hidden="true"></i>
+                    </a>
+                    <a href="https://t.me/share/url?url={{ urlencode($shareUrl) }}&text={{ urlencode($shareTitle) }}" target="_blank" rel="noopener" title="Share on Telegram" class="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200">
+                        <i class="fa-brands fa-telegram" aria-hidden="true"></i>
+                    </a>
+                    <a href="mailto:?subject={{ urlencode($shareTitle) }}&body={{ urlencode($shareUrl) }}" title="Share by Email" class="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200">
+                        <i class="fa-solid fa-envelope" aria-hidden="true"></i>
+                    </a>
+                    <button
+                        type="button"
+                        title="Copy link"
+                        onclick="navigator.clipboard.writeText('{{ $shareUrl }}').then(() => { this.dataset.copied = 'true'; this.querySelector('i').className = 'fa-solid fa-check'; setTimeout(() => { this.querySelector('i').className = 'fa-solid fa-link'; }, 2000); });"
+                        class="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    >
+                        <i class="fa-solid fa-link" aria-hidden="true"></i>
+                    </button>
+                    <button
+                        type="button"
+                        id="native-share-btn"
+                        title="Share"
+                        hidden
+                        onclick="navigator.share({ title: '{{ $shareTitle }}', url: '{{ $shareUrl }}' }).catch(() => {});"
+                        class="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    >
+                        <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </div>
+            <script>
+                if (navigator.share) {
+                    document.getElementById('native-share-btn').hidden = false;
+                }
+            </script>
 
             @if ($product->variations->isNotEmpty())
                 <div class="mt-6">

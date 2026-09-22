@@ -1,6 +1,8 @@
 <?php
 
+use App\Enums\SpotlightDisplayArea;
 use App\Models\Product;
+use App\Models\ProductSpotlight;
 
 test('search finds products by name', function () {
     $match = Product::factory()->create(['name' => 'Wireless Bluetooth Headphones']);
@@ -27,4 +29,14 @@ test('search with no query shows a prompt instead of every product', function ()
 
 test('an empty result set is communicated, not a blank page', function () {
     $this->get('/search?q=nonexistentxyz')->assertOk()->assertSee('No products match');
+});
+
+test('a search-area spotlight product is shown above the search results', function () {
+    $spotlighted = Product::factory()->create(['name' => 'Sponsored Widget']);
+    ProductSpotlight::factory()->forArea(SpotlightDisplayArea::Search)->create(['product_id' => $spotlighted->id]);
+    $match = Product::factory()->create(['name' => 'Wireless Bluetooth Headphones']);
+
+    $response = $this->get('/search?q=Bluetooth');
+
+    $response->assertOk()->assertSeeInOrder(['Spotlight', $spotlighted->name, $match->name]);
 });

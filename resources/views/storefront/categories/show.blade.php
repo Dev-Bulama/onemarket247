@@ -30,6 +30,19 @@
                 <p class="text-sm text-gray-600 mb-6">{{ ($subcategory ?? $category)->description }}</p>
             @endif
 
+            @if ($spotlightProducts->isNotEmpty())
+                <div class="mb-8">
+                    <h2 class="text-lg font-bold text-gray-900 mb-3">Spotlight</h2>
+                    <div class="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory">
+                        @foreach ($spotlightProducts as $product)
+                            <div class="w-40 sm:w-48 flex-none snap-start">
+                                @include('storefront.partials.product-card', ['product' => $product])
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
             @if (! $subcategory && $subcategories->isNotEmpty())
                 <div class="flex flex-wrap gap-2 mb-6">
                     @foreach ($subcategories as $child)

@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\SpotlightDisplayArea;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\City;
@@ -7,6 +8,7 @@ use App\Models\Currency;
 use App\Models\HeroSlide;
 use App\Models\Language;
 use App\Models\Product;
+use App\Models\ProductSpotlight;
 use App\Models\ProductTranslation;
 use App\Models\ProductVariation;
 use App\Models\Store;
@@ -58,6 +60,15 @@ test('recommended near you honours city_id/state_id passed as query params, not 
         ->assertJsonPath('data.recommended_near_you.0.name', $nearProduct->name);
 });
 
+test('the home endpoint includes admin-curated homepage spotlight products', function () {
+    $product = Product::factory()->create(['name' => 'Spotlighted Widget']);
+    ProductSpotlight::factory()->forArea(SpotlightDisplayArea::Homepage)->create(['product_id' => $product->id]);
+
+    $this->getJson('/api/v1/home')
+        ->assertOk()
+        ->assertJsonPath('data.spotlight_products.0.name', 'Spotlighted Widget');
+});
+
 test('categories index returns active root categories with their active children', function () {
     $root = Category::factory()->create(['is_active' => true, 'parent_id' => null]);
     Category::factory()->create(['is_active' => true, 'parent_id' => $root->id, 'name' => 'Child']);
@@ -99,6 +110,48 @@ test('product list supports the same filters as the storefront shop page', funct
     $this->getJson('/api/v1/products?sort=price_desc')
         ->assertOk()
         ->assertJsonPath('data.0.name', 'Pricey Widget');
+});
+
+test('product list supports filtering by multiple vendors at once', function () {
+    $vendorA = Vendor::factory()->create();
+    $vendorB = Vendor::factory()->create();
+    $vendorC = Vendor::factory()->create();
+    $matchingA = Product::factory()->create(['vendor_id' => $vendorA->id]);
+    $matchingB = Product::factory()->create(['vendor_id' => $vendorB->id]);
+    Product::factory()->create(['vendor_id' => $vendorC->id]);
+
+    $response = $this->getJson("/api/v1/products?vendor_id[]={$vendorA->id}&vendor_id[]={$vendorB->id}")->assertOk();
+
+    expect($response->json('data.*.id'))->toEqualCanonicalizing([$matchingA->id, $matchingB->id]);
+});
+
+test('product list supports filtering by multiple cities at once', function () {
+    $lagos = City::factory()->create();
+    $kano = City::factory()->create();
+
+    $lagosVendor = Vendor::factory()->create();
+    Store::factory()->create(['vendor_id' => $lagosVendor->id, 'city_id' => $lagos->id]);
+    $lagosProduct = Product::factory()->create(['vendor_id' => $lagosVendor->id]);
+
+    $kanoVendor = Vendor::factory()->create();
+    Store::factory()->create(['vendor_id' => $kanoVendor->id, 'city_id' => $kano->id]);
+    Product::factory()->create(['vendor_id' => $kanoVendor->id]);
+
+    $response = $this->getJson("/api/v1/products?city_id[]={$lagos->id}")->assertOk();
+
+    expect($response->json('data.*.id'))->toBe([$lagosProduct->id]);
+});
+
+test('the product filters endpoint returns vendors and cities with published products', function () {
+    $vendor = Vendor::factory()->create(['business_name' => 'Acme Traders']);
+    $city = City::factory()->create(['name' => 'Lagos']);
+    Store::factory()->create(['vendor_id' => $vendor->id, 'city_id' => $city->id]);
+    Product::factory()->create(['vendor_id' => $vendor->id]);
+
+    $response = $this->getJson('/api/v1/products/filters')->assertOk();
+
+    $response->assertJsonPath('data.vendors.0.name', 'Acme Traders')
+        ->assertJsonPath('data.cities.0.name', 'Lagos');
 });
 
 test('product detail returns the translated name when a translation exists for the active locale', function () {

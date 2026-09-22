@@ -9,6 +9,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useWishlistStore } from '../../store/wishlistStore';
 import { useBootstrapStore } from '../../store/bootstrapStore';
 import ProductCard, { computeGridCardWidth } from '../../components/ProductCard';
+import ProductFilterModal, { AppliedFilters } from '../../components/ProductFilterModal';
 
 const RECENT_SEARCHES = ['headphones', 'smartphone', 'laptop', 'smart watch'];
 
@@ -16,10 +17,18 @@ export default function SearchScreen({ navigation }: any) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Product[] | null>(null);
   const [loading, setLoading] = useState(false);
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [appliedFilters, setAppliedFilters] = useState<AppliedFilters>({});
   const { addItem } = useCartStore();
   const { isAuthenticated } = useAuthStore();
   const { ids: wishlistIds, toggle: toggleWishlist, fetchWishlist } = useWishlistStore();
   const gridColumns = useBootstrapStore(s => s.productGridColumns);
+  const activeFilterCount =
+    (appliedFilters.vendor_id?.length ?? 0) +
+    (appliedFilters.city_id?.length ?? 0) +
+    (appliedFilters.min_price != null ? 1 : 0) +
+    (appliedFilters.max_price != null ? 1 : 0) +
+    (appliedFilters.in_stock ? 1 : 0);
 
   const handleToggleWishlist = (productId: number) => {
     if (!isAuthenticated) {
@@ -33,11 +42,11 @@ export default function SearchScreen({ navigation }: any) {
     if (isAuthenticated) fetchWishlist();
   }, [isAuthenticated, fetchWishlist]);
 
-  const runSearch = async (q: string) => {
+  const runSearch = async (q: string, filters: AppliedFilters = appliedFilters) => {
     if (!q.trim()) return;
     setLoading(true);
     try {
-      const res = await searchApi.search(q.trim());
+      const res = await searchApi.search(q.trim(), filters);
       setResults(res.data.data);
     } finally {
       setLoading(false);
@@ -65,6 +74,12 @@ export default function SearchScreen({ navigation }: any) {
             </TouchableOpacity>
           )}
         </View>
+        {results !== null && (
+          <TouchableOpacity style={styles.filterBtn} onPress={() => setFilterModalVisible(true)}>
+            <IonIcon name="filter-outline" size={16} color={COLORS.text} />
+            <Text style={styles.filterBtnText}>Filter{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {loading && <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 40 }} />}
@@ -109,6 +124,13 @@ export default function SearchScreen({ navigation }: any) {
           )}
         />
       )}
+
+      <ProductFilterModal
+        visible={filterModalVisible}
+        onClose={() => setFilterModalVisible(false)}
+        filters={appliedFilters}
+        onApply={filters => { setAppliedFilters(filters); runSearch(query, filters); }}
+      />
     </View>
   );
 }
@@ -118,6 +140,8 @@ const styles = StyleSheet.create({
   header: { paddingHorizontal: SIZES.screenPadding, paddingTop: 52, paddingBottom: 12, backgroundColor: COLORS.white },
   searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.grayLight, borderRadius: SIZES.borderRadius, paddingHorizontal: 12, borderWidth: 1, borderColor: COLORS.border },
   input: { flex: 1, paddingVertical: 12, fontSize: 13, color: COLORS.text },
+  filterBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 10, paddingVertical: 8, marginTop: 8, alignSelf: 'flex-start' },
+  filterBtnText: { fontSize: 12, color: COLORS.text, fontWeight: '600' },
   recentBox: { padding: SIZES.screenPadding },
   recentTitle: { fontSize: 13, fontWeight: '700', color: COLORS.text, marginBottom: 10 },
   chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },

@@ -154,6 +154,11 @@ class Product extends Model implements HasMedia
         return $this->hasMany(WarehouseStock::class);
     }
 
+    public function spotlights(): HasMany
+    {
+        return $this->hasMany(ProductSpotlight::class);
+    }
+
     public function relatedProducts(): BelongsToMany
     {
         return $this->belongsToMany(self::class, 'related_products', 'product_id', 'related_product_id')

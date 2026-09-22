@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Storefront;
 
 use App\Actions\Product\BestSellingProductsAction;
 use App\Actions\Product\RecommendedNearYouAction;
+use App\Actions\Product\SpotlightProductsAction;
 use App\Enums\ProductStatus;
+use App\Enums\SpotlightDisplayArea;
 use App\Enums\StoreStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Brand;
@@ -15,7 +17,7 @@ use Illuminate\View\View;
 
 class HomeController extends Controller
 {
-    public function index(BestSellingProductsAction $bestSellingProducts): View
+    public function index(BestSellingProductsAction $bestSellingProducts, SpotlightProductsAction $spotlightProducts): View
     {
         $featuredProducts = Product::query()
             ->where('status', ProductStatus::Published)
@@ -70,6 +72,8 @@ class HomeController extends Controller
 
         $recommendedNearYou = $this->recommendedNearYou();
 
+        $spotlight = $spotlightProducts->handle(SpotlightDisplayArea::Homepage);
+
         return view('storefront.home', [
             'featuredProducts' => $featuredProducts,
             'newArrivals' => $newArrivals,
@@ -80,6 +84,7 @@ class HomeController extends Controller
             'flashSaleProducts' => $flashSaleProducts,
             'flashSaleEndsAt' => $flashSaleEndsAt,
             'recommendedNearYou' => $recommendedNearYou,
+            'spotlightProducts' => $spotlight,
         ]);
     }
 

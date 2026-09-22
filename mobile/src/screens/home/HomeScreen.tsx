@@ -55,6 +55,7 @@ export default function HomeScreen({ navigation }: any) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
   const [flashSale, setFlashSale] = useState<Product[]>([]);
+  const [spotlightProducts, setSpotlightProducts] = useState<Product[]>([]);
 
   const [products, setProducts] = useState<Product[]>([]);
   const [page, setPage] = useState(1);
@@ -76,6 +77,7 @@ export default function HomeScreen({ navigation }: any) {
     homeApi.get().then(res => {
       setFlashSale(res.data.data.flash_sale.products);
       setHeroSlides(res.data.data.hero_slides);
+      setSpotlightProducts(res.data.data.spotlight_products);
     }).catch(() => {});
     if (isAuthenticated) fetchWishlist();
   }, [isAuthenticated, fetchWishlist, language, currency]);
@@ -275,6 +277,30 @@ export default function HomeScreen({ navigation }: any) {
               </View>
               <IonIcon name="chevron-forward" size={18} color={COLORS.white} />
             </TouchableOpacity>
+
+            {/* Spotlight (admin-curated) */}
+            {spotlightProducts.length > 0 && (
+              <View style={styles.flashSection}>
+                <Text style={[styles.flashTitle, { color: COLORS.text }]}>✨ Spotlight</Text>
+                <FlatList
+                  data={spotlightProducts}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  keyExtractor={item => 'spotlight-' + item.id}
+                  contentContainerStyle={{ paddingHorizontal: SIZES.screenPadding }}
+                  renderItem={({ item }) => (
+                    <ProductCard
+                      product={item}
+                      width={computeGridCardWidth(gridColumns)}
+                      onPress={() => navigation.navigate('ProductDetail', { slug: item.slug })}
+                      onAddToCart={handleAddToCart}
+                      onToggleWishlist={handleToggleWishlist}
+                      isWishlisted={wishlistIds.has(item.id)}
+                    />
+                  )}
+                />
+              </View>
+            )}
 
             {/* Flash sale */}
             {flashSale.length > 0 && (

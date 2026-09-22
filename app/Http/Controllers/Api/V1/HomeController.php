@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Actions\Product\BestSellingProductsAction;
 use App\Actions\Product\RecommendedNearYouAction;
+use App\Actions\Product\SpotlightProductsAction;
 use App\Enums\ProductStatus;
+use App\Enums\SpotlightDisplayArea;
 use App\Enums\StoreStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\BrandResource;
@@ -28,8 +30,12 @@ use Illuminate\Http\Request;
  */
 class HomeController extends Controller
 {
-    public function __invoke(Request $request, BestSellingProductsAction $bestSellingProducts, RecommendedNearYouAction $recommendedNearYou): JsonResponse
-    {
+    public function __invoke(
+        Request $request,
+        BestSellingProductsAction $bestSellingProducts,
+        RecommendedNearYouAction $recommendedNearYou,
+        SpotlightProductsAction $spotlightProducts,
+    ): JsonResponse {
         $featuredProducts = Product::query()
             ->where('status', ProductStatus::Published)
             ->where('is_featured', true)
@@ -89,6 +95,8 @@ class HomeController extends Controller
             ->filter(fn (HeroSlide $slide) => $slide->imageUrl())
             ->values();
 
+        $spotlight = $spotlightProducts->handle(SpotlightDisplayArea::Homepage);
+
         return ApiResponse::success([
             'hero_slides' => HeroSlideResource::collection($heroSlides),
             'featured_products' => ProductResource::collection($featuredProducts),
@@ -102,6 +110,7 @@ class HomeController extends Controller
             'recommended_near_you' => ProductResource::collection($recommendedNearYouProducts),
             'brands' => BrandResource::collection($brands),
             'stores' => StoreResource::collection($stores),
+            'spotlight_products' => ProductResource::collection($spotlight),
         ]);
     }
 }

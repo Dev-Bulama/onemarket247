@@ -2,7 +2,10 @@
 
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\City;
 use App\Models\Product;
+use App\Models\Store;
+use App\Models\Vendor;
 
 test('the shop page lists published products', function () {
     $product = Product::factory()->create();
@@ -47,6 +50,47 @@ test('the shop page filters by price range', function () {
     $response = $this->get('/shop?min_price=50&max_price=200');
 
     $response->assertOk()->assertSee($expensive->name)->assertDontSee($cheap->name);
+});
+
+test('the shop page filters by one or more vendors', function () {
+    $vendorA = Vendor::factory()->create();
+    $vendorB = Vendor::factory()->create();
+    $vendorC = Vendor::factory()->create();
+    $matchingA = Product::factory()->create(['vendor_id' => $vendorA->id, 'name' => 'Vendor A Widget']);
+    $matchingB = Product::factory()->create(['vendor_id' => $vendorB->id, 'name' => 'Vendor B Widget']);
+    $other = Product::factory()->create(['vendor_id' => $vendorC->id, 'name' => 'Vendor C Widget']);
+
+    $response = $this->get("/shop?vendor_id[]={$vendorA->id}&vendor_id[]={$vendorB->id}");
+
+    $response->assertOk()
+        ->assertSee($matchingA->name)
+        ->assertSee($matchingB->name)
+        ->assertDontSee($other->name);
+});
+
+test('the shop page filters by one or more locations', function () {
+    $lagos = City::factory()->create(['name' => 'Lagos']);
+    $abuja = City::factory()->create(['name' => 'Abuja']);
+    $kano = City::factory()->create(['name' => 'Kano']);
+
+    $lagosVendor = Vendor::factory()->create();
+    Store::factory()->create(['vendor_id' => $lagosVendor->id, 'city_id' => $lagos->id]);
+    $lagosProduct = Product::factory()->create(['vendor_id' => $lagosVendor->id, 'name' => 'Lagos Widget']);
+
+    $abujaVendor = Vendor::factory()->create();
+    Store::factory()->create(['vendor_id' => $abujaVendor->id, 'city_id' => $abuja->id]);
+    $abujaProduct = Product::factory()->create(['vendor_id' => $abujaVendor->id, 'name' => 'Abuja Widget']);
+
+    $kanoVendor = Vendor::factory()->create();
+    Store::factory()->create(['vendor_id' => $kanoVendor->id, 'city_id' => $kano->id]);
+    $kanoProduct = Product::factory()->create(['vendor_id' => $kanoVendor->id, 'name' => 'Kano Widget']);
+
+    $response = $this->get("/shop?city_id[]={$lagos->id}&city_id[]={$abuja->id}");
+
+    $response->assertOk()
+        ->assertSee($lagosProduct->name)
+        ->assertSee($abujaProduct->name)
+        ->assertDontSee($kanoProduct->name);
 });
 
 test('the shop page filters to in-stock products only', function () {

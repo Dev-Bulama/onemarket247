@@ -4,6 +4,8 @@ import { ApiResponse, Brand, Category, PaginatedResponse, Product, ProductDetail
 export interface ProductFilters {
   category_id?: number;
   brand_id?: number;
+  vendor_id?: number[];
+  city_id?: number[];
   min_price?: number;
   max_price?: number;
   in_stock?: boolean;
@@ -11,6 +13,13 @@ export interface ProductFilters {
   search?: string;
   sort?: 'price_asc' | 'price_desc' | 'name' | 'latest';
   page?: number;
+}
+
+export interface ProductFilterOptions {
+  categories: Category[];
+  brands: Brand[];
+  vendors: { id: number; name: string }[];
+  cities: { id: number; name: string }[];
 }
 
 export const productsApi = {
@@ -42,6 +51,8 @@ export const productsApi = {
   brands: () => apiClient.get<ApiResponse<Brand[]>>('/brands'),
 
   brand: (slug: string) => apiClient.get<ApiResponse<Brand>>(`/brands/${slug}`),
+
+  filters: () => apiClient.get<ApiResponse<ProductFilterOptions>>('/products/filters'),
 };
 
 export const storesApi = {
@@ -54,5 +65,6 @@ export const storesApi = {
 };
 
 export const searchApi = {
-  search: (query: string, page = 1) => apiClient.get<PaginatedResponse<Product>>('/search', { params: { q: query, page } }),
+  search: (query: string, filters: ProductFilters = {}, page = 1) =>
+    apiClient.get<PaginatedResponse<Product>>('/search', { params: { q: query, page, ...filters } }),
 };

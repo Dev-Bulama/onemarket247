@@ -195,6 +195,20 @@
                 </section>
             @endif
 
+            {{-- Spotlight (admin-curated) --}}
+            @if ($spotlightProducts->isNotEmpty())
+                <section class="mt-14" id="spotlight">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-xl font-bold tracking-tight text-ink">Spotlight</h2>
+                    </div>
+                    <div class="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                        @foreach ($spotlightProducts as $product)
+                            @include('storefront.partials.product-card', ['product' => $product])
+                        @endforeach
+                    </div>
+                </section>
+            @endif
+
             {{-- Flash sales --}}
             @if ($flashSaleProducts->isNotEmpty())
                 <section class="mt-14" data-flash-sale-ends="{{ $flashSaleEndsAt?->toIso8601String() }}" id="flash-sales">

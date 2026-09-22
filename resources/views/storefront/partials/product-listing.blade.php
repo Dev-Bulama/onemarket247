@@ -5,7 +5,7 @@
 <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
     <aside class="md:col-span-1">
         <form method="GET" class="space-y-6 bg-white border border-gray-200 rounded-lg p-4">
-            @foreach (request()->except(['category_id', 'brand_id', 'min_price', 'max_price', 'in_stock', 'sort', 'page']) as $key => $value)
+            @foreach (request()->except(['category_id', 'brand_id', 'vendor_id', 'city_id', 'min_price', 'max_price', 'in_stock', 'sort', 'page']) as $key => $value)
                 <input type="hidden" name="{{ $key }}" value="{{ $value }}">
             @endforeach
 
@@ -28,6 +28,36 @@
                     @endforeach
                 </select>
             </div>
+
+            @if ($vendors->isNotEmpty())
+                <div>
+                    <span class="block text-sm font-medium text-gray-700">Store / Vendor</span>
+                    <div class="mt-1 space-y-1 max-h-40 overflow-y-auto">
+                        @foreach ($vendors as $vendorOption)
+                            <label class="flex items-center gap-2 text-sm text-gray-700">
+                                <input type="checkbox" name="vendor_id[]" value="{{ $vendorOption->id }}" onchange="this.form.submit()"
+                                    @checked(in_array($vendorOption->id, request('vendor_id', []))) class="rounded border-gray-300">
+                                {{ $vendorOption->business_name }}
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            @if ($cities->isNotEmpty())
+                <div>
+                    <span class="block text-sm font-medium text-gray-700">Location</span>
+                    <div class="mt-1 space-y-1 max-h-40 overflow-y-auto">
+                        @foreach ($cities as $cityOption)
+                            <label class="flex items-center gap-2 text-sm text-gray-700">
+                                <input type="checkbox" name="city_id[]" value="{{ $cityOption->id }}" onchange="this.form.submit()"
+                                    @checked(in_array($cityOption->id, request('city_id', []))) class="rounded border-gray-300">
+                                {{ $cityOption->name }}
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
 
             <div>
                 <span class="block text-sm font-medium text-gray-700">Price</span>

@@ -74,6 +74,21 @@ test('a product with no video shows no video player', function () {
     $response->assertOk()->assertDontSee('<video', false);
 });
 
+test('the product page includes share links pointing at the exact product url', function () {
+    $product = Product::factory()->create(['name' => 'Share Me Widget']);
+
+    $response = $this->get(route('products.show', $product));
+    $shareUrl = route('products.show', $product);
+
+    $response->assertOk()
+        ->assertSee('wa.me/?text='.urlencode('Share Me Widget '.$shareUrl), false)
+        ->assertSee('facebook.com/sharer/sharer.php?u='.urlencode($shareUrl), false)
+        ->assertSee('twitter.com/intent/tweet?url='.urlencode($shareUrl), false)
+        ->assertSee('t.me/share/url?url='.urlencode($shareUrl), false)
+        ->assertSee('mailto:?subject='.urlencode('Share Me Widget'), false)
+        ->assertSee("navigator.clipboard.writeText('{$shareUrl}')", false);
+});
+
 test('a draft product 404s on the storefront', function () {
     $product = Product::factory()->draft()->create();
 

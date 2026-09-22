@@ -72,6 +72,17 @@ export function setBaseUrl(url: string) {
   }
 }
 
+/**
+ * Builds a link to a storefront web page (e.g. for sharing a product) from
+ * whatever API base URL is currently in effect — the API is always served
+ * at `{origin}/api/v1` (see config/api.ts and BootstrapController), so the
+ * storefront lives at that same origin with the api segment stripped.
+ */
+export function getWebUrl(path: string): string {
+  const origin = (apiClient.defaults.baseURL ?? '').replace(/\/api(\/v\d+)?\/?$/, '');
+  return `${origin}/${path.replace(/^\//, '')}`;
+}
+
 // Retry safe read-only requests on network failure / 5xx (never on 4xx or writes)
 const RETRY_METHODS = new Set(['get', 'head']);
 const MAX_RETRIES = 2;

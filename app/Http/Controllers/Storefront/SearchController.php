@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Storefront;
 
+use App\Actions\Product\SpotlightProductsAction;
+use App\Enums\SpotlightDisplayArea;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Storefront\Concerns\FiltersProducts;
 use App\Models\Product;
@@ -13,7 +15,7 @@ class SearchController extends Controller
 {
     use FiltersProducts;
 
-    public function index(Request $request): View
+    public function index(Request $request, SpotlightProductsAction $spotlightProducts): View
     {
         $term = trim((string) $request->string('q'));
 
@@ -31,9 +33,12 @@ class SearchController extends Controller
 
         $products = $this->filteredProducts($query, $request);
 
+        $spotlight = $spotlightProducts->handle(SpotlightDisplayArea::Search);
+
         return view('storefront.search.index', [
             'term' => $term,
             'products' => $products,
+            'spotlightProducts' => $spotlight,
             ...$this->filterOptions(),
         ]);
     }
