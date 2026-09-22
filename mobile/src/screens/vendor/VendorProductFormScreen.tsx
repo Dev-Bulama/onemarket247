@@ -13,9 +13,10 @@ const MAX_IMAGES = 8;
 const STOCK_STATUS_OPTIONS: { value: 'in_stock' | 'out_of_stock' | 'on_backorder' }[] = [
   { value: 'in_stock' }, { value: 'out_of_stock' }, { value: 'on_backorder' },
 ];
-const TYPE_OPTIONS: { value: 'simple' | 'digital'; label: string }[] = [
+const TYPE_OPTIONS: { value: 'simple' | 'digital' | 'variable'; label: string }[] = [
   { value: 'simple', label: 'Simple' },
   { value: 'digital', label: 'Digital' },
+  { value: 'variable', label: 'Variable' },
 ];
 
 // Assumes 2 decimal places (100 minor units per major unit) — true for the
@@ -46,7 +47,7 @@ export default function VendorProductFormScreen({ route, navigation }: any) {
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
   const [sku, setSku] = useState('');
-  const [type, setType] = useState<'simple' | 'digital'>('simple');
+  const [type, setType] = useState<'simple' | 'digital' | 'variable'>('simple');
   const [brandId, setBrandId] = useState<number | null>(null);
   const [categoryIds, setCategoryIds] = useState<number[]>([]);
   const [weight, setWeight] = useState('');
@@ -86,6 +87,7 @@ export default function VendorProductFormScreen({ route, navigation }: any) {
       .then(res => {
         const product = res.data.data;
         setName(product.name);
+        setType(product.type);
         setExistingThumbnail(product.thumbnail ?? null);
         setShortDescription(product.short_description ?? '');
         setDescription(product.description ?? '');
@@ -146,7 +148,8 @@ export default function VendorProductFormScreen({ route, navigation }: any) {
 
   const handleSubmit = async () => {
     if (!isEdit && !name.trim()) { useToastStore.getState().show('Please enter a product name.', 'error'); return; }
-    if (!price.trim()) { useToastStore.getState().show('Please enter a price.', 'error'); return; }
+    const isNewVariable = !isEdit && type === 'variable';
+    if (!isNewVariable && !price.trim()) { useToastStore.getState().show('Please enter a price.', 'error'); return; }
     setSaving(true);
     try {
       if (isEdit) {
@@ -160,8 +163,10 @@ export default function VendorProductFormScreen({ route, navigation }: any) {
           stock_status: stockStatus,
           low_stock_threshold: lowStockThreshold.trim() ? parseInt(lowStockThreshold, 10) : undefined,
         });
+        useToastStore.getState().show('Product updated');
+        navigation.goBack();
       } else {
-        await vendorProductsApi.create({
+        const res = await vendorProductsApi.create({
           name: name.trim(),
           slug: slug.trim() || undefined,
           sku: sku.trim() || undefined,
@@ -170,11 +175,11 @@ export default function VendorProductFormScreen({ route, navigation }: any) {
           categories: categoryIds.length ? categoryIds : undefined,
           short_description: shortDescription.trim() || undefined,
           description: description.trim() || undefined,
-          price: toMinorUnits(price),
-          compare_at_price: toMinorUnits(compareAtPrice),
-          manage_stock: manageStock,
-          stock_quantity: stockQuantity.trim() ? parseInt(stockQuantity, 10) : undefined,
-          stock_status: stockStatus,
+          price: isNewVariable ? undefined : toMinorUnits(price),
+          compare_at_price: isNewVariable ? undefined : toMinorUnits(compareAtPrice),
+          manage_stock: isNewVariable ? undefined : manageStock,
+          stock_quantity: isNewVariable ? undefined : (stockQuantity.trim() ? parseInt(stockQuantity, 10) : undefined),
+          stock_status: isNewVariable ? undefined : stockStatus,
           low_stock_threshold: lowStockThreshold.trim() ? parseInt(lowStockThreshold, 10) : undefined,
           weight: weight.trim() ? parseFloat(weight) : undefined,
           length: length.trim() ? parseFloat(length) : undefined,
@@ -185,9 +190,13 @@ export default function VendorProductFormScreen({ route, navigation }: any) {
           images: images.map((img, idx) => ({ uri: img.uri!, name: img.fileName ?? `product-${idx}.jpg`, type: img.type ?? 'image/jpeg' })),
           video: video ? { uri: video.uri!, name: video.fileName ?? 'product-video.mp4', type: video.type ?? 'video/mp4' } : undefined,
         });
+        useToastStore.getState().show('Product created');
+        if (isNewVariable) {
+          navigation.replace('VendorProductVariations', { productId: res.data.data.id, productName: res.data.data.name });
+        } else {
+          navigation.goBack();
+        }
       }
-      useToastStore.getState().show(isEdit ? 'Product updated' : 'Product created');
-      navigation.goBack();
     } catch (e) {
       useToastStore.getState().show(apiErrorMessage(e, 'Could not save this product.'), 'error');
     } finally {
@@ -213,6 +222,15 @@ export default function VendorProductFormScreen({ route, navigation }: any) {
             {existingThumbnail ? <Image source={{ uri: existingThumbnail }} style={styles.readonlyThumb} /> : null}
             <Text style={styles.readonlyName} numberOfLines={2}>{name}</Text>
             <Text style={styles.readonlyNote}>Name, images, and categories can't be changed after creation.</Text>
+            {type === 'variable' && (
+              <TouchableOpacity
+                style={styles.manageVariationsBtn}
+                onPress={() => navigation.navigate('VendorProductVariations', { productId, productName: name })}
+              >
+                <IonIcon name="albums-outline" size={16} color={COLORS.white} />
+                <Text style={styles.manageVariationsBtnText}>Manage Variations</Text>
+              </TouchableOpacity>
+            )}
           </View>
         ) : (
           <>
@@ -251,24 +269,36 @@ export default function VendorProductFormScreen({ route, navigation }: any) {
         <Text style={styles.label}>Description (optional)</Text>
         <TextInput style={[styles.input, styles.textArea]} value={description} onChangeText={setDescription} placeholder="Full product description" placeholderTextColor={COLORS.placeholder} multiline numberOfLines={5} />
 
-        <View style={styles.row}>
-          <View style={{ flex: 1, marginRight: 8 }}>
-            <Field label="Price" value={price} onChangeText={setPrice} placeholder="0.00" keyboardType="decimal-pad" />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Field label="Compare-at Price" value={compareAtPrice} onChangeText={setCompareAtPrice} placeholder="0.00" keyboardType="decimal-pad" />
-          </View>
-        </View>
+        {(isEdit || type !== 'variable') && (
+          <>
+            <View style={styles.row}>
+              <View style={{ flex: 1, marginRight: 8 }}>
+                <Field label="Price" value={price} onChangeText={setPrice} placeholder="0.00" keyboardType="decimal-pad" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Field label="Compare-at Price" value={compareAtPrice} onChangeText={setCompareAtPrice} placeholder="0.00" keyboardType="decimal-pad" />
+              </View>
+            </View>
 
-        <View style={styles.switchRow}>
-          <Text style={styles.label}>Manage Stock</Text>
-          <Switch value={manageStock} onValueChange={setManageStock} trackColor={{ true: COLORS.primary }} />
-        </View>
+            <View style={styles.switchRow}>
+              <Text style={styles.label}>Manage Stock</Text>
+              <Switch value={manageStock} onValueChange={setManageStock} trackColor={{ true: COLORS.primary }} />
+            </View>
 
-        {manageStock && (
-          <Field label="Stock Quantity" value={stockQuantity} onChangeText={setStockQuantity} placeholder="0" keyboardType="number-pad" />
+            {manageStock && (
+              <Field label="Stock Quantity" value={stockQuantity} onChangeText={setStockQuantity} placeholder="0" keyboardType="number-pad" />
+            )}
+          </>
         )}
 
+        {!isEdit && type === 'variable' && (
+          <Text style={styles.variableNote}>
+            Set price and stock per option (colour, size, etc.) after creating this product — you'll be taken to the variations screen next.
+          </Text>
+        )}
+
+        {(isEdit || type !== 'variable') && (
+        <>
         <Text style={styles.label}>Stock Status</Text>
         <View style={styles.chipRow}>
           {STOCK_STATUS_OPTIONS.map(opt => {
@@ -282,6 +312,8 @@ export default function VendorProductFormScreen({ route, navigation }: any) {
         </View>
 
         <Field label="Low Stock Threshold (optional)" value={lowStockThreshold} onChangeText={setLowStockThreshold} placeholder="5" keyboardType="number-pad" />
+        </>
+        )}
 
         {!isEdit && (
           <>
@@ -443,4 +475,7 @@ const styles = StyleSheet.create({
   readonlyThumb: { width: 80, height: 80, borderRadius: SIZES.borderRadiusSm, marginBottom: 8, backgroundColor: COLORS.grayLight },
   readonlyName: { fontSize: 15, fontWeight: 'bold', color: COLORS.text, textAlign: 'center' },
   readonlyNote: { fontSize: 11, color: COLORS.textMuted, marginTop: 4, textAlign: 'center' },
+  manageVariationsBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: COLORS.primary, borderRadius: SIZES.borderRadius, paddingHorizontal: 16, paddingVertical: 10, marginTop: 12 },
+  manageVariationsBtnText: { color: COLORS.white, fontWeight: 'bold', fontSize: 13 },
+  variableNote: { fontSize: 12, color: COLORS.textSecondary, backgroundColor: COLORS.grayLight, borderRadius: SIZES.borderRadiusSm, padding: 12, marginTop: 8 },
 });

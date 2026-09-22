@@ -23,6 +23,7 @@ class VendorProductResource extends JsonResource
             'name' => $this->name,
             'slug' => $this->slug,
             'sku' => $this->sku,
+            'type' => $this->type->value,
             'status' => $this->status->value,
             'status_label' => $this->status->getLabel(),
             'rejection_reason' => $this->rejection_reason,

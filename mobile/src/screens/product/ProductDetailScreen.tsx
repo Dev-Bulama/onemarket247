@@ -158,6 +158,7 @@ export default function ProductDetailScreen({ route, navigation }: any) {
   };
 
   const images = product.images.length > 0 ? product.images : [{ url: '', thumbnail: '' }];
+  const mainImageUrl = matchedVariation?.image || images[activeImage]?.url;
 
   return (
     <View style={styles.flex}>
@@ -187,8 +188,8 @@ export default function ProductDetailScreen({ route, navigation }: any) {
 
         {/* Image */}
         <View style={styles.imageWrap}>
-          {images[activeImage]?.url ? (
-            <Image source={{ uri: images[activeImage].url }} style={styles.mainImage} resizeMode="contain" />
+          {mainImageUrl ? (
+            <Image source={{ uri: mainImageUrl }} style={styles.mainImage} resizeMode="contain" />
           ) : (
             <View style={[styles.mainImage, styles.imagePlaceholder]}>
               <IonIcon name="image-outline" size={64} color={COLORS.border} />

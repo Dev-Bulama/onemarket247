@@ -32,6 +32,7 @@ export interface VendorProductItem {
   name: string;
   slug: string;
   sku?: string | null;
+  type: 'simple' | 'digital' | 'variable';
   status: string;
   status_label: string;
   rejection_reason?: string | null;
@@ -46,6 +47,36 @@ export interface VendorProductItem {
   low_stock_threshold?: number | null;
   is_featured: boolean;
   created_at: string;
+}
+
+export interface VendorProductVariationAttribute {
+  attribute_id: number;
+  attribute: string;
+  value_id: number;
+  value: string;
+}
+
+export interface VendorProductVariation {
+  id: number;
+  sku: string;
+  price: Money;
+  compare_at_price: Money | null;
+  stock_quantity: number;
+  stock_status: string;
+  is_active: boolean;
+  image?: string | null;
+  attributes: VendorProductVariationAttribute[];
+}
+
+export interface VendorAttributeValue {
+  id: number;
+  value: string;
+}
+
+export interface VendorAttribute {
+  id: number;
+  name: string;
+  values: VendorAttributeValue[];
 }
 
 export interface VendorInventoryItem {

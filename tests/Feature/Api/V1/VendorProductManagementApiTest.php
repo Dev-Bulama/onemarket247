@@ -225,3 +225,18 @@ test('a vendor cannot delete another vendor\'s product', function () {
 
     expect(Product::find($otherProduct->id))->not->toBeNull();
 });
+
+test('a vendor can create a variable product without a base price or stock status', function () {
+    $vendor = Vendor::factory()->create();
+    Store::factory()->create(['vendor_id' => $vendor->id]);
+    $token = $vendor->user->createToken('t', ['vendor:*'])->plainTextToken;
+
+    $response = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/vendor/products', [
+            'name' => 'Variable Widget',
+            'type' => 'variable',
+        ]);
+
+    $response->assertCreated()->assertJsonPath('data.type', 'variable');
+    expect(Product::where('name', 'Variable Widget')->firstOrFail()->price)->toBeNull();
+});

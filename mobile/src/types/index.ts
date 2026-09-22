@@ -95,8 +95,10 @@ export interface ProductVariationAttribute {
 
 export interface ProductVariation {
   id: number;
+  sku?: string | null;
   price: Money;
   in_stock: boolean;
+  image?: string | null;
   attributes: ProductVariationAttribute[];
 }
 

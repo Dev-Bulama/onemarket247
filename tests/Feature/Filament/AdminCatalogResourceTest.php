@@ -3,11 +3,15 @@
 use App\Enums\ProductStatus;
 use App\Filament\Resources\Brands\Pages\CreateBrand;
 use App\Filament\Resources\Categories\Pages\CreateCategory;
+use App\Filament\Resources\Products\Pages\EditProduct;
 use App\Filament\Resources\Products\Pages\ListProducts;
+use App\Filament\Resources\Products\RelationManagers\VariationsRelationManager;
 use App\Models\Attribute;
+use App\Models\AttributeValue;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductVariation;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Http\UploadedFile;
@@ -141,4 +145,25 @@ test('an admin can create a brand with an uploaded logo', function () {
     $brand = Brand::where('slug', 'acme')->firstOrFail();
 
     expect($brand->getFirstMediaUrl('logo'))->not->toBe('');
+});
+
+test('an admin can view a product\'s variations but cannot create, edit or delete them', function () {
+    $admin = superAdminForCatalog();
+    $product = Product::factory()->variable()->create();
+    $attribute = Attribute::factory()->create(['is_variation' => true]);
+    $value = AttributeValue::factory()->for($attribute)->create(['value' => 'Blue']);
+    $variation = ProductVariation::factory()->create(['product_id' => $product->id, 'sku' => 'VAR-BLUE', 'price' => 999]);
+    $variation->attributeValues()->attach($value->id);
+
+    Livewire::actingAs($admin, 'admin')
+        ->test(VariationsRelationManager::class, [
+            'ownerRecord' => $product,
+            'pageClass' => EditProduct::class,
+        ])
+        ->assertSee('VAR-BLUE')
+        ->assertSee('9.99')
+        ->assertSee('Blue')
+        ->assertTableActionDoesNotExist('create')
+        ->assertTableActionDoesNotExist('edit')
+        ->assertTableActionDoesNotExist('delete');
 });

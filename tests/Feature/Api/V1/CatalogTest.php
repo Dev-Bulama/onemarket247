@@ -8,6 +8,7 @@ use App\Models\HeroSlide;
 use App\Models\Language;
 use App\Models\Product;
 use App\Models\ProductTranslation;
+use App\Models\ProductVariation;
 use App\Models\Store;
 use App\Models\Vendor;
 use Illuminate\Http\UploadedFile;
@@ -115,6 +116,20 @@ test('a draft product 404s from the product detail endpoint', function () {
     $draft = Product::factory()->draft()->create();
 
     $this->getJson("/api/v1/products/{$draft->slug}")->assertNotFound();
+});
+
+test('product detail includes each variation\'s sku and photo', function () {
+    Storage::fake('public');
+
+    $product = Product::factory()->variable()->create();
+    $variation = ProductVariation::factory()->create(['product_id' => $product->id, 'sku' => 'VAR-RED', 'price' => 1500]);
+    $variation->addMedia(UploadedFile::fake()->image('red.jpg'))->toMediaCollection('images');
+
+    $response = $this->getJson("/api/v1/products/{$product->slug}")->assertOk();
+
+    $data = collect($response->json('data.variations'))->firstWhere('id', $variation->id);
+    expect($data['sku'])->toBe('VAR-RED')
+        ->and($data['image'])->not->toBeNull();
 });
 
 test('store index, show, and products endpoints all work', function () {

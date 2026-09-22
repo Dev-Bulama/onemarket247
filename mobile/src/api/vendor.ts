@@ -2,11 +2,13 @@ import apiClient from './client';
 import { ApiResponse, PaginatedResponse } from '../types';
 import {
   VendorApplicationReceipt,
+  VendorAttribute,
   VendorDocumentItem,
   VendorEarningsSummary,
   VendorInventoryItem,
   VendorOrder,
   VendorProductItem,
+  VendorProductVariation,
   VendorStaffMember,
   VendorStoreProfile,
   VendorSubscriptionItem,
@@ -104,15 +106,11 @@ export interface VendorProductListFilters {
   page?: number;
 }
 
-// type is restricted to 'simple' | 'digital' here — 'variable' products
-// need per-variation price/stock management, and there is no vendor API
-// endpoint for variations yet, so offering that type would create products
-// the app can never finish configuring.
 export interface VendorProductCreatePayload {
   name: string;
   slug?: string;
   sku?: string;
-  type?: 'simple' | 'digital';
+  type?: 'simple' | 'digital' | 'variable';
   brand_id?: number;
   categories?: number[];
   short_description?: string;
@@ -121,7 +119,7 @@ export interface VendorProductCreatePayload {
   compare_at_price?: number;
   manage_stock?: boolean;
   stock_quantity?: number;
-  stock_status: 'in_stock' | 'out_of_stock' | 'on_backorder';
+  stock_status?: 'in_stock' | 'out_of_stock' | 'on_backorder';
   low_stock_threshold?: number;
   weight?: number;
   length?: number;
@@ -166,6 +164,48 @@ export const vendorProductsApi = {
   destroy: (id: number) => apiClient.delete<ApiResponse<null>>(`/vendor/products/${id}`),
 
   submit: (id: number) => apiClient.post<ApiResponse<VendorProductItem>>(`/vendor/products/${id}/submit`),
+};
+
+export interface VendorProductVariationPayload {
+  sku: string;
+  price: number;
+  compare_at_price?: number;
+  stock_quantity?: number;
+  is_active?: boolean;
+  attribute_value_ids?: number[];
+  image?: PickedFile;
+}
+
+export const vendorProductVariationsApi = {
+  list: (productId: number) => apiClient.get<ApiResponse<VendorProductVariation[]>>(`/vendor/products/${productId}/variations`),
+
+  create: (productId: number, data: VendorProductVariationPayload) => {
+    const form = new FormData();
+    appendFields(form, data, ['attribute_value_ids', 'image']);
+    (data.attribute_value_ids ?? []).forEach(id => form.append('attribute_value_ids[]', String(id)));
+    if (data.image) appendFile(form, 'image', data.image);
+    return apiClient.post<ApiResponse<VendorProductVariation>>(`/vendor/products/${productId}/variations`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+
+  update: (productId: number, variationId: number, data: VendorProductVariationPayload) => {
+    const form = new FormData();
+    appendFields(form, data, ['attribute_value_ids', 'image']);
+    (data.attribute_value_ids ?? []).forEach(id => form.append('attribute_value_ids[]', String(id)));
+    if (data.image) appendFile(form, 'image', data.image);
+    form.append('_method', 'PATCH');
+    return apiClient.post<ApiResponse<VendorProductVariation>>(`/vendor/products/${productId}/variations/${variationId}`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+
+  destroy: (productId: number, variationId: number) =>
+    apiClient.delete<ApiResponse<null>>(`/vendor/products/${productId}/variations/${variationId}`),
+};
+
+export const vendorAttributesApi = {
+  list: () => apiClient.get<ApiResponse<VendorAttribute[]>>('/vendor/attributes'),
 };
 
 export const vendorInventoryApi = {

@@ -26,9 +26,11 @@ use App\Http\Controllers\Api\V1\ReferenceDataController;
 use App\Http\Controllers\Api\V1\ReviewController;
 use App\Http\Controllers\Api\V1\SearchController;
 use App\Http\Controllers\Api\V1\StoreController;
+use App\Http\Controllers\Api\V1\Vendor\AttributeController as VendorAttributeController;
 use App\Http\Controllers\Api\V1\Vendor\EarningsController as VendorEarningsController;
 use App\Http\Controllers\Api\V1\Vendor\InventoryController as VendorInventoryController;
 use App\Http\Controllers\Api\V1\Vendor\ProductController as VendorProductController;
+use App\Http\Controllers\Api\V1\Vendor\ProductVariationController;
 use App\Http\Controllers\Api\V1\Vendor\StoreController as VendorStoreController;
 use App\Http\Controllers\Api\V1\Vendor\StoreStaffController;
 use App\Http\Controllers\Api\V1\Vendor\SubscriptionController;
@@ -200,6 +202,13 @@ Route::prefix('v1')->group(function () {
         Route::patch('products/{product}', [VendorProductController::class, 'update']);
         Route::delete('products/{product}', [VendorProductController::class, 'destroy']);
         Route::post('products/{product}/submit', [VendorProductController::class, 'submit']);
+
+        Route::get('products/{product}/variations', [ProductVariationController::class, 'index']);
+        Route::post('products/{product}/variations', [ProductVariationController::class, 'store']);
+        Route::patch('products/{product}/variations/{variation}', [ProductVariationController::class, 'update']);
+        Route::delete('products/{product}/variations/{variation}', [ProductVariationController::class, 'destroy']);
+
+        Route::get('attributes', [VendorAttributeController::class, 'index']);
 
         Route::get('inventory', [VendorInventoryController::class, 'index']);
         Route::patch('inventory/{warehouseStock}', [VendorInventoryController::class, 'adjust']);

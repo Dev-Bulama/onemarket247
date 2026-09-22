@@ -57,8 +57,10 @@ class ProductDetailResource extends JsonResource
             'review_count' => $this->approvedReviews->count(),
             'variations' => $this->variations->map(fn ($variation) => [
                 'id' => $variation->id,
+                'sku' => $variation->sku,
                 'price' => Money::make($variation->price),
                 'in_stock' => $variation->isInStock(),
+                'image' => $variation->getFirstMediaUrl('images') ?: null,
                 'attributes' => $variation->attributeValues->map(fn ($value) => [
                     'attribute' => $value->attribute->name,
                     'value' => $value->value,

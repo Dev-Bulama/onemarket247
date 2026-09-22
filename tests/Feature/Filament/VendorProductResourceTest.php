@@ -13,6 +13,7 @@ use App\Models\Category;
 use App\Models\Language;
 use App\Models\Product;
 use App\Models\ProductTag;
+use App\Models\ProductVariation;
 use App\Models\Store;
 use App\Models\Vendor;
 use App\Models\Warehouse;
@@ -175,6 +176,71 @@ test('a vendor can add a variation with attribute values through the relation ma
         ->and($product->variations()->first()->price)->toBe(999)
         ->and($product->variations()->first()->attributeValues()->pluck('attribute_values.id')->all())
         ->toEqual([$value->id]);
+});
+
+test('a new variation is seeded with a real WarehouseStock row, not just a cosmetic stock_quantity', function () {
+    $vendor = Vendor::factory()->create();
+    Store::factory()->for($vendor)->create();
+    $warehouse = Warehouse::create(['vendor_id' => $vendor->id, 'name' => 'Main', 'code' => 'MAIN', 'is_default' => true]);
+    $product = Product::factory()->for($vendor)->variable()->create();
+
+    Livewire::actingAs($vendor->user, 'vendor')
+        ->test(VariationsRelationManager::class, [
+            'ownerRecord' => $product,
+            'pageClass' => EditProduct::class,
+        ])
+        ->callTableAction('create', data: [
+            'sku' => 'VAR-STOCK',
+            'price' => 9.99,
+            'stock_quantity' => 7,
+        ]);
+
+    $variation = $product->variations()->where('sku', 'VAR-STOCK')->firstOrFail();
+    $stock = $variation->warehouseStocks()->first();
+
+    expect($stock)->not->toBeNull()
+        ->and($stock->warehouse_id)->toBe($warehouse->id)
+        ->and($stock->on_hand)->toBe(7);
+});
+
+test('a vendor can attach a photo to a variation, and a later upload replaces it', function () {
+    Storage::fake('public');
+
+    $vendor = Vendor::factory()->create();
+    Store::factory()->for($vendor)->create();
+    $product = Product::factory()->for($vendor)->variable()->create();
+    $variation = ProductVariation::factory()->create(['product_id' => $product->id, 'sku' => 'VAR-PHOTO']);
+
+    Livewire::actingAs($vendor->user, 'vendor')
+        ->test(VariationsRelationManager::class, [
+            'ownerRecord' => $product,
+            'pageClass' => EditProduct::class,
+        ])
+        ->callTableAction('edit', $variation, data: [
+            'sku' => $variation->sku,
+            'price' => 9.99,
+            'stock_quantity' => 3,
+            'image' => [UploadedFile::fake()->image('swatch.jpg')->store('tmp-product-media', 'public')],
+        ]);
+
+    expect($variation->fresh()->getMedia('images'))->toHaveCount(1);
+    $firstUrl = $variation->fresh()->getFirstMediaUrl('images');
+
+    Livewire::actingAs($vendor->user, 'vendor')
+        ->test(VariationsRelationManager::class, [
+            'ownerRecord' => $product,
+            'pageClass' => EditProduct::class,
+        ])
+        ->callTableAction('edit', $variation, data: [
+            'sku' => $variation->sku,
+            'price' => 9.99,
+            'stock_quantity' => 3,
+            'image' => [UploadedFile::fake()->image('swatch-2.jpg')->store('tmp-product-media', 'public')],
+        ]);
+
+    $variation->refresh();
+    expect($variation->getMedia('images'))->toHaveCount(1)
+        ->and($variation->getFirstMediaUrl('images'))->not->toBe($firstUrl);
 });
 
 test('a vendor can add a translation for their product through the relation manager', function () {

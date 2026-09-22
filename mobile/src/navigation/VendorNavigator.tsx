@@ -8,6 +8,7 @@ import { COLORS } from '../constants';
 import VendorDashboardScreen from '../screens/vendor/VendorDashboardScreen';
 import VendorProductsScreen from '../screens/vendor/VendorProductsScreen';
 import VendorProductFormScreen from '../screens/vendor/VendorProductFormScreen';
+import VendorProductVariationsScreen from '../screens/vendor/VendorProductVariationsScreen';
 import VendorInventoryScreen from '../screens/vendor/VendorInventoryScreen';
 import VendorOrdersScreen from '../screens/vendor/VendorOrdersScreen';
 import VendorOrderDetailScreen from '../screens/vendor/VendorOrderDetailScreen';
@@ -42,6 +43,7 @@ function ProductsStackNav() {
     <ProductsStack.Navigator screenOptions={{ headerShown: false }}>
       <ProductsStack.Screen name="VendorProducts" component={VendorProductsScreen} />
       <ProductsStack.Screen name="VendorProductForm" component={VendorProductFormScreen} />
+      <ProductsStack.Screen name="VendorProductVariations" component={VendorProductVariationsScreen} />
       <ProductsStack.Screen name="VendorInventory" component={VendorInventoryScreen} />
     </ProductsStack.Navigator>
   );
