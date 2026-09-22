@@ -32,6 +32,7 @@ class ProductDetailResource extends JsonResource
                 'url' => $media->getUrl(),
                 'thumbnail' => $media->getUrl('thumb') ?: $media->getUrl(),
             ])->values(),
+            'video_url' => $this->getFirstMediaUrl('videos') ?: null,
             'brand' => $this->brand ? [
                 'id' => $this->brand->id,
                 'name' => $this->brand->name,

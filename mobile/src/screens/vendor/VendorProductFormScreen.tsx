@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Modal, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { Asset, launchImageLibrary } from 'react-native-image-picker';
+import { ActivityIndicator, Alert, Image, Modal, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Asset, launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { COLORS, SIZES, STOCK_STATUSES } from '../../constants';
 import { vendorProductsApi } from '../../api/vendor';
@@ -56,6 +56,7 @@ export default function VendorProductFormScreen({ route, navigation }: any) {
   const [seoTitle, setSeoTitle] = useState('');
   const [seoDescription, setSeoDescription] = useState('');
   const [images, setImages] = useState<Asset[]>([]);
+  const [video, setVideo] = useState<Asset | null>(null);
 
   // Shared fields (editable on both create and edit)
   const [shortDescription, setShortDescription] = useState('');
@@ -105,12 +106,36 @@ export default function VendorProductFormScreen({ route, navigation }: any) {
       .finally(() => setLoading(false));
   }, [isEdit, productId, navigation]);
 
-  const pickImages = () => {
+  const pickFromGallery = () => {
     launchImageLibrary({ mediaType: 'photo', selectionLimit: MAX_IMAGES - images.length }, response => {
       if (response.assets) setImages(prev => [...prev, ...response.assets!].slice(0, MAX_IMAGES));
     });
   };
+  const takePhoto = () => {
+    launchCamera({ mediaType: 'photo' }, response => {
+      if (response.assets) setImages(prev => [...prev, ...response.assets!].slice(0, MAX_IMAGES));
+    });
+  };
+  const addImage = () => {
+    Alert.alert('Add Photo', undefined, [
+      { text: 'Take Photo', onPress: takePhoto },
+      { text: 'Choose from Gallery', onPress: pickFromGallery },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  };
   const removeImage = (uri?: string) => setImages(prev => prev.filter(img => img.uri !== uri));
+
+  const pickVideo = () => {
+    Alert.alert('Add Video', undefined, [
+      { text: 'Record Video', onPress: () => launchCamera({ mediaType: 'video', videoQuality: 'high' }, response => {
+        if (response.assets?.[0]) setVideo(response.assets[0]);
+      }) },
+      { text: 'Choose from Gallery', onPress: () => launchImageLibrary({ mediaType: 'video' }, response => {
+        if (response.assets?.[0]) setVideo(response.assets[0]);
+      }) },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  };
 
   const toggleCategory = (id: number) => {
     setCategoryIds(prev => (prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]));
@@ -158,6 +183,7 @@ export default function VendorProductFormScreen({ route, navigation }: any) {
           seo_title: seoTitle.trim() || undefined,
           seo_description: seoDescription.trim() || undefined,
           images: images.map((img, idx) => ({ uri: img.uri!, name: img.fileName ?? `product-${idx}.jpg`, type: img.type ?? 'image/jpeg' })),
+          video: video ? { uri: video.uri!, name: video.fileName ?? 'product-video.mp4', type: video.type ?? 'video/mp4' } : undefined,
         });
       }
       useToastStore.getState().show(isEdit ? 'Product updated' : 'Product created');
@@ -282,11 +308,28 @@ export default function VendorProductFormScreen({ route, navigation }: any) {
                 </View>
               ))}
               {images.length < MAX_IMAGES && (
-                <TouchableOpacity style={styles.addImageBtn} onPress={pickImages}>
+                <TouchableOpacity style={styles.addImageBtn} onPress={addImage}>
                   <IonIcon name="camera-outline" size={24} color={COLORS.textSecondary} />
                 </TouchableOpacity>
               )}
             </View>
+
+            <Text style={styles.label}>Product Video (optional)</Text>
+            <Text style={styles.videoHint}>Especially useful for property, vehicles, and machinery.</Text>
+            {video ? (
+              <View style={styles.videoChip}>
+                <IonIcon name="videocam" size={18} color={COLORS.primary} />
+                <Text style={styles.videoChipText} numberOfLines={1}>{video.fileName ?? 'Video selected'}</Text>
+                <TouchableOpacity onPress={() => setVideo(null)}>
+                  <IonIcon name="close-circle" size={18} color={COLORS.danger} />
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity style={styles.pickVideoBtn} onPress={pickVideo}>
+                <IonIcon name="videocam-outline" size={20} color={COLORS.textSecondary} />
+                <Text style={styles.pickVideoBtnText}>Add a video</Text>
+              </TouchableOpacity>
+            )}
           </>
         )}
 
@@ -382,6 +425,11 @@ const styles = StyleSheet.create({
   imageThumbImg: { width: 72, height: 72, borderRadius: 8 },
   removeImageBtn: { position: 'absolute', top: -6, right: -6, backgroundColor: COLORS.white, borderRadius: 10 },
   addImageBtn: { width: 72, height: 72, borderRadius: 8, borderWidth: 1, borderColor: COLORS.border, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.grayLight },
+  videoHint: { fontSize: 11, color: COLORS.textMuted, marginBottom: 8, marginTop: -4 },
+  pickVideoBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1, borderColor: COLORS.border, borderStyle: 'dashed', borderRadius: SIZES.borderRadiusSm, padding: 12, backgroundColor: COLORS.grayLight },
+  pickVideoBtnText: { fontSize: 13, color: COLORS.textSecondary },
+  videoChip: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, padding: 12, backgroundColor: COLORS.grayLight },
+  videoChipText: { flex: 1, fontSize: 13, color: COLORS.text },
   saveBtn: { backgroundColor: COLORS.primary, borderRadius: SIZES.borderRadius, paddingVertical: 14, alignItems: 'center', marginTop: 28 },
   saveBtnText: { color: COLORS.white, fontWeight: 'bold', fontSize: 15 },
   moderationNote: { fontSize: 11, color: COLORS.textMuted, textAlign: 'center', marginTop: 10 },

@@ -8,6 +8,7 @@
 
 @php
     $images = $product->getMedia('images');
+    $videoUrl = $product->getFirstMediaUrl('videos') ?: null;
     $range = $product->displayPriceRange();
     $price = $product->displayPrice();
     $canOrder = $product->variations->isNotEmpty()
@@ -48,6 +49,14 @@
                             <img src="{{ $image->getUrl('thumb') ?: $image->getUrl() }}" alt="{{ $product->translatedName() }}" class="h-full w-full object-cover pointer-events-none">
                         </button>
                     @endforeach
+                </div>
+            @endif
+
+            @if ($videoUrl)
+                <div class="mt-4">
+                    <video controls preload="metadata" class="w-full rounded-xl bg-black" src="{{ $videoUrl }}">
+                        Your browser doesn't support embedded video. <a href="{{ $videoUrl }}">Watch the product video</a>.
+                    </video>
                 </div>
             @endif
         </div>

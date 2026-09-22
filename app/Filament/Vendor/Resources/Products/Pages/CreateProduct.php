@@ -22,12 +22,15 @@ class CreateProduct extends CreateRecord
 
     private array $stagedDigitalFiles = [];
 
+    private ?string $stagedVideo = null;
+
     protected function handleRecordCreation(array $data): Model
     {
         $this->stagedImages = $data['images'] ?? [];
         $this->stagedDigitalFiles = $data['digital_files'] ?? [];
+        $this->stagedVideo = $data['video'] ?? null;
 
-        unset($data['images'], $data['digital_files']);
+        unset($data['images'], $data['digital_files'], $data['video']);
 
         $vendorId = Auth::guard('vendor')->user()->actingVendorId();
         $data['vendor_id'] = $vendorId;
@@ -64,5 +67,6 @@ class CreateProduct extends CreateRecord
 
         $this->attachStagedImages($product, $this->stagedImages);
         $this->attachStagedDigitalFiles($product, $this->stagedDigitalFiles);
+        $this->attachStagedVideo($product, $this->stagedVideo);
     }
 }

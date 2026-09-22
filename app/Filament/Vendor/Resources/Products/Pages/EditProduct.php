@@ -27,12 +27,15 @@ class EditProduct extends EditRecord
 
     private array $stagedDigitalFiles = [];
 
+    private ?string $stagedVideo = null;
+
     protected function mutateFormDataBeforeSave(array $data): array
     {
         $this->stagedImages = $data['images'] ?? [];
         $this->stagedDigitalFiles = $data['digital_files'] ?? [];
+        $this->stagedVideo = $data['video'] ?? null;
 
-        unset($data['images'], $data['digital_files']);
+        unset($data['images'], $data['digital_files'], $data['video']);
 
         return $data;
     }
@@ -44,6 +47,7 @@ class EditProduct extends EditRecord
 
         $this->attachStagedImages($product, $this->stagedImages);
         $this->attachStagedDigitalFiles($product, $this->stagedDigitalFiles);
+        $this->attachStagedVideo($product, $this->stagedVideo);
     }
 
     protected function getHeaderActions(): array

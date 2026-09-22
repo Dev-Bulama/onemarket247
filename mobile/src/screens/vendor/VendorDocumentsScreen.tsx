@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { ActivityIndicator, FlatList, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, Image, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { COLORS, DOCUMENT_STATUSES, SIZES } from '../../constants';
 import { vendorDocumentsApi } from '../../api/vendor';
@@ -150,7 +150,17 @@ function UploadSheet({ onClose, onUploaded }: { onClose: () => void; onUploaded:
         </View>
 
         <Text style={styles.label}>File</Text>
-        {file ? <Text style={styles.fileName} numberOfLines={1}>{file.name}</Text> : null}
+        {file?.type?.startsWith('image/') ? (
+          <View style={styles.previewBox}>
+            <Image source={{ uri: file.uri }} style={styles.previewImage} />
+            <TouchableOpacity style={styles.retakeBtn} onPress={handleTakePhoto}>
+              <IonIcon name="refresh-outline" size={16} color={COLORS.white} />
+              <Text style={styles.retakeBtnText}>Retake</Text>
+            </TouchableOpacity>
+          </View>
+        ) : file ? (
+          <Text style={styles.fileName} numberOfLines={1}>{file.name}</Text>
+        ) : null}
         <View style={styles.pickRow}>
           <TouchableOpacity style={styles.pickBtn} onPress={handlePickFile}>
             <IonIcon name="document-outline" size={20} color={COLORS.textSecondary} />
@@ -163,7 +173,7 @@ function UploadSheet({ onClose, onUploaded }: { onClose: () => void; onUploaded:
         </View>
 
         <TouchableOpacity style={styles.saveBtn} onPress={handleSubmit} disabled={uploading}>
-          {uploading ? <ActivityIndicator color={COLORS.white} /> : <Text style={styles.saveBtnText}>Upload</Text>}
+          {uploading ? <ActivityIndicator color={COLORS.white} /> : <Text style={styles.saveBtnText}>Confirm & Upload</Text>}
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
@@ -197,6 +207,10 @@ const styles = StyleSheet.create({
   chipText: { fontSize: 12, color: COLORS.text, fontWeight: '600' },
   chipTextActive: { color: COLORS.white },
   fileName: { fontSize: 12, color: COLORS.text, marginBottom: 8 },
+  previewBox: { marginBottom: 8 },
+  previewImage: { width: '100%', height: 180, borderRadius: SIZES.borderRadiusSm, backgroundColor: COLORS.grayLight },
+  retakeBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, alignSelf: 'flex-start', marginTop: 8, backgroundColor: COLORS.text, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 6 },
+  retakeBtnText: { color: COLORS.white, fontSize: 12, fontWeight: '600' },
   pickRow: { flexDirection: 'row', gap: 8 },
   pickBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1, borderColor: COLORS.border, borderStyle: 'dashed', borderRadius: SIZES.borderRadiusSm, padding: 12, backgroundColor: COLORS.grayLight },
   pickBtnText: { fontSize: 12, color: COLORS.textSecondary, textAlign: 'center' },

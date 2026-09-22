@@ -98,6 +98,37 @@ test('a vendor can create a product with categories, tags and images through the
         ->and($stock->on_hand)->toBe(5);
 });
 
+test('a vendor can attach a product video through the form, and a later upload replaces it', function () {
+    Storage::fake('public');
+
+    $vendor = Vendor::factory()->create();
+    Store::factory()->for($vendor)->create();
+    $product = Product::factory()->for($vendor)->create();
+
+    Livewire::actingAs($vendor->user, 'vendor')
+        ->test(EditProduct::class, ['record' => $product->getRouteKey()])
+        ->fillForm([
+            'video' => [UploadedFile::fake()->create('walkthrough.mp4', 2048, 'video/mp4')->store('tmp-product-media', 'public')],
+        ])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    expect($product->getMedia('videos'))->toHaveCount(1);
+    $firstVideoUrl = $product->getFirstMediaUrl('videos');
+
+    Livewire::actingAs($vendor->user, 'vendor')
+        ->test(EditProduct::class, ['record' => $product->getRouteKey()])
+        ->fillForm([
+            'video' => [UploadedFile::fake()->create('walkthrough-2.mp4', 2048, 'video/mp4')->store('tmp-product-media', 'public')],
+        ])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    $product->refresh();
+    expect($product->getMedia('videos'))->toHaveCount(1)
+        ->and($product->getFirstMediaUrl('videos'))->not->toBe($firstVideoUrl);
+});
+
 test('a vendor can submit a draft product for review from the table', function () {
     $vendor = Vendor::factory()->create();
     Store::factory()->for($vendor)->create();

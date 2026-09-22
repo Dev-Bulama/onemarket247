@@ -54,6 +54,26 @@ test('a single-image product shows no thumbnail row', function () {
     $response->assertOk()->assertDontSee('product-gallery-thumb', false);
 });
 
+test('a product with a video shows a video player', function () {
+    Storage::fake('public');
+    $product = Product::factory()->create();
+    $product->addMedia(UploadedFile::fake()->create('walkthrough.mp4', 2048, 'video/mp4'))->toMediaCollection('videos');
+
+    $response = $this->get(route('products.show', $product));
+
+    $response->assertOk()
+        ->assertSee('<video', false)
+        ->assertSee($product->getFirstMediaUrl('videos'), false);
+});
+
+test('a product with no video shows no video player', function () {
+    $product = Product::factory()->create();
+
+    $response = $this->get(route('products.show', $product));
+
+    $response->assertOk()->assertDontSee('<video', false);
+});
+
 test('a draft product 404s on the storefront', function () {
     $product = Product::factory()->draft()->create();
 

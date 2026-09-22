@@ -108,6 +108,7 @@ export interface ProductDetail {
   description?: string | null;
   sku?: string | null;
   images: ProductImage[];
+  video_url?: string | null;
   brand?: BrandSummary | null;
   categories: { id: number; name: string; slug: string }[];
   price: Money | null;

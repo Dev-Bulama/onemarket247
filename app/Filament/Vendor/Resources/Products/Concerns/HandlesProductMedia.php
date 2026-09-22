@@ -29,6 +29,17 @@ trait HandlesProductMedia
         }
     }
 
+    private function attachStagedVideo(Product $product, ?string $path): void
+    {
+        if (! $path || ! Storage::disk('public')->exists($path)) {
+            return;
+        }
+
+        $product->clearMediaCollection('videos');
+        $product->addMediaFromDisk($path, 'public')->toMediaCollection('videos');
+        Storage::disk('public')->delete($path);
+    }
+
     private function attachStagedDigitalFiles(Product $product, array $paths): void
     {
         foreach ($paths as $path) {

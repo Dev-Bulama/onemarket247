@@ -130,6 +130,7 @@ export interface VendorProductCreatePayload {
   seo_title?: string;
   seo_description?: string;
   images?: PickedFile[];
+  video?: PickedFile;
 }
 
 export interface VendorProductUpdatePayload {
@@ -151,8 +152,9 @@ export const vendorProductsApi = {
 
   create: (data: VendorProductCreatePayload) => {
     const form = new FormData();
-    appendFields(form, data, ['images']);
+    appendFields(form, data, ['images', 'video']);
     (data.images ?? []).forEach(image => form.append('images[]', image as unknown as Blob));
+    if (data.video) appendFile(form, 'video', data.video);
     return apiClient.post<ApiResponse<VendorProductItem>>('/vendor/products', form, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });

@@ -108,6 +108,15 @@ class ProductForm
                     ->directory('tmp-product-media')
                     ->visibility('public')
                     ->columnSpanFull(),
+                FileUpload::make('video')
+                    ->label('Product video (optional)')
+                    ->acceptedFileTypes(['video/mp4', 'video/quicktime'])
+                    ->disk('public')
+                    ->directory('tmp-product-media')
+                    ->visibility('public')
+                    ->maxSize(51200)
+                    ->helperText('MP4 or MOV, up to 50MB. Especially useful for property, vehicle, and machinery listings. Uploading a new video replaces the current one.')
+                    ->columnSpanFull(),
                 FileUpload::make('digital_files')
                     ->multiple()
                     ->disk('local')

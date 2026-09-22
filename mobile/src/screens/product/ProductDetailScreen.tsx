@@ -4,6 +4,7 @@ import {
   TextInput, TouchableOpacity, View,
 } from 'react-native';
 import IonIcon from 'react-native-vector-icons/Ionicons';
+import { WebView } from 'react-native-webview';
 import { COLORS, SIZES } from '../../constants';
 import { productsApi } from '../../api/products';
 import { apiErrorMessage } from '../../api/client';
@@ -207,6 +208,20 @@ export default function ProductDetailScreen({ route, navigation }: any) {
             ))}
           </ScrollView>
         )}
+
+        {product.video_url ? (
+          // No native video-player dependency is installed in this app —
+          // a WebView (already used for the Paystack checkout flow) hosting
+          // a plain HTML5 <video> tag plays it without adding one.
+          <View style={styles.videoWrap}>
+            <WebView
+              source={{ html: `<body style="margin:0;background:#000"><video src="${product.video_url}" controls playsinline style="width:100%;height:100%"></video></body>` }}
+              style={styles.videoPlayer}
+              allowsInlineMediaPlayback
+              mediaPlaybackRequiresUserAction={false}
+            />
+          </View>
+        ) : null}
 
         <View style={styles.contentBox}>
           {product.brand ? <Text style={styles.brand}>{product.brand.name}</Text> : null}
@@ -420,6 +435,8 @@ const styles = StyleSheet.create({
   discountText: { color: COLORS.white, fontWeight: 'bold', fontSize: 12 },
 
   thumbRow: { marginTop: 10 },
+  videoWrap: { width, height: width * 0.6, marginTop: 12, backgroundColor: '#000' },
+  videoPlayer: { flex: 1, backgroundColor: '#000' },
   thumbBox: { width: 56, height: 56, borderRadius: 8, borderWidth: 1, borderColor: COLORS.border, marginRight: 8, overflow: 'hidden' },
   thumbBoxActive: { borderColor: COLORS.primary, borderWidth: 2 },
   thumbImage: { width: '100%', height: '100%' },

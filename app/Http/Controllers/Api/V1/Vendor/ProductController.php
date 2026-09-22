@@ -107,12 +107,14 @@ class ProductController extends Controller
             'seo_description' => ['nullable', 'string', 'max:255'],
             'images' => ['nullable', 'array', 'max:8'],
             'images.*' => ['image', 'max:5120'],
+            'video' => ['nullable', 'file', 'mimetypes:video/mp4,video/quicktime', 'max:51200'],
         ]);
 
         $categories = $validated['categories'] ?? null;
         $tags = $validated['tags'] ?? null;
         $images = $request->file('images', []);
-        unset($validated['categories'], $validated['tags'], $validated['images']);
+        $video = $request->file('video');
+        unset($validated['categories'], $validated['tags'], $validated['images'], $validated['video']);
 
         $validated['slug'] = $validated['slug'] ?? $this->uniqueSlug($validated['name']);
         $validated['type'] = $validated['type'] ?? ProductType::Simple->value;
@@ -153,6 +155,10 @@ class ProductController extends Controller
 
         foreach ($images as $image) {
             $product->addMedia($image)->toMediaCollection('images');
+        }
+
+        if ($video) {
+            $product->addMedia($video)->toMediaCollection('videos');
         }
 
         return ApiResponse::success(new VendorProductResource($product->fresh()), status: 201);

@@ -27,6 +27,7 @@ class VendorProductResource extends JsonResource
             'status_label' => $this->status->getLabel(),
             'rejection_reason' => $this->rejection_reason,
             'thumbnail' => $this->getFirstMediaUrl('images', 'thumb') ?: $this->getFirstMediaUrl('images') ?: null,
+            'video_url' => $this->getFirstMediaUrl('videos') ?: null,
             'short_description' => $this->short_description,
             'description' => $this->description,
             'price' => Money::make($this->price),

@@ -51,6 +51,42 @@ test('a vendor can create a product with images, categories and tags', function 
         ->and($product->getMedia('images'))->toHaveCount(1);
 });
 
+test('a vendor can attach a product video when creating a product', function () {
+    $vendor = Vendor::factory()->create();
+    Store::factory()->create(['vendor_id' => $vendor->id]);
+    $token = $vendor->user->createToken('t', ['vendor:*'])->plainTextToken;
+
+    $response = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/vendor/products', [
+            'name' => 'Land Listing',
+            'price' => 500000,
+            'stock_status' => 'in_stock',
+            'video' => UploadedFile::fake()->create('walkthrough.mp4', 2048, 'video/mp4'),
+        ]);
+
+    $response->assertCreated()
+        ->assertJsonPath('data.video_url', fn ($url) => filled($url));
+
+    $product = Product::where('name', 'Land Listing')->firstOrFail();
+    expect($product->getMedia('videos'))->toHaveCount(1);
+});
+
+test('a non-video file is rejected for the video field', function () {
+    $vendor = Vendor::factory()->create();
+    Store::factory()->create(['vendor_id' => $vendor->id]);
+    $token = $vendor->user->createToken('t', ['vendor:*'])->plainTextToken;
+
+    $response = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/vendor/products', [
+            'name' => 'Bad Video Product',
+            'price' => 1000,
+            'stock_status' => 'in_stock',
+            'video' => UploadedFile::fake()->create('not-a-video.txt', 10, 'text/plain'),
+        ]);
+
+    $response->assertStatus(422)->assertJsonValidationErrors('video');
+});
+
 test('a new product is seeded with a real WarehouseStock row matching its requested initial stock quantity', function () {
     $vendor = Vendor::factory()->create();
     Store::factory()->create(['vendor_id' => $vendor->id]);
