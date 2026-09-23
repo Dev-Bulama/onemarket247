@@ -103,3 +103,27 @@ test('the approve action is hidden for an already approved vendor', function () 
         ->test(ListVendors::class)
         ->assertTableActionHidden('approve', $vendor);
 });
+
+test('an admin can message a vendor directly from the vendor list', function () {
+    $admin = superAdmin();
+    $vendor = Vendor::factory()->create();
+
+    Livewire::actingAs($admin, 'admin')
+        ->test(ListVendors::class)
+        ->callTableAction('message', $vendor, data: ['message' => 'Please update your bank details.']);
+
+    $conversation = $vendor->conversations()->first();
+    expect($conversation)->not->toBeNull()
+        ->and($conversation->user_id)->toBe($admin->id)
+        ->and($conversation->messages()->first()->body)->toBe('Please update your bank details.');
+});
+
+test('the message action is hidden for a user without conversations.moderate', function () {
+    $staff = User::factory()->admin()->create();
+    $staff->givePermissionTo(Permission::where('name', 'vendors.view')->where('guard_name', 'admin')->first());
+    $vendor = Vendor::factory()->create();
+
+    Livewire::actingAs($staff, 'admin')
+        ->test(ListVendors::class)
+        ->assertTableActionHidden('message', $vendor);
+});

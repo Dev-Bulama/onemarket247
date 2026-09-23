@@ -1,18 +1,22 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { COLORS, SIZES } from '../../constants';
 import { storesApi } from '../../api/products';
+import { chatApi } from '../../api/chat';
 import { apiErrorMessage } from '../../api/client';
 import { Product, Store } from '../../types';
 import { useCartStore } from '../../store/cartStore';
+import { useAuthStore } from '../../store/authStore';
 import { useBootstrapStore } from '../../store/bootstrapStore';
 import { useLocaleStore } from '../../store/localeStore';
+import { useToastStore } from '../../store/toastStore';
 import ProductCard, { computeGridCardWidth } from '../../components/ProductCard';
 
 export default function StoreScreen({ route, navigation }: any) {
   const { slug } = route.params as { slug: string };
   const { addItem } = useCartStore();
+  const { isAuthenticated } = useAuthStore();
   const gridColumns = useBootstrapStore(s => s.productGridColumns);
   const { language, currency } = useLocaleStore();
 
@@ -33,6 +37,24 @@ export default function StoreScreen({ route, navigation }: any) {
       setLastPage(res.data.meta.pagination.last_page);
     }).finally(() => setLoading(false));
   }, [slug, language, currency]);
+
+  const handleChatWithVendor = async () => {
+    if (!isAuthenticated) {
+      navigation.getParent()?.getParent()?.navigate('Auth', { screen: 'Login' });
+      return;
+    }
+    if (!store) return;
+    try {
+      const res = await chatApi.start({ vendor_id: store.vendor_id });
+      navigation.navigate('ChatThread', { conversationId: res.data.data.id, title: store.name });
+    } catch (e) {
+      useToastStore.getState().show(apiErrorMessage(e), 'error');
+    }
+  };
+
+  const handleCallVendor = () => {
+    if (store?.phone) Linking.openURL(`tel:${store.phone}`);
+  };
 
   const loadMore = useCallback(() => {
     if (loadingMore || page >= lastPage) return;
@@ -94,6 +116,18 @@ export default function StoreScreen({ route, navigation }: any) {
                   <Text style={styles.vacationText}>{store.vacation_message}</Text>
                 </View>
               ) : null}
+              <View style={styles.contactRow}>
+                <TouchableOpacity style={styles.contactBtn} onPress={handleChatWithVendor}>
+                  <IonIcon name="chatbubble-ellipses-outline" size={15} color={COLORS.primary} />
+                  <Text style={styles.contactBtnText}>Chat</Text>
+                </TouchableOpacity>
+                {store.phone ? (
+                  <TouchableOpacity style={styles.contactBtn} onPress={handleCallVendor}>
+                    <IonIcon name="call-outline" size={15} color={COLORS.primary} />
+                    <Text style={styles.contactBtnText}>Call</Text>
+                  </TouchableOpacity>
+                ) : null}
+              </View>
             </View>
           </View>
         }
@@ -129,6 +163,12 @@ const styles = StyleSheet.create({
   locationText: { fontSize: 11, color: COLORS.textMuted },
   vacationBanner: { backgroundColor: '#FFF3EB', borderRadius: SIZES.borderRadiusSm, padding: 8, marginTop: 8 },
   vacationText: { fontSize: 11, color: COLORS.primaryDark },
+  contactRow: { flexDirection: 'row', gap: 8, marginTop: 8 },
+  contactBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 4, borderWidth: 1, borderColor: COLORS.border,
+    borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 10, paddingVertical: 6,
+  },
+  contactBtnText: { fontSize: 11, fontWeight: '600', color: COLORS.primary },
   footerLoader: { marginVertical: 16 },
   emptyText: { textAlign: 'center', color: COLORS.textSecondary, marginTop: 24 },
 });

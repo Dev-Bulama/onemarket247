@@ -45,9 +45,33 @@ export interface Brand extends BrandSummary {
 }
 
 export interface VendorSummary {
+  id: number;
   store_name: string;
   store_slug: string;
   city?: string | null;
+}
+
+export interface Conversation {
+  id: number;
+  subject?: string | null;
+  vendor: { id: number; store_name: string; store_slug: string } | null;
+  with_name?: string | null;
+  product?: { id: number; name: string; slug: string } | null;
+  last_message?: { body: string; sender_id: number; created_at: string } | null;
+  unread_count: number;
+  is_closed: boolean;
+  last_message_at?: string | null;
+  created_at: string;
+}
+
+export interface ChatMessage {
+  id: number;
+  conversation_id: number;
+  sender_id: number;
+  is_mine: boolean;
+  body: string;
+  read_at?: string | null;
+  created_at: string;
 }
 
 export interface Category {
@@ -131,9 +155,12 @@ export interface ProductDetail {
 
 export interface Store {
   id: number;
+  vendor_id: number;
   name: string;
   slug: string;
   description?: string | null;
+  email?: string | null;
+  phone?: string | null;
   status: string;
   is_verified: boolean;
   is_featured: boolean;

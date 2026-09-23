@@ -22,7 +22,7 @@ class RolePermissionSeeder extends Seeder
         'products.view', 'products.create', 'products.update', 'products.delete', 'products.approve', 'products.feature',
         'categories.manage', 'brands.manage', 'attributes.manage', 'collections.manage',
         'inventory.manage', 'warehouses.manage',
-        'reviews.moderate', 'questions.manage',
+        'reviews.moderate', 'questions.manage', 'conversations.moderate',
         'orders.view', 'orders.manage', 'orders.export',
         'payments.view', 'payments.manage', 'refunds.manage',
         'commissions.manage', 'withdrawals.view', 'withdrawals.approve',
@@ -43,7 +43,7 @@ class RolePermissionSeeder extends Seeder
     private const STORE_PERMISSIONS = [
         'store.products.manage', 'store.inventory.manage', 'store.orders.manage',
         'store.orders.fulfil', 'store.coupons.manage', 'store.reviews.respond',
-        'store.questions.answer',
+        'store.questions.answer', 'store.conversations.manage',
         'store.settings.manage', 'store.staff.manage', 'store.reports.view',
         'store.withdrawals.request',
     ];
@@ -52,7 +52,7 @@ class RolePermissionSeeder extends Seeder
         'Super Admin' => '*',
         'Admin' => self::PERMISSIONS,
         'Catalog Staff' => ['products.view', 'products.create', 'products.update', 'products.approve', 'categories.manage', 'brands.manage', 'attributes.manage'],
-        'Support Staff' => ['support.manage', 'customers.view', 'orders.view', 'returns.manage', 'disputes.manage'],
+        'Support Staff' => ['support.manage', 'customers.view', 'orders.view', 'returns.manage', 'disputes.manage', 'conversations.moderate'],
         'Finance Staff' => ['payments.view', 'payments.manage', 'refunds.manage', 'commissions.manage', 'withdrawals.view', 'withdrawals.approve', 'reports.view'],
     ];
 

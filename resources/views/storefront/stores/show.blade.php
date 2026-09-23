@@ -25,6 +25,27 @@
             <p class="mt-4 text-gray-700">{{ $store->description }}</p>
         @endif
 
+        <div class="mt-4 flex flex-wrap items-center gap-2">
+            @auth
+                <form method="POST" action="{{ route('account.conversations.store') }}">
+                    @csrf
+                    <input type="hidden" name="vendor_id" value="{{ $store->vendor_id }}">
+                    <button type="submit" class="inline-flex items-center gap-2 rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:border-brand-orange hover:text-brand-orange">
+                        <i class="fa-solid fa-comment-dots" aria-hidden="true"></i> Chat with Vendor
+                    </button>
+                </form>
+            @else
+                <a href="{{ route('login') }}" class="inline-flex items-center gap-2 rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:border-brand-orange hover:text-brand-orange">
+                    <i class="fa-solid fa-comment-dots" aria-hidden="true"></i> Chat with Vendor
+                </a>
+            @endauth
+            @if ($store->phone)
+                <a href="tel:{{ $store->phone }}" class="inline-flex items-center gap-2 rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:border-brand-orange hover:text-brand-orange">
+                    <i class="fa-solid fa-phone" aria-hidden="true"></i> Call Vendor
+                </a>
+            @endif
+        </div>
+
         <dl class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm">
             @if ($store->address)
                 <div>

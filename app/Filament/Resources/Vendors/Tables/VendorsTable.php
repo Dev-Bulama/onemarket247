@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\Vendors\Tables;
 
+use App\Actions\Chat\StartConversationAction;
 use App\Enums\VendorStatus;
+use App\Filament\Resources\Conversations\ConversationResource;
 use App\Models\Vendor;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
@@ -125,6 +127,30 @@ class VendorsTable
                     ->action(function (Vendor $record) {
                         $record->update(['status' => VendorStatus::Deactivated]);
                         Notification::make()->title('Vendor terminated')->success()->send();
+                    }),
+                Action::make('message')
+                    ->label('Message')
+                    ->icon(Heroicon::OutlinedChatBubbleLeftRight)
+                    ->color('gray')
+                    ->visible(fn () => auth()->user()?->can('conversations.moderate'))
+                    ->schema([
+                        Textarea::make('message')
+                            ->label('Message')
+                            ->required()
+                            ->maxLength(2000),
+                    ])
+                    ->action(function (Vendor $record, array $data) {
+                        $conversation = app(StartConversationAction::class)->handle($record, auth()->user(), null, $data['message']);
+
+                        Notification::make()
+                            ->title('Message sent to '.$record->business_name)
+                            ->success()
+                            ->actions([
+                                Action::make('view')
+                                    ->label('View conversation')
+                                    ->url(ConversationResource::getUrl('view', ['record' => $conversation])),
+                            ])
+                            ->send();
                     }),
                 EditAction::make(),
             ])

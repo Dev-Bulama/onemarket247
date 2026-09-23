@@ -43,6 +43,7 @@ class ProductResource extends JsonResource
             'rating' => $this->averageRating(),
             'review_count' => $this->approved_reviews_count ?? $this->approvedReviews()->count(),
             'vendor' => $this->whenLoaded('vendor', fn () => $this->vendor?->store ? [
+                'id' => $this->vendor->id,
                 'store_name' => $this->vendor->store->name,
                 'store_slug' => $this->vendor->store->slug,
                 'city' => $this->vendor->store->relationLoaded('city') ? $this->vendor->store->city?->name : null,

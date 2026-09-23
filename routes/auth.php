@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Account\AddressController;
 use App\Http\Controllers\Account\CompareController;
+use App\Http\Controllers\Account\ConversationController;
 use App\Http\Controllers\Account\NotificationController;
 use App\Http\Controllers\Account\OrderController;
 use App\Http\Controllers\Account\WishlistController;
@@ -88,6 +89,11 @@ Route::middleware('auth:web')->group(function () {
         Route::get('account/orders/{order}', [OrderController::class, 'show'])->name('account.orders.show');
         Route::get('account/orders/{order}/track', [OrderController::class, 'track'])->name('account.orders.track');
         Route::post('account/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('account.orders.cancel');
+
+        Route::get('account/conversations', [ConversationController::class, 'index'])->name('account.conversations.index');
+        Route::post('account/conversations', [ConversationController::class, 'store'])->name('account.conversations.store');
+        Route::get('account/conversations/{conversation}', [ConversationController::class, 'show'])->name('account.conversations.show');
+        Route::post('account/conversations/{conversation}/messages', [ConversationController::class, 'reply'])->name('account.conversations.reply');
 
         Route::get('account/notifications', [NotificationController::class, 'index'])->name('account.notifications.index');
         Route::post('account/notifications/{notification}/read', [NotificationController::class, 'markRead'])->name('account.notifications.read');

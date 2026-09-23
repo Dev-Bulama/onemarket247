@@ -67,6 +67,7 @@ class ProductDetailResource extends JsonResource
                 ])->values(),
             ])->values(),
             'vendor' => $this->vendor?->store ? [
+                'id' => $this->vendor->id,
                 'store_name' => $this->vendor->store->name,
                 'store_slug' => $this->vendor->store->slug,
             ] : null,

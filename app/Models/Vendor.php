@@ -89,6 +89,11 @@ class Vendor extends Model
         return $this->hasMany(Warehouse::class);
     }
 
+    public function conversations(): HasMany
+    {
+        return $this->hasMany(Conversation::class);
+    }
+
     /**
      * Where a newly created product's initial stock should be seeded —
      * see ApproveVendorApplicationAction, which guarantees this exists for

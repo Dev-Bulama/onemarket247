@@ -7,6 +7,7 @@ import IonIcon from 'react-native-vector-icons/Ionicons';
 import { WebView } from 'react-native-webview';
 import { COLORS, SIZES } from '../../constants';
 import { productsApi } from '../../api/products';
+import { chatApi } from '../../api/chat';
 import { apiErrorMessage, getWebUrl } from '../../api/client';
 import { ProductDetail, ProductVariation, Review } from '../../types';
 import { useCartStore } from '../../store/cartStore';
@@ -166,6 +167,19 @@ export default function ProductDetailScreen({ route, navigation }: any) {
     }
   };
 
+  const handleChatWithVendor = async () => {
+    if (!isAuthenticated) {
+      navigation.getParent()?.getParent()?.navigate('Auth', { screen: 'Login' });
+      return;
+    }
+    try {
+      const res = await chatApi.start({ product_id: product.id });
+      navigation.navigate('ChatThread', { conversationId: res.data.data.id, title: product.vendor?.store_name });
+    } catch (e) {
+      useToastStore.getState().show(apiErrorMessage(e), 'error');
+    }
+  };
+
   const images = product.images.length > 0 ? product.images : [{ url: '', thumbnail: '' }];
   const mainImageUrl = matchedVariation?.image || images[activeImage]?.url;
 
@@ -307,11 +321,17 @@ export default function ProductDetailScreen({ route, navigation }: any) {
           </View>
 
           {product.vendor && (
-            <TouchableOpacity style={styles.vendorRow} onPress={() => navigation.navigate('Store', { slug: product.vendor!.store_slug })}>
-              <IonIcon name="storefront-outline" size={16} color={COLORS.textSecondary} />
-              <Text style={styles.vendorText}>Sold by {product.vendor.store_name}</Text>
-              <IonIcon name="chevron-forward" size={14} color={COLORS.textMuted} />
-            </TouchableOpacity>
+            <>
+              <TouchableOpacity style={styles.vendorRow} onPress={() => navigation.navigate('Store', { slug: product.vendor!.store_slug })}>
+                <IonIcon name="storefront-outline" size={16} color={COLORS.textSecondary} />
+                <Text style={styles.vendorText}>Sold by {product.vendor.store_name}</Text>
+                <IonIcon name="chevron-forward" size={14} color={COLORS.textMuted} />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.chatVendorBtn} onPress={handleChatWithVendor}>
+                <IonIcon name="chatbubble-ellipses-outline" size={16} color={COLORS.primary} />
+                <Text style={styles.chatVendorBtnText}>Chat with Vendor</Text>
+              </TouchableOpacity>
+            </>
           )}
 
           {addedMessage ? <Text style={styles.addedMessage}>{addedMessage}</Text> : null}
@@ -489,6 +509,11 @@ const styles = StyleSheet.create({
 
   vendorRow: { flexDirection: 'row', alignItems: 'center', marginTop: 18, gap: 6 },
   vendorText: { fontSize: 13, color: COLORS.textSecondary },
+  chatVendorBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', marginTop: 10,
+    borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 7,
+  },
+  chatVendorBtnText: { fontSize: 12, fontWeight: '600', color: COLORS.primary },
 
   addedMessage: { marginTop: 12, color: COLORS.accent, fontWeight: '600', fontSize: 13 },
 

@@ -104,6 +104,27 @@
                     Sold by
                     <a href="{{ route('stores.show', $product->vendor->store->slug) }}" class="font-medium text-brand-orange hover:underline">{{ $product->vendor->store->name }}</a>
                 </p>
+
+                <div class="mt-3 flex flex-wrap items-center gap-2">
+                    @auth
+                        <form method="POST" action="{{ route('account.conversations.store') }}">
+                            @csrf
+                            <input type="hidden" name="product_id" value="{{ $product->id }}">
+                            <button type="submit" class="inline-flex items-center gap-2 rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:border-brand-orange hover:text-brand-orange">
+                                <i class="fa-solid fa-comment-dots" aria-hidden="true"></i> Chat with Vendor
+                            </button>
+                        </form>
+                    @else
+                        <a href="{{ route('login') }}" class="inline-flex items-center gap-2 rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:border-brand-orange hover:text-brand-orange">
+                            <i class="fa-solid fa-comment-dots" aria-hidden="true"></i> Chat with Vendor
+                        </a>
+                    @endauth
+                    @if ($product->vendor->store->phone)
+                        <a href="tel:{{ $product->vendor->store->phone }}" class="inline-flex items-center gap-2 rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:border-brand-orange hover:text-brand-orange">
+                            <i class="fa-solid fa-phone" aria-hidden="true"></i> Call Vendor
+                        </a>
+                    @endif
+                </div>
             @endif
 
             <div class="mt-4">

@@ -19,6 +19,8 @@ import VendorStaffScreen from '../screens/vendor/VendorStaffScreen';
 import VendorSubscriptionScreen from '../screens/vendor/VendorSubscriptionScreen';
 import VendorDocumentsScreen from '../screens/vendor/VendorDocumentsScreen';
 import VendorStoreSettingsScreen from '../screens/vendor/VendorStoreSettingsScreen';
+import ChatListScreen from '../screens/chat/ChatListScreen';
+import ChatThreadScreen from '../screens/chat/ChatThreadScreen';
 
 // Mirrors MainNavigator.tsx's structure exactly (same Tab.Navigator style
 // constants, same TabIcon helper pattern) but for the vendor side of the
@@ -68,6 +70,8 @@ function MoreStackNav() {
       <MoreStack.Screen name="VendorSubscription" component={VendorSubscriptionScreen} />
       <MoreStack.Screen name="VendorDocuments" component={VendorDocumentsScreen} />
       <MoreStack.Screen name="VendorStoreSettings" component={VendorStoreSettingsScreen} />
+      <MoreStack.Screen name="ChatList" component={ChatListScreen} />
+      <MoreStack.Screen name="ChatThread" component={ChatThreadScreen} />
     </MoreStack.Navigator>
   );
 }

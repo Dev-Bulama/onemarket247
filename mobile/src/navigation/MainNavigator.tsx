@@ -13,6 +13,8 @@ import ProductListScreen from '../screens/product/ProductListScreen';
 import ProductDetailScreen from '../screens/product/ProductDetailScreen';
 import StoreScreen from '../screens/product/StoreScreen';
 import WriteReviewScreen from '../screens/product/WriteReviewScreen';
+import ChatListScreen from '../screens/chat/ChatListScreen';
+import ChatThreadScreen from '../screens/chat/ChatThreadScreen';
 import NotificationsScreen from '../screens/notifications/NotificationsScreen';
 import CartScreen from '../screens/cart/CartScreen';
 import CheckoutScreen from '../screens/checkout/CheckoutScreen';
@@ -47,6 +49,8 @@ function HomeStackNav() {
       <HomeStack.Screen name="ProductList" component={ProductListScreen} />
       <HomeStack.Screen name="ProductDetail" component={ProductDetailScreen} />
       <HomeStack.Screen name="Store" component={StoreScreen} />
+      <HomeStack.Screen name="ChatList" component={ChatListScreen} />
+      <HomeStack.Screen name="ChatThread" component={ChatThreadScreen} />
       <HomeStack.Screen name="WriteReview" component={WriteReviewScreen} />
       <HomeStack.Screen name="Notifications" component={NotificationsScreen} />
     </HomeStack.Navigator>
@@ -60,6 +64,8 @@ function CategoriesStackNav() {
       <CategoriesStack.Screen name="ProductList" component={ProductListScreen} />
       <CategoriesStack.Screen name="ProductDetail" component={ProductDetailScreen} />
       <CategoriesStack.Screen name="Store" component={StoreScreen} />
+      <CategoriesStack.Screen name="ChatList" component={ChatListScreen} />
+      <CategoriesStack.Screen name="ChatThread" component={ChatThreadScreen} />
       <CategoriesStack.Screen name="WriteReview" component={WriteReviewScreen} />
     </CategoriesStack.Navigator>
   );
@@ -72,6 +78,8 @@ function SearchStackNav() {
       <SearchStack.Screen name="ProductList" component={ProductListScreen} />
       <SearchStack.Screen name="ProductDetail" component={ProductDetailScreen} />
       <SearchStack.Screen name="Store" component={StoreScreen} />
+      <SearchStack.Screen name="ChatList" component={ChatListScreen} />
+      <SearchStack.Screen name="ChatThread" component={ChatThreadScreen} />
       <SearchStack.Screen name="WriteReview" component={WriteReviewScreen} />
     </SearchStack.Navigator>
   );
@@ -109,6 +117,8 @@ function ProfileStackNav() {
       <ProfileStack.Screen name="Compare" component={CompareScreen} />
       <ProfileStack.Screen name="ProductDetail" component={ProductDetailScreen} />
       <ProfileStack.Screen name="Store" component={StoreScreen} />
+      <ProfileStack.Screen name="ChatList" component={ChatListScreen} />
+      <ProfileStack.Screen name="ChatThread" component={ChatThreadScreen} />
       <ProfileStack.Screen name="WriteReview" component={WriteReviewScreen} />
       <ProfileStack.Screen name="Blog" component={BlogListScreen} />
       <ProfileStack.Screen name="BlogPost" component={BlogPostScreen} />

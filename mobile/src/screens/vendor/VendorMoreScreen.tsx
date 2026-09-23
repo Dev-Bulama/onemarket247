@@ -9,6 +9,7 @@ export default function VendorMoreScreen({ navigation }: any) {
   const isOwner = user?.user_type === 'vendor_owner';
 
   const storeItems = [
+    { icon: 'chatbubbles-outline', label: 'Messages', onPress: () => navigation.navigate('ChatList') },
     { icon: 'cash-outline', label: 'Earnings', onPress: () => navigation.navigate('VendorEarnings') },
     { icon: 'wallet-outline', label: 'Withdrawals', onPress: () => navigation.navigate('VendorWithdrawals') },
     ...(isOwner ? [{ icon: 'people-outline', label: 'Staff', onPress: () => navigation.navigate('VendorStaff') }] : []),
