@@ -86,6 +86,11 @@ export default function ProfileScreen({ navigation }: any) {
           <Text style={styles.menuLabel}>{vendorItem.label}</Text>
           <IonIcon name="chevron-forward" size={18} color={COLORS.textMuted} />
         </TouchableOpacity>
+        <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate('AgentOnboarding')}>
+          <IonIcon name="briefcase-outline" size={20} color={COLORS.text} />
+          <Text style={styles.menuLabel}>Become an Agent</Text>
+          <IonIcon name="chevron-forward" size={18} color={COLORS.textMuted} />
+        </TouchableOpacity>
       </View>
 
       <Text style={styles.sectionLabel}>Info & Help</Text>

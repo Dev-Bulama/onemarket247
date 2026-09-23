@@ -59,6 +59,7 @@ class ApproveVendorApplicationAction
 
             $vendor = Vendor::create([
                 'user_id' => $user->id,
+                'agent_id' => $application->agent_id,
                 'business_name' => $application->business_name,
                 'registration_number' => $application->registration_number,
                 'tax_identification_number' => $application->tax_identification_number,

@@ -27,6 +27,10 @@ class VendorApplicationRequest extends FormRequest
 
             // Agent info — filled in when a OneMarket247 field agent assisted
             // with this application; optional for self-service sign-ups.
+            // agent_id picks a registered/approved Agent from the dropdown;
+            // the free-text fields below remain as a fallback for an agent
+            // who isn't registered in the roster yet.
+            'agent_id' => ['nullable', 'exists:agents,id'],
             'agent_id_number' => ['nullable', 'string', 'max:100'],
             'agent_full_name' => ['nullable', 'string', 'max:255'],
             'agent_phone' => ['nullable', 'string', 'max:30'],

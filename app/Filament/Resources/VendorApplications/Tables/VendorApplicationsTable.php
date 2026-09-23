@@ -35,8 +35,13 @@ class VendorApplicationsTable
                     ->searchable(),
                 TextColumn::make('country.name')
                     ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('agent.full_name')
+                    ->label('Registered agent')
+                    ->searchable()
+                    ->placeholder('—')
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('agent_full_name')
-                    ->label('Agent')
+                    ->label('Agent (manual entry)')
                     ->searchable()
                     ->placeholder('—')
                     ->toggleable(isToggledHiddenByDefault: true),

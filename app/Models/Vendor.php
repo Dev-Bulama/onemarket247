@@ -18,7 +18,7 @@ class Vendor extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'user_id', 'business_name', 'registration_number', 'tax_identification_number',
+        'user_id', 'agent_id', 'business_name', 'registration_number', 'tax_identification_number',
         'identity_type', 'identity_number', 'status', 'commission_rate', 'is_verified',
         'is_featured', 'bank_name', 'bank_account_name', 'bank_account_number',
         'country_id', 'state_id', 'city_id', 'postal_code', 'address',
@@ -42,6 +42,11 @@ class Vendor extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function agent(): BelongsTo
+    {
+        return $this->belongsTo(Agent::class);
     }
 
     public function country(): BelongsTo

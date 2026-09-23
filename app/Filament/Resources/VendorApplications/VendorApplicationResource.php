@@ -53,8 +53,9 @@ class VendorApplicationResource extends Resource
             Section::make('Agent info')
                 ->columns(3)
                 ->schema([
+                    TextEntry::make('agent.full_name')->label('Registered agent')->placeholder('— none —'),
                     TextEntry::make('agent_id_number')->label('Agent ID No.')->placeholder('— no agent —'),
-                    TextEntry::make('agent_full_name')->label('Agent full name')->placeholder('—'),
+                    TextEntry::make('agent_full_name')->label('Agent full name (manual entry)')->placeholder('—'),
                     TextEntry::make('agent_phone')->label('Agent phone no.')->placeholder('—'),
                 ]),
             Section::make('Business')

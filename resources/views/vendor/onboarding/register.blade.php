@@ -75,19 +75,31 @@
                     <p class="text-xs text-gray-500">Only fill this in if a OneMarket247 field agent is assisting with this application.</p>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Agent ID No.</label>
-                    <input type="text" name="agent_id_number" value="{{ old('agent_id_number') }}"
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    <label class="block text-sm font-medium text-gray-700">Registered agent</label>
+                    <select name="agent_id" id="agent_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        <option value="">— None / agent not listed —</option>
+                        @foreach ($agents as $agent)
+                            <option value="{{ $agent->id }}" @selected(old('agent_id') == $agent->id)>{{ $agent->full_name }}</option>
+                        @endforeach
+                    </select>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Agent full name</label>
-                    <input type="text" name="agent_full_name" value="{{ old('agent_full_name') }}"
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Agent phone no.</label>
-                    <input type="text" name="agent_phone" value="{{ old('agent_phone') }}"
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                <div id="manual-agent-fields" class="space-y-4 {{ old('agent_id') ? 'hidden' : '' }}">
+                    <p class="text-xs text-gray-500">If your agent isn't listed above, enter their details manually instead:</p>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Agent ID No.</label>
+                        <input type="text" name="agent_id_number" value="{{ old('agent_id_number') }}"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Agent full name</label>
+                        <input type="text" name="agent_full_name" value="{{ old('agent_full_name') }}"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Agent phone no.</label>
+                        <input type="text" name="agent_phone" value="{{ old('agent_phone') }}"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    </div>
                 </div>
 
                 <button type="button" class="step-next rounded-md bg-brand-orange px-4 py-2 text-white font-medium hover:bg-brand-orange2" data-next="2">Next: Store</button>
@@ -242,6 +254,10 @@
 
     document.getElementById('country_id').addEventListener('change', (e) => populateStates(e.target.value));
     document.getElementById('state_id').addEventListener('change', (e) => populateCities(e.target.value));
+
+    document.getElementById('agent_id').addEventListener('change', (e) => {
+        document.getElementById('manual-agent-fields').classList.toggle('hidden', e.target.value !== '');
+    });
 
     const initialCountry = document.getElementById('country_id').value;
     if (initialCountry) {

@@ -34,6 +34,7 @@ import PageScreen from '../screens/profile/PageScreen';
 import PreferencesScreen from '../screens/profile/PreferencesScreen';
 import DeleteAccountScreen from '../screens/profile/DeleteAccountScreen';
 import VendorOnboardingScreen from '../screens/vendor/VendorOnboardingScreen';
+import AgentOnboardingScreen from '../screens/agent/AgentOnboardingScreen';
 
 const Tab = createBottomTabNavigator();
 const HomeStack = createNativeStackNavigator();
@@ -128,6 +129,7 @@ function ProfileStackNav() {
       <ProfileStack.Screen name="Preferences" component={PreferencesScreen} />
       <ProfileStack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
       <ProfileStack.Screen name="VendorOnboarding" component={VendorOnboardingScreen} />
+      <ProfileStack.Screen name="AgentOnboarding" component={AgentOnboardingScreen} />
     </ProfileStack.Navigator>
   );
 }

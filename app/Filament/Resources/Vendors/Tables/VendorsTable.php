@@ -33,6 +33,11 @@ class VendorsTable
                 TextColumn::make('user.name')
                     ->label('Owner')
                     ->searchable(),
+                TextColumn::make('agent.full_name')
+                    ->label('Agent')
+                    ->searchable()
+                    ->placeholder('—')
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('user.email')
                     ->label('Email')
                     ->searchable()

@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Enums\AgentStatus;
 use App\Http\Controllers\Controller;
+use App\Models\Agent;
 use App\Models\City;
 use App\Models\Country;
 use App\Models\Currency;
@@ -45,6 +47,17 @@ class ReferenceDataController extends Controller
     {
         return ApiResponse::success(
             City::where('state_id', $state->id)->where('is_active', true)->orderBy('name')->get(['id', 'name'])
+        );
+    }
+
+    /**
+     * The "Registered Agent" dropdown vendors pick from when applying —
+     * only approved/active agents, never suspended or deactivated ones.
+     */
+    public function agents(): JsonResponse
+    {
+        return ApiResponse::success(
+            Agent::where('status', AgentStatus::Approved)->orderBy('full_name')->get(['id', 'full_name', 'phone'])
         );
     }
 }

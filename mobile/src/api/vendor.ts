@@ -48,6 +48,7 @@ export interface VendorApplicationPayload {
   business_name: string;
   registration_number?: string;
   tax_identification_number?: string;
+  agent_id?: number;
   agent_id_number?: string;
   agent_full_name?: string;
   agent_phone?: string;

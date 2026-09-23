@@ -3,6 +3,7 @@ import { ActivityIndicator, Image, Modal, ScrollView, StyleSheet, Switch, Text, 
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { COLORS, SIZES } from '../../constants';
 import { vendorApplicationApi, PickedFile } from '../../api/vendor';
+import { agentsApi, AgentSummary } from '../../api/agent';
 import { referenceApi } from '../../api/config';
 import { apiErrorMessage } from '../../api/client';
 import { pickDocumentFile, takeDocumentPhoto } from '../../utils/documentPicker';
@@ -19,6 +20,7 @@ interface FormState {
   businessName: string;
   registrationNumber: string;
   taxIdentificationNumber: string;
+  agentId: number | null;
   agentIdNumber: string;
   agentFullName: string;
   agentPhone: string;
@@ -39,7 +41,7 @@ interface FormState {
 
 const INITIAL: FormState = {
   fullName: '', email: '', phone: '', businessName: '', registrationNumber: '', taxIdentificationNumber: '',
-  agentIdNumber: '', agentFullName: '', agentPhone: '',
+  agentId: null, agentIdNumber: '', agentFullName: '', agentPhone: '',
   storeName: '', storeCategory: '', storeDescription: '', countryId: null, stateId: null, cityId: null,
   postalCode: '', address: '', website: '',
   bankName: '', bankAccountName: '', bankAccountNumber: '',
@@ -54,7 +56,8 @@ export default function VendorOnboardingScreen({ navigation }: any) {
   const [countries, setCountries] = useState<Country[]>([]);
   const [states, setStates] = useState<State[]>([]);
   const [cities, setCities] = useState<City[]>([]);
-  const [pickerFor, setPickerFor] = useState<'country' | 'state' | 'city' | null>(null);
+  const [agents, setAgents] = useState<AgentSummary[]>([]);
+  const [pickerFor, setPickerFor] = useState<'country' | 'state' | 'city' | 'agent' | null>(null);
 
   const [identityDoc, setIdentityDoc] = useState<PickedFile | null>(null);
   const [businessDoc, setBusinessDoc] = useState<PickedFile | null>(null);
@@ -66,6 +69,7 @@ export default function VendorOnboardingScreen({ navigation }: any) {
 
   useEffect(() => {
     referenceApi.countries().then(res => setCountries(res.data.data)).catch(() => {});
+    agentsApi.list().then(res => setAgents(res.data.data)).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -136,6 +140,7 @@ export default function VendorOnboardingScreen({ navigation }: any) {
         business_name: form.businessName.trim(),
         registration_number: form.registrationNumber.trim() || undefined,
         tax_identification_number: form.taxIdentificationNumber.trim() || undefined,
+        agent_id: form.agentId ?? undefined,
         agent_id_number: form.agentIdNumber.trim() || undefined,
         agent_full_name: form.agentFullName.trim() || undefined,
         agent_phone: form.agentPhone.trim() || undefined,
@@ -200,6 +205,7 @@ export default function VendorOnboardingScreen({ navigation }: any) {
   const selectedCountry = countries.find(c => c.id === form.countryId);
   const selectedState = states.find(s => s.id === form.stateId);
   const selectedCity = cities.find(c => c.id === form.cityId);
+  const selectedAgent = agents.find(a => a.id === form.agentId);
 
   return (
     <View style={styles.flex}>
@@ -230,9 +236,19 @@ export default function VendorOnboardingScreen({ navigation }: any) {
             <Field label="Registration Number (optional)" value={form.registrationNumber} onChangeText={t => set('registrationNumber', t)} placeholder="RC123456" />
             <Field label="Tax ID Number (optional)" value={form.taxIdentificationNumber} onChangeText={t => set('taxIdentificationNumber', t)} placeholder="TIN-000000" />
             <Text style={styles.sectionLabel}>Agent Info (optional — if a field agent assisted you)</Text>
-            <Field label="Agent ID Number" value={form.agentIdNumber} onChangeText={t => set('agentIdNumber', t)} placeholder="AGT-000" />
-            <Field label="Agent Full Name" value={form.agentFullName} onChangeText={t => set('agentFullName', t)} placeholder="Agent name" />
-            <Field label="Agent Phone" value={form.agentPhone} onChangeText={t => set('agentPhone', t)} placeholder="08012345678" keyboardType="phone-pad" />
+            <Text style={styles.label}>Registered Agent</Text>
+            <TouchableOpacity style={styles.selectInput} onPress={() => setPickerFor('agent')}>
+              <Text style={selectedAgent ? styles.selectValue : styles.selectPlaceholder}>{selectedAgent?.full_name ?? 'None / agent not listed'}</Text>
+              <IonIcon name="chevron-down" size={16} color={COLORS.textMuted} />
+            </TouchableOpacity>
+            {!form.agentId && (
+              <>
+                <Text style={styles.sectionLabel}>If your agent isn't listed, enter their details manually</Text>
+                <Field label="Agent ID Number" value={form.agentIdNumber} onChangeText={t => set('agentIdNumber', t)} placeholder="AGT-000" />
+                <Field label="Agent Full Name" value={form.agentFullName} onChangeText={t => set('agentFullName', t)} placeholder="Agent name" />
+                <Field label="Agent Phone" value={form.agentPhone} onChangeText={t => set('agentPhone', t)} placeholder="08012345678" keyboardType="phone-pad" />
+              </>
+            )}
           </>
         )}
 
@@ -319,7 +335,12 @@ export default function VendorOnboardingScreen({ navigation }: any) {
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setPickerFor(null)}>
           <View style={styles.sheet}>
             <ScrollView style={{ maxHeight: 360 }}>
-              {(pickerFor === 'country' ? countries : pickerFor === 'state' ? states : cities).map((opt: any) => (
+              {pickerFor === 'agent' && (
+                <TouchableOpacity style={styles.pickerRow} onPress={() => { set('agentId', null); setPickerFor(null); }}>
+                  <Text style={styles.selectValue}>None / agent not listed</Text>
+                </TouchableOpacity>
+              )}
+              {(pickerFor === 'country' ? countries : pickerFor === 'state' ? states : pickerFor === 'city' ? cities : agents).map((opt: any) => (
                 <TouchableOpacity
                   key={opt.id}
                   style={styles.pickerRow}
@@ -327,10 +348,11 @@ export default function VendorOnboardingScreen({ navigation }: any) {
                     if (pickerFor === 'country') { set('countryId', opt.id); set('stateId', null); set('cityId', null); }
                     if (pickerFor === 'state') { set('stateId', opt.id); set('cityId', null); }
                     if (pickerFor === 'city') set('cityId', opt.id);
+                    if (pickerFor === 'agent') set('agentId', opt.id);
                     setPickerFor(null);
                   }}
                 >
-                  <Text style={styles.selectValue}>{opt.name}</Text>
+                  <Text style={styles.selectValue}>{opt.name ?? opt.full_name}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\ProductTranslationExportController;
+use App\Http\Controllers\AgentDocumentDownloadController;
 use App\Http\Controllers\InvoiceDownloadController;
 use App\Http\Controllers\PackingSlipDownloadController;
 use App\Http\Controllers\ProductDigitalFileDownloadController;
@@ -26,6 +27,10 @@ Route::get('vendor-documents/{vendorDocument}/download', VendorDocumentDownloadC
     ->middleware('auth:admin,vendor')
     ->name('vendor-documents.download');
 
+Route::get('agent-documents/{agentDocument}/download', AgentDocumentDownloadController::class)
+    ->middleware('auth:admin')
+    ->name('agent-documents.download');
+
 Route::get('product-digital-files/{productDigitalFile}/download', ProductDigitalFileDownloadController::class)
     ->middleware('auth:admin,vendor')
     ->name('product-digital-files.download');
@@ -45,3 +50,4 @@ Route::get('admin/translation-report/export', ProductTranslationExportController
 
 require __DIR__.'/auth.php';
 require __DIR__.'/vendor.php';
+require __DIR__.'/agent.php';

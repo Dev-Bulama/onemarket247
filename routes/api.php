@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AddressController;
+use App\Http\Controllers\Api\V1\Agent\AgentApplicationController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BlogController;
 use App\Http\Controllers\Api\V1\BootstrapController;
@@ -66,6 +67,9 @@ Route::prefix('v1')->group(function () {
     // auto-provisioned).
     Route::post('vendor/apply', [VendorApplicationController::class, 'store'])->middleware('throttle:5,1');
 
+    // Public agent application — same rationale as vendor/apply above.
+    Route::post('agent/apply', [AgentApplicationController::class, 'store'])->middleware('throttle:5,1');
+
     // Public catalog browsing — generous throttle, no auth required, mirrors
     // the storefront's own web controllers query-for-query (see each
     // controller's docblock) so mobile and web can never disagree on what
@@ -79,6 +83,7 @@ Route::prefix('v1')->group(function () {
         Route::get('countries', [ReferenceDataController::class, 'countries']);
         Route::get('countries/{country}/states', [ReferenceDataController::class, 'states']);
         Route::get('states/{state}/cities', [ReferenceDataController::class, 'cities']);
+        Route::get('agents', [ReferenceDataController::class, 'agents']);
 
         Route::get('home', HomeController::class);
 

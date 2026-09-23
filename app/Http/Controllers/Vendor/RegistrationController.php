@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Vendor;
 
 use App\Actions\Vendor\SubmitVendorApplicationAction;
+use App\Enums\AgentStatus;
 use App\Enums\VendorDocumentType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Vendor\VendorApplicationRequest;
+use App\Models\Agent;
 use App\Models\City;
 use App\Models\Country;
 use App\Models\State;
@@ -22,6 +24,7 @@ class RegistrationController extends Controller
             'states' => State::orderBy('name')->get(['id', 'name', 'country_id']),
             'cities' => City::orderBy('name')->get(['id', 'name', 'state_id']),
             'plans' => VendorSubscriptionPlan::where('is_active', true)->orderBy('sort_order')->get(),
+            'agents' => Agent::where('status', AgentStatus::Approved)->orderBy('full_name')->get(['id', 'full_name']),
         ]);
     }
 
