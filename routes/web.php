@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Admin\ProductTranslationExportController;
 use App\Http\Controllers\AgentDocumentDownloadController;
+use App\Http\Controllers\Delivery\DeliveryRequestAcceptController;
+use App\Http\Controllers\Delivery\DeliveryTrackingController;
 use App\Http\Controllers\InvoiceDownloadController;
 use App\Http\Controllers\PackingSlipDownloadController;
 use App\Http\Controllers\ProductDigitalFileDownloadController;
@@ -47,6 +49,15 @@ Route::get('packing-slips/{vendorOrder}/download', PackingSlipDownloadController
 Route::get('admin/translation-report/export', ProductTranslationExportController::class)
     ->middleware('auth:admin')
     ->name('admin.translation-report.export');
+
+// No auth middleware, and deliberately no delivery-partner login system at
+// all (see Priority 7's scope decision) — the unguessable per-partner
+// `token` route parameter is the entire access control, exactly like the
+// guest order-invoice route above.
+Route::get('delivery-requests/{notification:token}', [DeliveryRequestAcceptController::class, 'show'])->name('delivery-requests.accept');
+Route::post('delivery-requests/{notification:token}', [DeliveryRequestAcceptController::class, 'accept'])->name('delivery-requests.accept.store');
+Route::get('deliveries/{assignment:tracking_token}', [DeliveryTrackingController::class, 'show'])->name('deliveries.track');
+Route::post('deliveries/{assignment:tracking_token}', [DeliveryTrackingController::class, 'advance'])->name('deliveries.track.advance');
 
 require __DIR__.'/auth.php';
 require __DIR__.'/vendor.php';

@@ -2,15 +2,19 @@
 
 namespace App\Filament\Vendor\Pages;
 
+use App\Actions\Delivery\CreateDeliveryRequestAction;
 use App\Actions\Shipping\CreateShipmentAction;
 use App\Actions\Shipping\RecordShipmentEventAction;
 use App\Enums\ShipmentStatus;
 use App\Enums\VendorOrderStatus;
 use App\Exceptions\InvalidOrderTransitionException;
+use App\Exceptions\ShipmentAlreadyAssignedException;
 use App\Models\PickupStation;
 use App\Models\Shipment;
 use App\Models\ShippingCarrier;
 use App\Models\VendorOrder;
+use App\Support\Filament\MinorUnitsInput;
+use App\Support\PriceDisplay;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
@@ -117,6 +121,13 @@ class Shipments extends Page implements HasTable
                 TextColumn::make('delivered_at')
                     ->dateTime()
                     ->placeholder('—'),
+                TextColumn::make('deliveryRequest.status')
+                    ->label('Delivery')
+                    ->badge()
+                    ->formatStateUsing(fn (?Shipment $record) => $record?->deliveryAssignment?->deliveryPartner?->full_name
+                        ?? $record?->deliveryRequest?->status?->getLabel()
+                        ?? 'Not requested')
+                    ->placeholder('Not requested'),
             ])
             ->defaultSort('created_at', 'desc')
             ->recordActions([
@@ -141,6 +152,39 @@ class Shipments extends Page implements HasTable
                             );
                             Notification::make()->title('Shipment event recorded')->success()->send();
                         } catch (InvalidOrderTransitionException $e) {
+                            Notification::make()->title($e->getMessage())->danger()->send();
+                        }
+                    }),
+                Action::make('requestDeliveryPartner')
+                    ->label('Request delivery partner')
+                    ->color('info')
+                    ->visible(fn (Shipment $record) => $record->deliveryAssignment === null && $record->deliveryRequest === null)
+                    ->schema(fn (Shipment $record) => [
+                        TextInput::make('delivery_fee')
+                            ->label('Delivery fee')
+                            ->numeric()
+                            ->prefix(PriceDisplay::baseCurrencyCode())
+                            ->default($record->vendorOrder->shipping_amount / 100)
+                            ->afterStateHydrated(MinorUnitsInput::hydrate())
+                            ->dehydrateStateUsing(MinorUnitsInput::dehydrate())
+                            ->required(),
+                        DateTimePicker::make('required_by')
+                            ->label('Required by')
+                            ->default($record->estimated_delivery_at),
+                        Textarea::make('special_instructions')
+                            ->label('Instructions for the partner'),
+                    ])
+                    ->action(function (Shipment $record, array $data) {
+                        try {
+                            app(CreateDeliveryRequestAction::class)->handle(
+                                $record,
+                                $data['delivery_fee'],
+                                $data['required_by'] ?? null,
+                                $data['special_instructions'] ?: null,
+                                Auth::guard('vendor')->user(),
+                            );
+                            Notification::make()->title('Delivery partners notified')->success()->send();
+                        } catch (ShipmentAlreadyAssignedException $e) {
                             Notification::make()->title($e->getMessage())->danger()->send();
                         }
                     }),

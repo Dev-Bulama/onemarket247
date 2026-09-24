@@ -52,4 +52,9 @@ class Shipment extends Model
     {
         return $this->hasOne(DeliveryAssignment::class);
     }
+
+    public function deliveryRequest(): HasOne
+    {
+        return $this->hasOne(DeliveryRequest::class);
+    }
 }

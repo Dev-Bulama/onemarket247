@@ -13,7 +13,8 @@ class DeliveryAssignment extends Model
     use HasFactory;
 
     protected $fillable = [
-        'shipment_id', 'assignee_name', 'assignee_phone', 'status',
+        'shipment_id', 'delivery_partner_id', 'delivery_request_id', 'tracking_token',
+        'assignee_name', 'assignee_phone', 'status',
         'assigned_at', 'delivered_at', 'assigned_by',
     ];
 
@@ -26,9 +27,24 @@ class DeliveryAssignment extends Model
         ];
     }
 
+    public function getRouteKeyName(): string
+    {
+        return 'tracking_token';
+    }
+
     public function shipment(): BelongsTo
     {
         return $this->belongsTo(Shipment::class);
+    }
+
+    public function deliveryPartner(): BelongsTo
+    {
+        return $this->belongsTo(DeliveryPartner::class);
+    }
+
+    public function deliveryRequest(): BelongsTo
+    {
+        return $this->belongsTo(DeliveryRequest::class);
     }
 
     public function assignedBy(): BelongsTo

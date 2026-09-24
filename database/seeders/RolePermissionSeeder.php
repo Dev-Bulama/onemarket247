@@ -18,6 +18,7 @@ class RolePermissionSeeder extends Seeder
         'admins.manage', 'staff.manage', 'roles.manage',
         'vendors.view', 'vendors.approve', 'vendors.suspend', 'vendors.terminate', 'vendors.manage_commission',
         'agents.manage',
+        'delivery_partners.manage',
         'stores.manage', 'subscription_plans.manage',
         'customers.view', 'customers.manage',
         'products.view', 'products.create', 'products.update', 'products.delete', 'products.approve', 'products.feature',
