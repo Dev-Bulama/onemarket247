@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\LiveLocationDataController;
+use App\Http\Controllers\Admin\LocationHistoryController;
 use App\Http\Controllers\Admin\ProductTranslationExportController;
 use App\Http\Controllers\AgentDocumentDownloadController;
 use App\Http\Controllers\Delivery\DeliveryRequestAcceptController;
@@ -49,6 +51,14 @@ Route::get('packing-slips/{vendorOrder}/download', PackingSlipDownloadController
 Route::get('admin/translation-report/export', ProductTranslationExportController::class)
     ->middleware('auth:admin')
     ->name('admin.translation-report.export');
+
+Route::get('admin/location-tracking/data', LiveLocationDataController::class)
+    ->middleware('auth:admin')
+    ->name('admin.location-tracking.data');
+
+Route::get('admin/location-tracking/{user}/history', LocationHistoryController::class)
+    ->middleware('auth:admin')
+    ->name('admin.location-tracking.history');
 
 // No auth middleware, and deliberately no delivery-partner login system at
 // all (see Priority 7's scope decision) — the unguessable per-partner

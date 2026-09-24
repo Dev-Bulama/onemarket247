@@ -140,6 +140,16 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         return $this->hasMany(DeviceToken::class);
     }
 
+    public function locationConsent(): HasOne
+    {
+        return $this->hasOne(LocationConsent::class);
+    }
+
+    public function locationPings(): HasMany
+    {
+        return $this->hasMany(LocationPing::class);
+    }
+
     public function wishlistOrCreate(): Wishlist
     {
         return $this->wishlist()->first() ?? $this->wishlist()->create();

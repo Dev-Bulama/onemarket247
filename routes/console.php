@@ -17,3 +17,6 @@ Schedule::command('queue:prune-failed --hours=48')->daily();
 // Requires the server's crontab to run `php artisan schedule:run` every
 // minute — see ResolveSiteVisitCountries's docblock.
 Schedule::command('analytics:resolve-site-visit-countries')->hourly();
+
+// See PruneLocationHistory's docblock.
+Schedule::command('location:prune-history')->daily();

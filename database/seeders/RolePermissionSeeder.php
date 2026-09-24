@@ -38,6 +38,7 @@ class RolePermissionSeeder extends Seeder
         'notifications.manage', 'email_templates.manage', 'smtp.manage',
         'support.manage',
         'reports.view',
+        'location_tracking.view',
         'settings.manage', 'security.manage',
         'backups.manage', 'logs.view', 'system_health.view',
     ];

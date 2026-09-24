@@ -57,6 +57,8 @@ Route::middleware('auth:web')->group(function () {
     Route::middleware('verified')->group(function () {
         Route::get('account', [AccountController::class, 'dashboard'])->name('account.dashboard');
         Route::get('account/security', [AccountController::class, 'security'])->name('account.security');
+        Route::patch('account/location-consent', [AccountController::class, 'updateLocationConsent'])->name('account.location-consent.update');
+        Route::post('account/location-ping', [AccountController::class, 'reportLocation'])->name('account.location-ping.store');
 
         Route::put('password', [PasswordController::class, 'update'])->name('password.update');
 

@@ -46,6 +46,52 @@
             <a href="{{ route('two-factor.show') }}" class="text-brand-orange hover:underline text-sm">Manage two-factor authentication &rarr;</a>
         </section>
 
+        @php($locationSharingEnabled = $locationConsent?->is_enabled ?? false)
+        <section class="bg-white shadow rounded-lg p-6">
+            <h2 class="font-medium text-gray-900 mb-2">Live location sharing</h2>
+            <p class="text-sm text-gray-600 mb-4">
+                When enabled, OneMarket247 admins can see your current location while you're using this page — for
+                example to help with a delivery. This only shares your location while a OneMarket247 page is open in
+                your browser, never in the background.
+            </p>
+
+            <form method="POST" action="{{ route('account.location-consent.update') }}">
+                @csrf
+                @method('PATCH')
+                <input type="hidden" name="enabled" value="{{ $locationSharingEnabled ? '0' : '1' }}">
+                <button type="submit" class="rounded-md px-4 py-2 text-sm font-medium {{ $locationSharingEnabled ? 'bg-gray-100 text-gray-700' : 'bg-brand-orange text-white' }}">
+                    {{ $locationSharingEnabled ? 'Turn off location sharing' : 'Turn on location sharing' }}
+                </button>
+            </form>
+
+            @if ($locationSharingEnabled)
+                <form method="POST" action="{{ route('account.location-ping.store') }}" id="location-ping-form" class="hidden">
+                    @csrf
+                    <input type="hidden" name="latitude" id="location-ping-latitude">
+                    <input type="hidden" name="longitude" id="location-ping-longitude">
+                    <input type="hidden" name="accuracy" id="location-ping-accuracy">
+                </form>
+
+                <p class="text-xs text-gray-400 mt-2" id="location-ping-status">Sharing your current location now…</p>
+
+                <script>
+                    if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(
+                            function (position) {
+                                document.getElementById('location-ping-latitude').value = position.coords.latitude;
+                                document.getElementById('location-ping-longitude').value = position.coords.longitude;
+                                document.getElementById('location-ping-accuracy').value = position.coords.accuracy;
+                                document.getElementById('location-ping-form').submit();
+                            },
+                            function () {
+                                document.getElementById('location-ping-status').textContent = 'Could not read your location from this browser.';
+                            }
+                        );
+                    }
+                </script>
+            @endif
+        </section>
+
         <section class="bg-white shadow rounded-lg p-6">
             <h2 class="font-medium text-gray-900 mb-4">Active sessions</h2>
             <div class="divide-y divide-gray-100">

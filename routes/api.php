@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\V1\ConfigController;
 use App\Http\Controllers\Api\V1\ConversationController;
 use App\Http\Controllers\Api\V1\DeviceTokenController;
 use App\Http\Controllers\Api\V1\HomeController;
+use App\Http\Controllers\Api\V1\LocationController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\OrderController;
 use App\Http\Controllers\Api\V1\PageController;
@@ -198,6 +199,9 @@ Route::prefix('v1')->group(function () {
 
         Route::post('device-tokens', [DeviceTokenController::class, 'store']);
         Route::delete('device-tokens', [DeviceTokenController::class, 'destroy']);
+
+        Route::post('location/consent', [LocationController::class, 'updateConsent']);
+        Route::post('location/ping', [LocationController::class, 'storePing']);
     });
 
     // Vendor API — a vendor owner or active store staff managing their own
