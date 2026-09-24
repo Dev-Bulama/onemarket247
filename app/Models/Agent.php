@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * A OneMarket247 field agent who assists customers with applying to
@@ -26,7 +28,8 @@ class Agent extends Model
     protected $fillable = [
         'full_name', 'email', 'phone', 'country_id', 'state_id', 'city_id',
         'postal_code', 'address', 'identity_type', 'identity_number',
-        'commission_rate', 'status', 'notes', 'approved_at', 'suspended_at', 'rejection_reason',
+        'commission_rate', 'bank_name', 'bank_account_name', 'bank_account_number',
+        'status', 'notes', 'approved_at', 'suspended_at', 'rejection_reason',
     ];
 
     protected function casts(): array
@@ -34,6 +37,8 @@ class Agent extends Model
         return [
             'status' => AgentStatus::class,
             'commission_rate' => 'decimal:2',
+            'bank_account_name' => 'encrypted',
+            'bank_account_number' => 'encrypted',
             'approved_at' => 'datetime',
             'suspended_at' => 'datetime',
         ];
@@ -67,6 +72,21 @@ class Agent extends Model
     public function vendorApplications(): HasMany
     {
         return $this->hasMany(VendorApplication::class);
+    }
+
+    public function wallet(): HasOne
+    {
+        return $this->hasOne(AgentWallet::class);
+    }
+
+    public function walletTransactions(): HasManyThrough
+    {
+        return $this->hasManyThrough(AgentWalletTransaction::class, AgentWallet::class);
+    }
+
+    public function settlements(): HasMany
+    {
+        return $this->hasMany(AgentSettlement::class);
     }
 
     public function scopeActive(Builder $query): Builder

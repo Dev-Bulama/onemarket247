@@ -4,6 +4,7 @@ namespace App\Actions\Payment;
 
 use App\Actions\Inventory\DeductStockAction;
 use App\Actions\Order\UpdateVendorOrderStatusAction;
+use App\Actions\Wallet\CreditAgentWalletAction;
 use App\Actions\Wallet\CreditVendorWalletAction;
 use App\Enums\PaymentStatus;
 use App\Enums\VendorOrderStatus;
@@ -63,6 +64,9 @@ class MarkPaymentPaidAction
 
     private function creditVendorWallets(Payment $payment): void
     {
-        $payment->order->vendorOrders->each(fn ($vendorOrder) => app(CreditVendorWalletAction::class)->handle($vendorOrder));
+        $payment->order->vendorOrders->each(function ($vendorOrder) {
+            app(CreditVendorWalletAction::class)->handle($vendorOrder);
+            app(CreditAgentWalletAction::class)->handle($vendorOrder);
+        });
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Actions\Payment;
 
+use App\Actions\Wallet\ReverseAgentWalletCreditAction;
 use App\Actions\Wallet\ReverseVendorWalletCreditAction;
 use App\Enums\PaymentLogDirection;
 use App\Enums\PaymentStatus;
@@ -93,6 +94,7 @@ class RefundPaymentAction
             $share = (int) round($refundedAmount * $vendorOrder->netCommissionAmount() / $order->total);
 
             app(ReverseVendorWalletCreditAction::class)->handle($vendorOrder, $share);
+            app(ReverseAgentWalletCreditAction::class)->handle($vendorOrder, $refundedAmount, $order->total);
         });
     }
 }

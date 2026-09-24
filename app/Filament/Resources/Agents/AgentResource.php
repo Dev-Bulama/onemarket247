@@ -6,6 +6,8 @@ use App\Filament\Concerns\GatedByPermission;
 use App\Filament\Resources\Agents\Pages\CreateAgent;
 use App\Filament\Resources\Agents\Pages\EditAgent;
 use App\Filament\Resources\Agents\Pages\ListAgents;
+use App\Filament\Resources\Agents\RelationManagers\SettlementsRelationManager;
+use App\Filament\Resources\Agents\RelationManagers\WalletTransactionsRelationManager;
 use App\Filament\Resources\Agents\Schemas\AgentForm;
 use App\Filament\Resources\Agents\Tables\AgentsTable;
 use App\Models\Agent;
@@ -43,6 +45,14 @@ class AgentResource extends Resource
     public static function table(Table $table): Table
     {
         return AgentsTable::configure($table);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            SettlementsRelationManager::class,
+            WalletTransactionsRelationManager::class,
+        ];
     }
 
     public static function getPages(): array

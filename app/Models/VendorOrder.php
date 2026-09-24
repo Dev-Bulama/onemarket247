@@ -106,4 +106,18 @@ class VendorOrder extends Model
             ->join('order_item_commissions', 'order_item_commissions.order_item_id', '=', 'order_items.id')
             ->sum('order_item_commissions.net_amount');
     }
+
+    /**
+     * Sum of this vendor order's items' platform commission amounts —
+     * the basis a referring agent's commission_rate is applied against
+     * (see App\Actions\Wallet\CreditAgentWalletAction). Mirrors
+     * netCommissionAmount() but sums the platform's own cut instead of
+     * the vendor's take-home.
+     */
+    public function platformCommissionAmount(): int
+    {
+        return $this->orderItems()
+            ->join('order_item_commissions', 'order_item_commissions.order_item_id', '=', 'order_items.id')
+            ->sum('order_item_commissions.commission_amount');
+    }
 }

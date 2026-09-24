@@ -1,0 +1,46 @@
+<?php
+
+namespace App\Filament\Resources\AgentSettlements\Tables;
+
+use App\Enums\WithdrawalStatus;
+use App\Support\PriceDisplay;
+use Filament\Actions\ViewAction;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
+
+class AgentSettlementsTable
+{
+    public static function configure(Table $table): Table
+    {
+        return $table
+            ->columns([
+                TextColumn::make('reference')
+                    ->searchable(),
+                TextColumn::make('agent.full_name')
+                    ->label('Agent')
+                    ->searchable(),
+                TextColumn::make('amount')
+                    ->money(PriceDisplay::baseCurrencyCode(), divideBy: 100)
+                    ->sortable(),
+                TextColumn::make('status')
+                    ->badge()
+                    ->sortable(),
+                TextColumn::make('created_at')
+                    ->label('Created')
+                    ->dateTime()
+                    ->sortable(),
+                TextColumn::make('paid_at')
+                    ->dateTime()
+                    ->placeholder('—'),
+            ])
+            ->defaultSort('created_at', 'desc')
+            ->filters([
+                SelectFilter::make('status')
+                    ->options(WithdrawalStatus::class),
+            ])
+            ->recordActions([
+                ViewAction::make(),
+            ]);
+    }
+}
