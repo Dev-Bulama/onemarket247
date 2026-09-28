@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Storefront;
 
 use App\Actions\Checkout\CompleteCheckoutAction;
 use App\Actions\Checkout\InitiateCheckoutAction;
+use App\Actions\Disclaimer\ResolveActiveDisclaimerAction;
+use App\Enums\DisclaimerTrigger;
 use App\Exceptions\CheckoutValidationException;
 use App\Exceptions\InsufficientStockException;
 use App\Http\Controllers\Controller;
@@ -11,12 +13,15 @@ use App\Http\Requests\Storefront\CheckoutRequest;
 use App\Models\CheckoutSession;
 use App\Models\City;
 use App\Models\Country;
+use App\Models\Disclaimer;
 use App\Models\Order;
 use App\Models\PaymentGateway;
 use App\Models\Setting;
 use App\Models\State;
 use App\Support\Cart\CartResolver;
+use App\Support\VisitorIdentifier;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
@@ -46,11 +51,17 @@ class CheckoutController extends Controller
             'cities' => City::where('is_active', true)->orderBy('name')->get(['id', 'state_id', 'name']),
             'paystackAvailable' => PaymentGateway::where('code', 'paystack')->where('is_active', true)->exists(),
             'bankTransferDetails' => $this->bankTransferDetails(),
+            'pageDisclaimer' => $this->beforeCheckoutDisclaimer(request()),
         ]);
     }
 
     public function store(CheckoutRequest $request, CartResolver $cartResolver, CompleteCheckoutAction $action): RedirectResponse
     {
+        if ($this->beforeCheckoutDisclaimer($request)) {
+            return redirect()->route('checkout.index')
+                ->withErrors(['checkout' => 'Please review and accept the notice before continuing.']);
+        }
+
         $cart = $cartResolver->resolve();
 
         $session = CheckoutSession::where('idempotency_key', $request->string('checkout_session_key')->value())
@@ -112,5 +123,13 @@ class CheckoutController extends Controller
             'account_name' => Setting::where('key', 'payment.bank_transfer.account_name')->value('value'),
             'account_number' => Setting::where('key', 'payment.bank_transfer.account_number')->value('value'),
         ];
+    }
+
+    private function beforeCheckoutDisclaimer(Request $request): ?Disclaimer
+    {
+        $user = Auth::guard('web')->user();
+        $guestIdentifier = $user ? null : ($request->attributes->get('visitor_id') ?? VisitorIdentifier::resolve($request));
+
+        return app(ResolveActiveDisclaimerAction::class)->handle(DisclaimerTrigger::BeforeCheckout, $user, $guestIdentifier);
     }
 }

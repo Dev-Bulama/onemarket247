@@ -34,6 +34,7 @@ class RolePermissionSeeder extends Seeder
         'cms.manage', 'blog.manage', 'menus.manage',
         'seo.manage', 'analytics.view',
         'newsletter.manage',
+        'disclaimers.manage',
         'translations.manage', 'currencies.manage', 'languages.manage',
         'notifications.manage', 'email_templates.manage', 'smtp.manage',
         'support.manage',

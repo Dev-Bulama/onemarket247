@@ -63,5 +63,6 @@
 
         @yield('content')
     </main>
+    @include('partials.disclaimer-popup')
 </body>
 </html>

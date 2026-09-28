@@ -4,10 +4,10 @@ namespace App\Http\Middleware;
 
 use App\Models\SiteVisit;
 use App\Models\Store;
+use App\Support\VisitorIdentifier;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
@@ -33,7 +33,13 @@ class TrackSiteVisit
             return $response;
         }
 
-        $visitorId = $request->cookie('visitor_id') ?? (string) Str::uuid();
+        // App\Http\Middleware\ShareVisitorIdentifier, a global 'web'
+        // middleware that runs ahead of this route-level one, has already
+        // resolved (and, on a first visit, queued the cookie for) this
+        // same id — reusing it here instead of minting a second one keeps
+        // the SiteVisit row and the cookie the browser actually receives
+        // in agreement.
+        $visitorId = $request->attributes->get('visitor_id') ?? VisitorIdentifier::resolve($request);
 
         try {
             SiteVisit::create([
@@ -45,10 +51,6 @@ class TrackSiteVisit
             ]);
         } catch (Throwable $exception) {
             report($exception);
-        }
-
-        if (! $request->cookie('visitor_id')) {
-            $response->headers->setCookie(cookie()->forever('visitor_id', $visitorId));
         }
 
         return $response;

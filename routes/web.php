@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\ProductTranslationExportController;
 use App\Http\Controllers\AgentDocumentDownloadController;
 use App\Http\Controllers\Delivery\DeliveryRequestAcceptController;
 use App\Http\Controllers\Delivery\DeliveryTrackingController;
+use App\Http\Controllers\DisclaimerAcceptanceController;
 use App\Http\Controllers\InvoiceDownloadController;
 use App\Http\Controllers\PackingSlipDownloadController;
 use App\Http\Controllers\ProductDigitalFileDownloadController;
@@ -68,6 +69,8 @@ Route::get('delivery-requests/{notification:token}', [DeliveryRequestAcceptContr
 Route::post('delivery-requests/{notification:token}', [DeliveryRequestAcceptController::class, 'accept'])->name('delivery-requests.accept.store');
 Route::get('deliveries/{assignment:tracking_token}', [DeliveryTrackingController::class, 'show'])->name('deliveries.track');
 Route::post('deliveries/{assignment:tracking_token}', [DeliveryTrackingController::class, 'advance'])->name('deliveries.track.advance');
+
+Route::post('disclaimers/{disclaimer}/accept', [DisclaimerAcceptanceController::class, 'store'])->name('disclaimers.accept');
 
 require __DIR__.'/auth.php';
 require __DIR__.'/vendor.php';

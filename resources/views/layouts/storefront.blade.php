@@ -261,6 +261,7 @@
 </footer>
 
 @include('storefront.partials.mobile-nav')
+@include('partials.disclaimer-popup')
 
 <script>
     const headerStates = @json($allStates);

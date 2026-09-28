@@ -159,5 +159,6 @@
         populateStates(initialCountry, '{{ old('state_id') }}');
     }
 </script>
+@include('partials.disclaimer-popup')
 </body>
 </html>

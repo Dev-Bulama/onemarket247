@@ -6,7 +6,9 @@ use App\Http\Middleware\SetApiLocale;
 use App\Http\Middleware\SetDeliveryLocation;
 use App\Http\Middleware\SetDisplayCurrency;
 use App\Http\Middleware\SetLocale;
+use App\Http\Middleware\ShareActiveDisclaimer;
 use App\Http\Middleware\ShareStorefrontNavigation;
+use App\Http\Middleware\ShareVisitorIdentifier;
 use App\Http\Middleware\TrackSiteVisit;
 use App\Support\Api\ApiResponse;
 use Illuminate\Foundation\Application;
@@ -25,10 +27,12 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->authenticateSessions();
         $middleware->web(append: [
+            ShareVisitorIdentifier::class,
             SetLocale::class,
             SetDisplayCurrency::class,
             SetDeliveryLocation::class,
             ShareStorefrontNavigation::class,
+            ShareActiveDisclaimer::class,
         ]);
         $middleware->api(append: [
             SetApiLocale::class,
