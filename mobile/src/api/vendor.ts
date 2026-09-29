@@ -68,6 +68,7 @@ export interface VendorApplicationPayload {
   business_registration_document: PickedFile;
   tax_certificate_document?: PickedFile;
   terms: boolean;
+  guest_id?: string;
 }
 
 const APPLICATION_FILE_KEYS = ['identity_document', 'business_registration_document', 'tax_certificate_document'];

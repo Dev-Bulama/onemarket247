@@ -55,6 +55,16 @@ class VendorOrderResource extends JsonResource
                     'occurred_at' => $event->occurred_at,
                 ])->values() : [],
             ] : null,
+            // The delivery partner's own progress (see Priority 7) — distinct
+            // from the shipment's carrier-tracking status above, since a
+            // shipment can be created before any partner has accepted it.
+            'delivery' => ($shipment && $shipment->relationLoaded('deliveryAssignment') && $shipment->deliveryAssignment) ? [
+                'partner_name' => $shipment->deliveryAssignment->assignee_name,
+                'status' => $shipment->deliveryAssignment->status->value,
+                'status_label' => $shipment->deliveryAssignment->status->getLabel(),
+                'assigned_at' => $shipment->deliveryAssignment->assigned_at,
+                'delivered_at' => $shipment->deliveryAssignment->delivered_at,
+            ] : null,
         ];
     }
 }

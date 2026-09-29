@@ -10,6 +10,8 @@ import { pickDocumentFile, takeDocumentPhoto } from '../../utils/documentPicker'
 import { City, Country, State } from '../../types';
 import { VendorApplicationReceipt } from '../../types/vendor';
 import { useToastStore } from '../../store/toastStore';
+import { useDisclaimerStore } from '../../store/disclaimerStore';
+import { getGuestId } from '../../utils/guestId';
 
 const STEPS = ['Business', 'Store', 'Banking', 'Documents'] as const;
 
@@ -70,6 +72,7 @@ export default function VendorOnboardingScreen({ navigation }: any) {
   useEffect(() => {
     referenceApi.countries().then(res => setCountries(res.data.data)).catch(() => {});
     agentsApi.list().then(res => setAgents(res.data.data)).catch(() => {});
+    useDisclaimerStore.getState().loadForTrigger('before_vendor_application');
   }, []);
 
   useEffect(() => {
@@ -160,6 +163,7 @@ export default function VendorOnboardingScreen({ navigation }: any) {
         business_registration_document: businessDoc!,
         tax_certificate_document: taxDoc ?? undefined,
         terms: form.terms,
+        guest_id: await getGuestId(),
       });
       setReceipt(res.data.data);
       setReceiptMessage(res.data.message ?? 'Your application has been submitted.');

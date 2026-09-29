@@ -55,3 +55,21 @@ test('a ping outside valid latitude/longitude ranges is rejected', function () {
         ->postJson('/api/v1/location/ping', ['latitude' => 200, 'longitude' => 3.4])
         ->assertUnprocessable();
 });
+
+test('the profile endpoint reflects the current location-sharing consent state', function () {
+    [, $token] = apiUserToken();
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/v1/profile')
+        ->assertOk()
+        ->assertJsonPath('data.location_sharing_enabled', false);
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/location/consent', ['enabled' => true])
+        ->assertOk();
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/v1/profile')
+        ->assertOk()
+        ->assertJsonPath('data.location_sharing_enabled', true);
+});

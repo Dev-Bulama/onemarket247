@@ -7,6 +7,7 @@ import { useCartStore } from '../store/cartStore';
 import { useLocaleStore } from '../store/localeStore';
 import { usePushStore } from '../store/pushStore';
 import { useBootstrapStore } from '../store/bootstrapStore';
+import { useDisclaimerStore } from '../store/disclaimerStore';
 import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
 import VendorNavigator from './VendorNavigator';
@@ -21,6 +22,7 @@ export default function AppNavigator() {
   const { load: loadLocale } = useLocaleStore();
   const { initialize: initializePush, registerCurrentDevice } = usePushStore();
   const { load: loadBootstrap, splashLogoUrl, updateRequired } = useBootstrapStore();
+  const { loadGeneral: loadGeneralDisclaimer } = useDisclaimerStore();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -44,8 +46,9 @@ export default function AppNavigator() {
 
       initializePush(useBootstrapStore.getState().oneSignalAppId);
       if (useAuthStore.getState().isAuthenticated) registerCurrentDevice();
+      loadGeneralDisclaimer();
     })();
-  }, [loadBootstrap, loadUser, fetchCart, loadLocale, initializePush, registerCurrentDevice]);
+  }, [loadBootstrap, loadUser, fetchCart, loadLocale, initializePush, registerCurrentDevice, loadGeneralDisclaimer]);
 
   if (isLoading) return <SplashScreen logoUrl={splashLogoUrl} />;
   if (updateRequired) return <ForceUpdateScreen />;

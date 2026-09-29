@@ -41,6 +41,7 @@ export type ProfileStackParamList = {
   ProductDetail: { slug: string };
   Store: { slug: string };
   VendorOnboarding: undefined;
+  LocationSharing: undefined;
 };
 
 // Vendor dashboard (createBottomTabNavigator, see VendorNavigator.tsx) —

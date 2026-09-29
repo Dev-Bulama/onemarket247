@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\V1\CompareController;
 use App\Http\Controllers\Api\V1\ConfigController;
 use App\Http\Controllers\Api\V1\ConversationController;
 use App\Http\Controllers\Api\V1\DeviceTokenController;
+use App\Http\Controllers\Api\V1\DisclaimerController;
 use App\Http\Controllers\Api\V1\HomeController;
 use App\Http\Controllers\Api\V1\LocationController;
 use App\Http\Controllers\Api\V1\NotificationController;
@@ -70,6 +71,16 @@ Route::prefix('v1')->group(function () {
 
     // Public agent application — same rationale as vendor/apply above.
     Route::post('agent/apply', [AgentApplicationController::class, 'store'])->middleware('throttle:5,1');
+
+    // Disclaimer pop-ups (Priority 9) — open to guests (identified by a
+    // client-persisted guest_id, mirroring cart_token below) and Sanctum-
+    // authenticated users alike, since both can hit a first-visit/
+    // before-checkout/before-application notice before ever logging in.
+    Route::middleware('throttle:120,1')->prefix('disclaimers')->group(function () {
+        Route::get('general', [DisclaimerController::class, 'general']);
+        Route::get('active', [DisclaimerController::class, 'active']);
+        Route::post('{disclaimer}/accept', [DisclaimerController::class, 'accept']);
+    });
 
     // Public catalog browsing — generous throttle, no auth required, mirrors
     // the storefront's own web controllers query-for-query (see each

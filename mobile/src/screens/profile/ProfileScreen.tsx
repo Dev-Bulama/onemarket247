@@ -22,6 +22,7 @@ export default function ProfileScreen({ navigation }: any) {
     { icon: 'location-outline', label: 'My Addresses', onPress: () => navigation.navigate('Addresses') },
     { icon: 'heart-outline', label: 'My Wishlist', onPress: () => navigation.navigate('Wishlist') },
     { icon: 'git-compare-outline', label: 'Compare Products', onPress: () => navigation.navigate('Compare') },
+    { icon: 'locate-outline', label: 'Location Sharing', onPress: () => navigation.navigate('LocationSharing') },
   ];
 
   const isVendor = user?.user_type === 'vendor_owner' || user?.user_type === 'vendor_staff';

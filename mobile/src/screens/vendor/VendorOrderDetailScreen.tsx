@@ -100,6 +100,15 @@ export default function VendorOrderDetailScreen({ route, navigation }: any) {
           </View>
         )}
 
+        {order.delivery && (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Delivery Partner</Text>
+            <Text style={styles.shipmentLine}>{order.delivery.partner_name} — {order.delivery.status_label}</Text>
+            {order.delivery.assigned_at ? <Text style={styles.shipmentMeta}>Assigned {new Date(order.delivery.assigned_at).toLocaleString()}</Text> : null}
+            {order.delivery.delivered_at ? <Text style={styles.shipmentMeta}>Delivered {new Date(order.delivery.delivered_at).toLocaleString()}</Text> : null}
+          </View>
+        )}
+
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Summary</Text>
           <SummaryRow label="Subtotal" value={order.subtotal.formatted} />

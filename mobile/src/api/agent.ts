@@ -32,6 +32,7 @@ export interface AgentApplicationPayload {
   identity_document: PickedFile;
   proof_of_address_document?: PickedFile;
   terms: boolean;
+  guest_id?: string;
 }
 
 function appendFields(form: FormData, data: object, skip: string[] = []) {

@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Api\V1\Vendor;
 
+use App\Actions\Disclaimer\ResolveActiveDisclaimerAction;
 use App\Actions\Vendor\SubmitVendorApplicationAction;
+use App\Enums\DisclaimerTrigger;
 use App\Enums\VendorApplicationStatus;
 use App\Enums\VendorDocumentType;
 use App\Http\Controllers\Controller;
@@ -21,8 +23,14 @@ class VendorApplicationController extends Controller
 {
     public function store(VendorApplicationRequest $request, SubmitVendorApplicationAction $action): JsonResponse
     {
+        $guestId = $request->string('guest_id')->value() ?: null;
+
+        if (app(ResolveActiveDisclaimerAction::class)->handle(DisclaimerTrigger::BeforeVendorApplication, null, $guestId)) {
+            return ApiResponse::error('Please review and accept the notice before continuing.', [], 'DISCLAIMER_NOT_ACCEPTED');
+        }
+
         $data = $request->safe()->except([
-            'identity_document', 'business_registration_document', 'tax_certificate_document', 'terms',
+            'identity_document', 'business_registration_document', 'tax_certificate_document', 'terms', 'guest_id',
         ]);
         $data['store_slug'] = $request->storeSlug();
 

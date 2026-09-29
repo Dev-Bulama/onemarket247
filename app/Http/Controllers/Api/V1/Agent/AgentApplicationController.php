@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api\V1\Agent;
 
 use App\Actions\Agent\SubmitAgentApplicationAction;
+use App\Actions\Disclaimer\ResolveActiveDisclaimerAction;
 use App\Enums\AgentDocumentType;
+use App\Enums\DisclaimerTrigger;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Agent\AgentApplicationRequest;
 use App\Http\Resources\Api\V1\AgentApplicationResource;
@@ -20,7 +22,13 @@ class AgentApplicationController extends Controller
 {
     public function store(AgentApplicationRequest $request, SubmitAgentApplicationAction $action): JsonResponse
     {
-        $data = $request->safe()->except(['identity_document', 'proof_of_address_document', 'terms']);
+        $guestId = $request->string('guest_id')->value() ?: null;
+
+        if (app(ResolveActiveDisclaimerAction::class)->handle(DisclaimerTrigger::BeforeAgentApplication, null, $guestId)) {
+            return ApiResponse::error('Please review and accept the notice before continuing.', [], 'DISCLAIMER_NOT_ACCEPTED');
+        }
+
+        $data = $request->safe()->except(['identity_document', 'proof_of_address_document', 'terms', 'guest_id']);
 
         $application = $action->handle($data, [
             AgentDocumentType::Identity->value => $request->file('identity_document'),

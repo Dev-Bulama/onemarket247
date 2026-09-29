@@ -34,7 +34,7 @@ class VendorOrderController extends Controller
     {
         $this->assertOwns($request, $vendorOrder);
 
-        $vendorOrder->load(['orderItems', 'order', 'shipments.carrier', 'shipments.events']);
+        $vendorOrder->load(['orderItems', 'order', 'shipments.carrier', 'shipments.events', 'shipments.deliveryAssignment']);
 
         return ApiResponse::success(new VendorOrderResource($vendorOrder));
     }

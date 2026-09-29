@@ -20,7 +20,7 @@ class ProfileController extends Controller
     public function show(Request $request): JsonResponse
     {
         $user = $request->user();
-        $user->load('customerProfile');
+        $user->load(['customerProfile', 'locationConsent']);
 
         return ApiResponse::success($this->payload($user));
     }
@@ -116,6 +116,11 @@ class ProfileController extends Controller
             'preferred_language_id' => $user->customerProfile?->preferred_language_id,
             'preferred_currency_id' => $user->customerProfile?->preferred_currency_id,
             'marketing_opt_in' => $user->customerProfile?->marketing_opt_in ?? false,
+            // Lets the mobile app show its location-sharing toggle in the
+            // right state on load — there's no dedicated GET endpoint for
+            // this, since the profile payload already round-trips on every
+            // login/app-start (see authStore.loadUser() on the mobile side).
+            'location_sharing_enabled' => $user->locationConsent?->is_enabled ?? false,
         ];
     }
 }

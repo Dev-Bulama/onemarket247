@@ -80,6 +80,15 @@ export default function OrderDetailScreen({ route, navigation }: any) {
                 </Text>
               </View>
             )}
+            {vo.delivery && (
+              <View style={styles.trackingBox}>
+                <IonIcon name="bicycle-outline" size={16} color={COLORS.textSecondary} />
+                <Text style={styles.trackingText}>
+                  Delivery partner: {vo.delivery.partner_name} — {vo.delivery.status_label}
+                  {vo.delivery.delivered_at ? ` (delivered ${new Date(vo.delivery.delivered_at).toLocaleString()})` : ''}
+                </Text>
+              </View>
+            )}
             {vo.status_histories && vo.status_histories.length > 0 && (
               <View style={styles.timeline}>
                 <Text style={styles.timelineHeading}>Order Tracking</Text>

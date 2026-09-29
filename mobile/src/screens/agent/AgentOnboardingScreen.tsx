@@ -8,6 +8,8 @@ import { apiErrorMessage } from '../../api/client';
 import { pickDocumentFile, takeDocumentPhoto } from '../../utils/documentPicker';
 import { City, Country, State } from '../../types';
 import { useToastStore } from '../../store/toastStore';
+import { useDisclaimerStore } from '../../store/disclaimerStore';
+import { getGuestId } from '../../utils/guestId';
 
 interface FormState {
   fullName: string;
@@ -46,6 +48,7 @@ export default function AgentOnboardingScreen({ navigation }: any) {
 
   useEffect(() => {
     referenceApi.countries().then(res => setCountries(res.data.data)).catch(() => {});
+    useDisclaimerStore.getState().loadForTrigger('before_agent_application');
   }, []);
 
   useEffect(() => {
@@ -99,6 +102,7 @@ export default function AgentOnboardingScreen({ navigation }: any) {
         identity_document: identityDoc!,
         proof_of_address_document: addressDoc ?? undefined,
         terms: form.terms,
+        guest_id: await getGuestId(),
       });
       setReceipt(res.data.data);
     } catch (e) {

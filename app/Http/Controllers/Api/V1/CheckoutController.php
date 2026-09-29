@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Actions\Checkout\CompleteCheckoutAction;
 use App\Actions\Checkout\InitiateCheckoutAction;
+use App\Actions\Disclaimer\ResolveActiveDisclaimerAction;
+use App\Enums\DisclaimerTrigger;
 use App\Http\Controllers\Api\V1\Concerns\ResolvesApiCart;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\CheckoutRequest;
@@ -34,8 +36,16 @@ class CheckoutController extends Controller
 
     public function complete(CheckoutRequest $request, CartResolver $cartResolver, CompleteCheckoutAction $action): JsonResponse
     {
-        $cart = $this->resolveApiCart($request, $cartResolver);
         $user = $request->user('sanctum');
+        $guestId = $user ? null : ($request->string('guest_id')->value() ?: null);
+
+        $pendingDisclaimer = app(ResolveActiveDisclaimerAction::class)->handle(DisclaimerTrigger::BeforeCheckout, $user, $guestId);
+
+        if ($pendingDisclaimer) {
+            return ApiResponse::error('Please review and accept the notice before continuing.', [], 'DISCLAIMER_NOT_ACCEPTED');
+        }
+
+        $cart = $this->resolveApiCart($request, $cartResolver);
 
         $session = CheckoutSession::where('idempotency_key', $request->string('checkout_session_key')->value())
             ->where('cart_id', $cart->id)

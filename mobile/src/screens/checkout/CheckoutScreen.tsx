@@ -16,6 +16,8 @@ import { configApi, referenceApi } from '../../api/config';
 import { apiErrorMessage } from '../../api/client';
 import { Address, City, Country, State } from '../../types';
 import { useToastStore } from '../../store/toastStore';
+import { useDisclaimerStore } from '../../store/disclaimerStore';
+import { getGuestId } from '../../utils/guestId';
 
 const PAYSTACK_HOST = 'paystack.com';
 
@@ -63,6 +65,8 @@ export default function CheckoutScreen({ navigation }: any) {
       setPaymentMethods(res.data.data.payment_methods);
       if (res.data.data.payment_methods.length > 0) setPaymentMethod(res.data.data.payment_methods[0] as any);
     }).catch(() => {});
+
+    useDisclaimerStore.getState().loadForTrigger('before_checkout');
 
     if (!isAuthenticated) {
       referenceApi.countries().then(res => setCountries(res.data.data)).catch(() => {});
@@ -143,6 +147,7 @@ export default function CheckoutScreen({ navigation }: any) {
             city_id: guestCityId ?? undefined,
             payment_method: paymentMethod,
             cart_token: guestToken ?? undefined,
+            guest_id: await getGuestId(),
           };
 
       const res = await checkoutApi.complete(payload);

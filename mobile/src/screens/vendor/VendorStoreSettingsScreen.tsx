@@ -5,8 +5,13 @@ import { COLORS, SIZES } from '../../constants';
 import { vendorStoreApi } from '../../api/vendor';
 import { apiErrorMessage } from '../../api/client';
 import { useToastStore } from '../../store/toastStore';
+import { useAuthStore } from '../../store/authStore';
+import { useLocationStore } from '../../store/locationStore';
 
 export default function VendorStoreSettingsScreen({ navigation }: any) {
+  const { user } = useAuthStore();
+  const { enabled: locationEnabled, hydrate: hydrateLocation, toggle: toggleLocation } = useLocationStore();
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -44,6 +49,15 @@ export default function VendorStoreSettingsScreen({ navigation }: any) {
       })
       .finally(() => setLoading(false));
   }, [navigation]);
+
+  useEffect(() => {
+    hydrateLocation(user?.location_sharing_enabled ?? false);
+    // Only ever hydrate from the value the profile had when this screen
+    // mounted — hydrateLocation/toggleLocation change identity across
+    // renders (zustand actions), and re-running this on every render would
+    // re-request permission / restart the ping loop repeatedly.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSave = async () => {
     if (!name.trim()) { useToastStore.getState().show('Please enter your store name.', 'error'); return; }
@@ -110,6 +124,14 @@ export default function VendorStoreSettingsScreen({ navigation }: any) {
             <TextInput style={styles.input} value={vacationMessage} onChangeText={setVacationMessage} placeholder="We'll be back soon!" placeholderTextColor={COLORS.placeholder} />
           </>
         )}
+
+        <View style={styles.switchRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.label}>Share Live Location</Text>
+            <Text style={styles.hint}>Lets OneMarket247 admins see your live location, e.g. to help coordinate a delivery. You can turn this off anytime.</Text>
+          </View>
+          <Switch value={locationEnabled} onValueChange={toggleLocation} trackColor={{ true: COLORS.primary }} />
+        </View>
 
         <Text style={styles.label}>SEO Title (optional)</Text>
         <TextInput style={styles.input} value={seoTitle} onChangeText={setSeoTitle} placeholder="SEO title" placeholderTextColor={COLORS.placeholder} />

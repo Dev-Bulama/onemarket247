@@ -33,7 +33,7 @@
 		<true/>
 	</dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
+	<string>OneMarket 24/7 uses your location to share it with OneMarket247 admins while you have location sharing turned on in Settings — for example, to help coordinate a delivery.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Take a photo of a product review or a vendor document.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

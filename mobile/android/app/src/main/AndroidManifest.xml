@@ -5,6 +5,13 @@
          ID/business document (react-native-image-picker's launchCamera) —
          required for that camera intent to be granted at runtime. -->
     <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Location sharing toggle (see src/store/locationStore.ts) — a real
+         GPS fix while the app is open, requested at runtime via
+         @react-native-community/geolocation. Foreground only: no
+         ACCESS_BACKGROUND_LOCATION, since there's no verified background
+         service wired up (see that store's own docblock for why). -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <application
       android:name=".MainApplication"

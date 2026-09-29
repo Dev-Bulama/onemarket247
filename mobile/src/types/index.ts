@@ -32,6 +32,7 @@ export interface User {
   email: string;
   user_type: string;
   email_verified: boolean;
+  location_sharing_enabled?: boolean;
 }
 
 export interface BrandSummary {
@@ -261,6 +262,13 @@ export interface VendorOrder {
     estimated_delivery_at?: string | null;
     delivered_at?: string | null;
     events: ShipmentEvent[];
+  } | null;
+  delivery?: {
+    partner_name: string;
+    status: string;
+    status_label: string;
+    assigned_at?: string | null;
+    delivered_at?: string | null;
   } | null;
 }
 

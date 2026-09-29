@@ -55,6 +55,7 @@ class OrderController extends Controller
             'vendorOrders.shipments.carrier',
             'vendorOrders.shipments.events',
             'vendorOrders.shipments.pickupStation',
+            'vendorOrders.shipments.deliveryAssignment',
         ]);
 
         return ApiResponse::success(new OrderResource($order));

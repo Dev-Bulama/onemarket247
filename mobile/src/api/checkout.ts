@@ -14,6 +14,7 @@ export interface CompleteCheckoutPayload {
   postal_code?: string;
   payment_method?: 'paystack' | 'bank_transfer';
   cart_token?: string;
+  guest_id?: string;
 }
 
 export const checkoutApi = {
