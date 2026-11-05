@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\VendorOrders\Tables;
 
 use App\Enums\VendorOrderStatus;
+use App\Models\VendorOrder;
 use App\Support\PriceDisplay;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
@@ -14,6 +15,7 @@ class VendorOrdersTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn ($query) => $query->with('orderItems'))
             ->columns([
                 TextColumn::make('vendor_order_number')
                     ->label('Sub-order')
@@ -24,6 +26,14 @@ class VendorOrdersTable
                 TextColumn::make('vendor.business_name')
                     ->label('Vendor')
                     ->searchable(),
+                TextColumn::make('products')
+                    ->label('Products')
+                    ->state(fn (VendorOrder $record) => $record->orderItems->pluck('product_name')->implode(', '))
+                    ->wrap()
+                    ->searchable(query: fn ($query, $search) => $query->whereHas(
+                        'orderItems',
+                        fn ($query) => $query->where('product_name', 'like', "%{$search}%")
+                    )),
                 TextColumn::make('total')
                     ->money(PriceDisplay::baseCurrencyCode(), divideBy: 100)
                     ->sortable(),

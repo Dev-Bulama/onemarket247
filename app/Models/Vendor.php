@@ -17,6 +17,20 @@ class Vendor extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected static function booted(): void
+    {
+        // A soft delete (the plain "Delete" action) is reversible via
+        // RestoreAction, so the owning login account is deliberately left
+        // alone — restoring the vendor should restore a working login too.
+        // Force-delete is the admin's "this account is permanently gone"
+        // action; without this, it only ever removed the vendor profile,
+        // leaving the User row (and therefore its email) stuck forever,
+        // since nothing else in the app deletes a vendor's User for them.
+        static::forceDeleting(function (self $vendor) {
+            $vendor->user?->delete();
+        });
+    }
+
     protected $fillable = [
         'user_id', 'agent_id', 'business_name', 'registration_number', 'tax_identification_number',
         'identity_type', 'identity_number', 'status', 'commission_rate', 'is_verified',

@@ -3,6 +3,7 @@
 use App\Enums\VendorApplicationStatus;
 use App\Models\Setting;
 use App\Models\User;
+use App\Models\Vendor;
 use App\Models\VendorApplication;
 use Database\Seeders\RolePermissionSeeder;
 use Database\Seeders\SettingsSeeder;
@@ -105,6 +106,43 @@ test('an application with a phone number already used by an existing account is 
     $response = submitVendorApplication(['email' => 'newphoneconflict@example.com']);
 
     $response->assertSessionHasErrors('phone');
+});
+
+test('an application with an email still pending review is rejected', function () {
+    VendorApplication::factory()->create(['email' => 'pending@example.com']);
+
+    $response = submitVendorApplication(['email' => 'pending@example.com']);
+
+    $response->assertSessionHasErrors('email');
+});
+
+test('an application with an email tied to a live approved vendor is rejected', function () {
+    $vendor = Vendor::factory()->create();
+    VendorApplication::factory()->approved()->create(['email' => 'live@example.com', 'vendor_id' => $vendor->id]);
+
+    $response = submitVendorApplication(['email' => 'live@example.com']);
+
+    $response->assertSessionHasErrors('email');
+});
+
+test('an email from a rejected application can apply again', function () {
+    VendorApplication::factory()->rejected()->create(['email' => 'rejected@example.com']);
+
+    $response = submitVendorApplication(['email' => 'rejected@example.com']);
+
+    $response->assertRedirect(route('vendor.register.submitted'));
+    expect(VendorApplication::where('email', 'rejected@example.com')->where('status', VendorApplicationStatus::Pending)->exists())->toBeTrue();
+});
+
+test('an email from an approved application whose vendor account was permanently deleted can apply again', function () {
+    $vendor = Vendor::factory()->create();
+    $application = VendorApplication::factory()->approved()->create(['email' => 'reapply@example.com', 'vendor_id' => $vendor->id]);
+    $vendor->forceDelete();
+    expect($application->refresh()->vendor_id)->toBeNull();
+
+    $response = submitVendorApplication(['email' => 'reapply@example.com']);
+
+    $response->assertRedirect(route('vendor.register.submitted'));
 });
 
 test('required documents must be uploaded', function () {

@@ -70,6 +70,10 @@ class VendorApplicationResource extends Resource
                 ->schema([
                     TextEntry::make('store_name'),
                     TextEntry::make('store_category')->placeholder('—'),
+                    TextEntry::make('country.name')->label('Country')->placeholder('—'),
+                    TextEntry::make('state.name')->label('State')->placeholder('—'),
+                    TextEntry::make('city.name')->label('City')->placeholder('—'),
+                    TextEntry::make('postal_code')->label('Postal code')->placeholder('—'),
                     TextEntry::make('store_description')->placeholder('—')->columnSpanFull(),
                     TextEntry::make('address')->placeholder('—')->columnSpanFull(),
                 ]),

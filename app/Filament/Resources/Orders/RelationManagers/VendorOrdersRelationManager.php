@@ -52,14 +52,16 @@ class VendorOrdersRelationManager extends RelationManager
     {
         return $table
             ->recordTitleAttribute('vendor_order_number')
+            ->modifyQueryUsing(fn ($query) => $query->with('orderItems'))
             ->columns([
                 TextColumn::make('vendor_order_number')
                     ->label('Sub-order'),
                 TextColumn::make('vendor.business_name')
                     ->label('Vendor'),
-                TextColumn::make('order_items_count')
-                    ->label('Items')
-                    ->counts('orderItems'),
+                TextColumn::make('products')
+                    ->label('Products')
+                    ->state(fn (VendorOrder $record) => $record->orderItems->pluck('product_name')->implode(', '))
+                    ->wrap(),
                 TextColumn::make('total')
                     ->money(PriceDisplay::baseCurrencyCode(), divideBy: 100),
                 TextColumn::make('status')

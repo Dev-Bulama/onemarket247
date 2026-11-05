@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\AgentApplicationStatus;
 use App\Enums\AgentStatus;
 use App\Models\Agent;
 use App\Models\AgentApplication;
@@ -24,6 +25,51 @@ test('submitting a complete agent application redirects to the submitted page', 
 
     $response->assertRedirect(route('agent.apply.submitted'));
     expect(AgentApplication::where('email', 'jane.agent@example.com')->exists())->toBeTrue();
+});
+
+test('an application with an email still pending review is rejected', function () {
+    AgentApplication::factory()->create(['email' => 'pending@example.com']);
+
+    $response = $this->post(route('agent.apply'), [
+        'full_name' => 'Pending Again',
+        'email' => 'pending@example.com',
+        'identity_document' => UploadedFile::fake()->create('id.pdf', 100, 'application/pdf'),
+        'terms' => '1',
+    ]);
+
+    $response->assertSessionHasErrors('email');
+});
+
+test('an email from a rejected agent application can apply again', function () {
+    Storage::fake('local');
+    AgentApplication::factory()->rejected()->create(['email' => 'rejected@example.com']);
+
+    $response = $this->post(route('agent.apply'), [
+        'full_name' => 'Second Try',
+        'email' => 'rejected@example.com',
+        'identity_document' => UploadedFile::fake()->create('id.pdf', 100, 'application/pdf'),
+        'terms' => '1',
+    ]);
+
+    $response->assertRedirect(route('agent.apply.submitted'));
+    expect(AgentApplication::where('email', 'rejected@example.com')->where('status', AgentApplicationStatus::Pending)->exists())->toBeTrue();
+});
+
+test('an email from an approved agent application whose agent record was deleted can apply again', function () {
+    Storage::fake('local');
+    $agent = Agent::factory()->create(['status' => AgentStatus::Approved]);
+    $application = AgentApplication::factory()->approved()->create(['email' => 'reapply@example.com', 'agent_id' => $agent->id]);
+    $agent->delete();
+    expect($application->refresh()->agent_id)->toBeNull();
+
+    $response = $this->post(route('agent.apply'), [
+        'full_name' => 'Reapplying',
+        'email' => 'reapply@example.com',
+        'identity_document' => UploadedFile::fake()->create('id.pdf', 100, 'application/pdf'),
+        'terms' => '1',
+    ]);
+
+    $response->assertRedirect(route('agent.apply.submitted'));
 });
 
 test('the vendor application page lists approved agents in the registered-agent dropdown', function () {

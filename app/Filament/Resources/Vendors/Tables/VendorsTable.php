@@ -42,6 +42,10 @@ class VendorsTable
                     ->label('Email')
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('user.phone')
+                    ->label('Phone')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('status')
                     ->badge()
                     ->sortable(),
@@ -57,6 +61,12 @@ class VendorsTable
                     ->boolean()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('country.name')
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('state.name')
+                    ->label('State')
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('city.name')
+                    ->label('City')
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('approved_at')
                     ->dateTime()
@@ -157,6 +167,12 @@ class VendorsTable
                             ])
                             ->send();
                     }),
+                Action::make('call')
+                    ->label('Call')
+                    ->icon(Heroicon::OutlinedPhone)
+                    ->color('gray')
+                    ->visible(fn (Vendor $record) => filled($record->user?->phone))
+                    ->url(fn (Vendor $record) => 'tel:'.$record->user->phone),
                 EditAction::make(),
             ])
             ->toolbarActions([

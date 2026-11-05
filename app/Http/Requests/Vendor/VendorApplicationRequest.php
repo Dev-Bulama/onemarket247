@@ -2,10 +2,13 @@
 
 namespace App\Http\Requests\Vendor;
 
+use App\Enums\VendorApplicationStatus;
 use App\Models\Store;
 use App\Models\VendorApplication;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Unique;
 
 class VendorApplicationRequest extends FormRequest
 {
@@ -19,7 +22,7 @@ class VendorApplicationRequest extends FormRequest
         return [
             // Step 1 — applicant & business
             'full_name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email', 'unique:vendor_applications,email'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email', $this->uniqueLiveApplicationEmail()],
             'phone' => ['nullable', 'string', 'max:30', 'unique:users,phone'],
             'business_name' => ['required', 'string', 'max:255'],
             'registration_number' => ['nullable', 'string', 'max:100'],
@@ -68,6 +71,23 @@ class VendorApplicationRequest extends FormRequest
             'terms.accepted' => 'You must accept the vendor terms to continue.',
             'phone.unique' => 'That phone number is already associated with another account.',
         ];
+    }
+
+    /**
+     * A rejected application, or an approved one whose vendor account was
+     * later permanently deleted by an admin, must never block the same
+     * person from applying again — only a still-pending application, or an
+     * approved one with a live vendor account, is a genuine duplicate.
+     */
+    private function uniqueLiveApplicationEmail(): Unique
+    {
+        return Rule::unique('vendor_applications', 'email')->where(function ($query) {
+            $query->where('status', VendorApplicationStatus::Pending)
+                ->orWhere(function ($query) {
+                    $query->where('status', VendorApplicationStatus::Approved)
+                        ->whereNotNull('vendor_id');
+                });
+        });
     }
 
     public function storeSlug(): string

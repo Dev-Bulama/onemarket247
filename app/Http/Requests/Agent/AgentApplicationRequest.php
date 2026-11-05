@@ -2,7 +2,10 @@
 
 namespace App\Http\Requests\Agent;
 
+use App\Enums\AgentApplicationStatus;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Unique;
 
 class AgentApplicationRequest extends FormRequest
 {
@@ -15,7 +18,7 @@ class AgentApplicationRequest extends FormRequest
     {
         return [
             'full_name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:agents,email', 'unique:agent_applications,email'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:agents,email', $this->uniqueLiveApplicationEmail()],
             'phone' => ['nullable', 'string', 'max:30'],
             'country_id' => ['nullable', 'exists:countries,id'],
             'state_id' => ['nullable', 'exists:states,id'],
@@ -38,5 +41,22 @@ class AgentApplicationRequest extends FormRequest
         return [
             'terms.accepted' => 'You must accept the agent terms to continue.',
         ];
+    }
+
+    /**
+     * A rejected application, or an approved one whose agent record was
+     * later permanently deleted by an admin, must never block the same
+     * person from applying again — only a still-pending application, or an
+     * approved one with a live agent record, is a genuine duplicate.
+     */
+    private function uniqueLiveApplicationEmail(): Unique
+    {
+        return Rule::unique('agent_applications', 'email')->where(function ($query) {
+            $query->where('status', AgentApplicationStatus::Pending)
+                ->orWhere(function ($query) {
+                    $query->where('status', AgentApplicationStatus::Approved)
+                        ->whereNotNull('agent_id');
+                });
+        });
     }
 }

@@ -2,6 +2,7 @@
 
 use App\Enums\VendorStatus;
 use App\Models\Store;
+use App\Models\User;
 use App\Models\Vendor;
 
 test('a vendor belongs to a user and can have one store', function () {
@@ -34,4 +35,26 @@ test('bank account fields are stored encrypted and decrypt transparently', funct
 
     expect($raw)->not->toBe('0123456789')
         ->and($vendor->fresh()->bank_account_number)->toBe('0123456789');
+});
+
+test('soft-deleting a vendor leaves its owning user account intact', function () {
+    $vendor = Vendor::factory()->create();
+    $userId = $vendor->user_id;
+
+    $vendor->delete();
+
+    expect(Vendor::withTrashed()->find($vendor->id))->not->toBeNull()
+        ->and(User::find($userId))->not->toBeNull();
+});
+
+test('force-deleting a vendor also deletes its owning user account, freeing the email', function () {
+    $vendor = Vendor::factory()->create();
+    $userId = $vendor->user_id;
+    $email = $vendor->user->email;
+
+    $vendor->forceDelete();
+
+    expect(Vendor::withTrashed()->find($vendor->id))->toBeNull()
+        ->and(User::find($userId))->toBeNull()
+        ->and(User::where('email', $email)->exists())->toBeFalse();
 });
