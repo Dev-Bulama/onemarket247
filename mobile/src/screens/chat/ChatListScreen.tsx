@@ -4,18 +4,24 @@ import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, Touchabl
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { COLORS, SIZES } from '../../constants';
 import { chatApi } from '../../api/chat';
+import { apiErrorMessage } from '../../api/client';
 import { Conversation } from '../../types';
 
 export default function ChatListScreen({ navigation }: any) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState('');
 
   const load = useCallback(() => {
-    chatApi.list().then(res => setConversations(res.data.data)).finally(() => {
-      setLoading(false);
-      setRefreshing(false);
-    });
+    setError('');
+    chatApi.list()
+      .then(res => setConversations(res.data.data))
+      .catch(e => setError(apiErrorMessage(e, 'Could not load your chats.')))
+      .finally(() => {
+        setLoading(false);
+        setRefreshing(false);
+      });
   }, []);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
@@ -35,6 +41,10 @@ export default function ChatListScreen({ navigation }: any) {
 
       {loading ? (
         <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 40 }} />
+      ) : error ? (
+        <TouchableOpacity style={styles.errorBanner} onPress={load}>
+          <Text style={styles.errorBannerText}>{error} — Tap to retry.</Text>
+        </TouchableOpacity>
       ) : conversations.length === 0 ? (
         <View style={styles.empty}>
           <IonIcon name="chatbubbles-outline" size={48} color={COLORS.border} />
@@ -74,6 +84,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: SIZES.screenPadding, paddingTop: 48, paddingBottom: 12, backgroundColor: COLORS.white, borderBottomWidth: 1, borderBottomColor: COLORS.divider,
   },
   headerTitle: { fontSize: 16, fontWeight: 'bold', color: COLORS.text },
+  errorBanner: { backgroundColor: COLORS.danger, padding: 14, margin: SIZES.screenPadding, borderRadius: SIZES.borderRadiusSm },
+  errorBannerText: { color: COLORS.white, fontSize: 12, textAlign: 'center' },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: SIZES.xxl },
   emptyText: { color: COLORS.textSecondary, marginTop: 12, textAlign: 'center' },
   card: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.white, borderRadius: SIZES.borderRadius, padding: 14, marginBottom: 10, gap: 8 },
