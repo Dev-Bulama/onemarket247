@@ -6,6 +6,7 @@
 /database/database.sqlite
 .phpactor.json
 .phpunit.result.cache
+/.claude
 /.codex
 /.cursor/
 /.idea
