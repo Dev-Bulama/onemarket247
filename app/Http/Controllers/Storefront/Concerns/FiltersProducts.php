@@ -2,17 +2,20 @@
 
 namespace App\Http\Controllers\Storefront\Concerns;
 
+use App\Actions\Currency\ConvertCurrencyAction;
 use App\Enums\ProductStatus;
 use App\Enums\StockStatus;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\City;
+use App\Models\Currency;
 use App\Models\Store;
 use App\Models\Vendor;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\App;
 
 /**
  * Shared category/brand/vendor/location/price/stock filtering, sorting, and
@@ -59,7 +62,7 @@ trait FiltersProducts
         }
 
         if ($request->filled('min_price')) {
-            $minMinor = (int) round(((float) $request->input('min_price')) * 100);
+            $minMinor = $this->priceFilterToBaseCurrencyMinorUnits((float) $request->input('min_price'));
             $query->where(function (Builder $q) use ($minMinor) {
                 $q->where('price', '>=', $minMinor)
                     ->orWhereHas('variations', fn (Builder $vq) => $vq->where('price', '>=', $minMinor));
@@ -67,7 +70,7 @@ trait FiltersProducts
         }
 
         if ($request->filled('max_price')) {
-            $maxMinor = (int) round(((float) $request->input('max_price')) * 100);
+            $maxMinor = $this->priceFilterToBaseCurrencyMinorUnits((float) $request->input('max_price'));
             $query->where(function (Builder $q) use ($maxMinor) {
                 $q->where('price', '<=', $maxMinor)
                     ->orWhereHas('variations', fn (Builder $vq) => $vq->where('price', '<=', $maxMinor));
@@ -128,5 +131,31 @@ trait FiltersProducts
         }
 
         return array_values(array_filter(array_map('intval', $value)));
+    }
+
+    /**
+     * min_price/max_price are typed by the shopper against the prices they
+     * can actually see on the page — i.e. in whatever currency
+     * App\Support\PriceDisplay is currently rendering (the session's
+     * chosen display currency, or the default), not necessarily the base
+     * currency Product.price is stored in. Mirror PriceDisplay::format()'s
+     * base -> display conversion in reverse before comparing, or the
+     * filter silently compares the wrong numbers for every shopper who
+     * isn't viewing the store's default currency. Falls back to the
+     * previous bare "major units at 2dp" assumption when no currencies are
+     * configured at all, so stores that never set one up are unaffected.
+     */
+    private function priceFilterToBaseCurrencyMinorUnits(float $majorAmount): int
+    {
+        $base = Currency::where('is_default', true)->first();
+        $display = App::bound('display.currency') ? App::make('display.currency') : $base;
+
+        if (! $base || ! $display) {
+            return (int) round($majorAmount * 100);
+        }
+
+        $displayMinor = (int) round($majorAmount * (10 ** $display->decimal_places));
+
+        return app(ConvertCurrencyAction::class)->handle($displayMinor, $display, $base);
     }
 }

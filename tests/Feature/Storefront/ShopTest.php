@@ -3,6 +3,8 @@
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\City;
+use App\Models\Currency;
+use App\Models\ExchangeRate;
 use App\Models\Product;
 use App\Models\Store;
 use App\Models\Vendor;
@@ -91,6 +93,29 @@ test('the shop page filters by one or more locations', function () {
         ->assertSee($lagosProduct->name)
         ->assertSee($abujaProduct->name)
         ->assertDontSee($kanoProduct->name);
+});
+
+test('the shop page filters by price range in the shoppers selected display currency, not the stores base currency', function () {
+    // Prices are stored in the store's base currency (USD here), but a
+    // shopper who has switched their display currency sees — and types
+    // filter values in terms of — the converted amount. 1 USD = 1000 NGN.
+    $usd = Currency::factory()->create(['code' => 'USD', 'is_default' => true, 'is_active' => true, 'decimal_places' => 2]);
+    ExchangeRate::factory()->create(['currency_id' => $usd->id, 'rate' => 1]);
+
+    $ngn = Currency::factory()->create(['code' => 'NGN', 'is_default' => false, 'is_active' => true, 'decimal_places' => 2]);
+    ExchangeRate::factory()->create(['currency_id' => $ngn->id, 'rate' => 1000]);
+
+    $inRange = Product::factory()->create(['price' => 5000, 'name' => 'Fifty Dollar Widget']); // $50 -> NGN 50,000
+    $tooCheap = Product::factory()->create(['price' => 1000, 'name' => 'Ten Dollar Widget']); // $10 -> NGN 10,000
+    $tooExpensive = Product::factory()->create(['price' => 20000, 'name' => 'Two Hundred Dollar Widget']); // $200 -> NGN 200,000
+
+    $response = $this->withSession(['display_currency' => 'NGN'])
+        ->get('/shop?min_price=40000&max_price=60000');
+
+    $response->assertOk()
+        ->assertSee($inRange->name)
+        ->assertDontSee($tooCheap->name)
+        ->assertDontSee($tooExpensive->name);
 });
 
 test('the shop page filters to in-stock products only', function () {
