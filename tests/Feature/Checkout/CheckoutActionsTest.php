@@ -155,6 +155,32 @@ test('completing checkout sends an order confirmation to a registered customer',
     Notification::assertSentTo($customer, OrderConfirmationNotification::class);
 });
 
+test('the order confirmation email shows the total formatted in the base currency, not the raw minor-unit amount', function () {
+    Notification::fake();
+
+    Currency::factory()->create(['code' => 'NGN', 'symbol' => '₦', 'is_default' => true]);
+    $country = Country::factory()->create();
+    seedFreeShippingFor($country);
+    $product = Product::factory()->create(['price' => 1500, 'manage_stock' => true, 'stock_status' => StockStatus::InStock]);
+    $warehouse = Warehouse::factory()->create(['vendor_id' => $product->vendor_id]);
+    app(AdjustStockAction::class)->handle($warehouse, $product, 10, 'seed');
+
+    $customer = User::factory()->create();
+    $cart = Cart::factory()->create(['customer_id' => $customer->id]);
+    app(AddCartItemAction::class)->handle($cart, $product, null, 1);
+    $session = app(InitiateCheckoutAction::class)->handle($cart);
+    $shippingData = shippingDataFor($country);
+    $shippingData['customer_id'] = $customer->id;
+    app(CompleteCheckoutAction::class)->handle($session, $shippingData);
+
+    Notification::assertSentTo($customer, OrderConfirmationNotification::class, function ($notification) use ($customer) {
+        $mail = $notification->toMail($customer);
+
+        return str_contains($mail->introLines[0], '₦15.00')
+            && ! str_contains($mail->introLines[0], '1,500.00');
+    });
+});
+
 test('replaying the same checkout session returns the same order, never creating a second one', function () {
     Currency::factory()->create(['is_default' => true]);
     $country = Country::factory()->create();
