@@ -14,6 +14,7 @@ use App\Models\Coupon;
 use App\Models\Product;
 use App\Models\ProductVariation;
 use App\Models\User;
+use App\Models\Vendor;
 
 test('adding a product creates a cart item with the current price', function () {
     $cart = Cart::factory()->create();
@@ -151,6 +152,55 @@ test('a coupon below its minimum spend is rejected', function () {
     Coupon::factory()->create(['code' => 'BIGSPEND', 'minimum_spend' => 5000]);
 
     expect(fn () => app(ApplyCouponAction::class)->handle($cart, 'BIGSPEND'))
+        ->toThrow(RuntimeException::class);
+});
+
+test('a vendor coupon only discounts that vendors items in the cart', function () {
+    $vendorA = Vendor::factory()->create();
+    $vendorB = Vendor::factory()->create();
+    $productA = Product::factory()->create(['vendor_id' => $vendorA->id, 'price' => 10000]);
+    $productB = Product::factory()->create(['vendor_id' => $vendorB->id, 'price' => 5000]);
+
+    $cart = Cart::factory()->create();
+    app(AddCartItemAction::class)->handle($cart, $productA, null, 1);
+    app(AddCartItemAction::class)->handle($cart, $productB, null, 1);
+
+    $coupon = Coupon::factory()->create(['code' => 'VENDORA10', 'vendor_id' => $vendorA->id, 'type' => CouponType::Percentage, 'value' => 10]);
+
+    $cartCoupon = app(ApplyCouponAction::class)->handle($cart, 'VENDORA10');
+
+    // 10% of vendor A's 10000 line only — vendor B's 5000 line is untouched.
+    expect($cartCoupon->discount_amount)->toBe(1000);
+});
+
+test('a vendor coupon is rejected if the cart has none of that vendors items', function () {
+    $vendorA = Vendor::factory()->create();
+    $vendorB = Vendor::factory()->create();
+    $productB = Product::factory()->create(['vendor_id' => $vendorB->id, 'price' => 5000]);
+
+    $cart = Cart::factory()->create();
+    app(AddCartItemAction::class)->handle($cart, $productB, null, 1);
+
+    Coupon::factory()->create(['code' => 'VENDORA10', 'vendor_id' => $vendorA->id]);
+
+    expect(fn () => app(ApplyCouponAction::class)->handle($cart, 'VENDORA10'))
+        ->toThrow(RuntimeException::class);
+});
+
+test('a vendor coupons minimum spend is checked against that vendors items only', function () {
+    $vendorA = Vendor::factory()->create();
+    $vendorB = Vendor::factory()->create();
+    $productA = Product::factory()->create(['vendor_id' => $vendorA->id, 'price' => 2000]);
+    $productB = Product::factory()->create(['vendor_id' => $vendorB->id, 'price' => 20000]);
+
+    $cart = Cart::factory()->create();
+    app(AddCartItemAction::class)->handle($cart, $productA, null, 1);
+    app(AddCartItemAction::class)->handle($cart, $productB, null, 1);
+
+    // Cart total (22000) clears this minimum, but vendor A's own share (2000) does not.
+    Coupon::factory()->create(['code' => 'VENDORMIN', 'vendor_id' => $vendorA->id, 'minimum_spend' => 5000]);
+
+    expect(fn () => app(ApplyCouponAction::class)->handle($cart, 'VENDORMIN'))
         ->toThrow(RuntimeException::class);
 });
 

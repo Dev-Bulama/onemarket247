@@ -5,12 +5,13 @@ namespace App\Models;
 use App\Enums\CouponType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Coupon extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['code', 'type', 'value', 'minimum_spend', 'starts_at', 'expires_at', 'is_active'];
+    protected $fillable = ['vendor_id', 'code', 'type', 'value', 'minimum_spend', 'starts_at', 'expires_at', 'is_active'];
 
     protected function casts(): array
     {
@@ -29,6 +30,16 @@ class Coupon extends Model
         static::saving(function (self $coupon) {
             $coupon->code = strtoupper($coupon->code);
         });
+    }
+
+    public function vendor(): BelongsTo
+    {
+        return $this->belongsTo(Vendor::class);
+    }
+
+    public function isVendorCoupon(): bool
+    {
+        return $this->vendor_id !== null;
     }
 
     public function isValidNow(): bool
