@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { COLORS, SIZES } from '../../constants';
 import { CurrencyOption, referenceApi } from '../../api/config';
+import { apiErrorMessage } from '../../api/client';
 import { useLocaleStore } from '../../store/localeStore';
 
 // The language picker is hidden for now — there's no translated UI content
@@ -15,10 +16,18 @@ export default function PreferencesScreen({ navigation }: any) {
   const { currency, setCurrency } = useLocaleStore();
   const [currencies, setCurrencies] = useState<CurrencyOption[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    referenceApi.currencies().then(res => setCurrencies(res.data.data)).finally(() => setLoading(false));
+  const load = useCallback(() => {
+    setLoading(true);
+    setError('');
+    referenceApi.currencies()
+      .then(res => setCurrencies(res.data.data))
+      .catch(e => setError(apiErrorMessage(e, 'Could not load currencies.')))
+      .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => { load(); }, [load]);
 
   const activeCurrency = currency ?? currencies.find(c => c.is_default)?.code;
 
@@ -32,6 +41,10 @@ export default function PreferencesScreen({ navigation }: any) {
 
       {loading ? (
         <ActivityIndicator size="large" color={COLORS.primary} style={styles.loader} />
+      ) : error ? (
+        <TouchableOpacity style={styles.errorBanner} onPress={load}>
+          <Text style={styles.errorBannerText}>{error} — Tap to retry.</Text>
+        </TouchableOpacity>
       ) : (
         <ScrollView contentContainerStyle={styles.content}>
           <Text style={styles.sectionLabel}>Currency</Text>
@@ -65,4 +78,6 @@ const styles = StyleSheet.create({
   optionLabel: { fontSize: 14, color: COLORS.text, fontWeight: '600' },
   optionSubLabel: { fontSize: 11, color: COLORS.textMuted, marginTop: 2 },
   note: { fontSize: 11, color: COLORS.textMuted, marginTop: 20, textAlign: 'center', lineHeight: 16 },
+  errorBanner: { backgroundColor: COLORS.danger, padding: 14, margin: SIZES.screenPadding, borderRadius: SIZES.borderRadiusSm },
+  errorBannerText: { color: COLORS.white, fontSize: 12, textAlign: 'center' },
 });

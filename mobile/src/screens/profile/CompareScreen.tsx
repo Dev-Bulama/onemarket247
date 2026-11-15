@@ -4,6 +4,7 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { COLORS, SIZES } from '../../constants';
 import { compareApi } from '../../api/wishlist';
+import { apiErrorMessage } from '../../api/client';
 import { Product } from '../../types';
 
 const ROWS: { label: string; render: (p: Product) => string }[] = [
@@ -17,10 +18,15 @@ const ROWS: { label: string; render: (p: Product) => string }[] = [
 export default function CompareScreen({ navigation }: any) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   const load = useCallback(() => {
     setLoading(true);
-    compareApi.list().then(res => setProducts(res.data.data)).finally(() => setLoading(false));
+    setError('');
+    compareApi.list()
+      .then(res => setProducts(res.data.data))
+      .catch(e => setError(apiErrorMessage(e, 'Could not load your comparison list.')))
+      .finally(() => setLoading(false));
   }, []);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
@@ -32,6 +38,14 @@ export default function CompareScreen({ navigation }: any) {
 
   if (loading) {
     return <View style={styles.centerFlex}><ActivityIndicator size="large" color={COLORS.primary} /></View>;
+  }
+
+  if (error) {
+    return (
+      <TouchableOpacity style={styles.centerFlex} onPress={load}>
+        <Text style={styles.emptyText}>{error} — Tap to retry.</Text>
+      </TouchableOpacity>
+    );
   }
 
   return (

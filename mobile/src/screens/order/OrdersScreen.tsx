@@ -4,16 +4,24 @@ import { ActivityIndicator, FlatList, StyleSheet, Text, TouchableOpacity, View }
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { COLORS, ORDER_STATUSES, SIZES } from '../../constants';
 import { ordersApi } from '../../api/orders';
+import { apiErrorMessage } from '../../api/client';
 import { Order } from '../../types';
 
 export default function OrdersScreen({ navigation }: any) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  useFocusEffect(useCallback(() => {
+  const load = useCallback(() => {
     setLoading(true);
-    ordersApi.list().then(res => setOrders(res.data.data)).finally(() => setLoading(false));
-  }, []));
+    setError('');
+    ordersApi.list()
+      .then(res => setOrders(res.data.data))
+      .catch(e => setError(apiErrorMessage(e, 'Could not load your orders.')))
+      .finally(() => setLoading(false));
+  }, []);
+
+  useFocusEffect(useCallback(() => { load(); }, [load]));
 
   return (
     <View style={styles.flex}>
@@ -25,6 +33,10 @@ export default function OrdersScreen({ navigation }: any) {
 
       {loading ? (
         <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 40 }} />
+      ) : error ? (
+        <TouchableOpacity style={styles.errorBanner} onPress={load}>
+          <Text style={styles.errorBannerText}>{error} — Tap to retry.</Text>
+        </TouchableOpacity>
       ) : orders.length === 0 ? (
         <View style={styles.empty}>
           <IonIcon name="receipt-outline" size={48} color={COLORS.border} />
@@ -66,6 +78,8 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 16, fontWeight: 'bold', color: COLORS.text },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: SIZES.xxl },
   emptyText: { color: COLORS.textSecondary, marginTop: 12, textAlign: 'center' },
+  errorBanner: { backgroundColor: COLORS.danger, padding: 14, margin: SIZES.screenPadding, borderRadius: SIZES.borderRadiusSm },
+  errorBannerText: { color: COLORS.white, fontSize: 12, textAlign: 'center' },
   card: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.white, borderRadius: SIZES.borderRadius, padding: 14, marginBottom: 10 },
   orderNumber: { fontSize: 13, fontWeight: '700', color: COLORS.text },
   date: { fontSize: 11, color: COLORS.textMuted, marginTop: 2 },

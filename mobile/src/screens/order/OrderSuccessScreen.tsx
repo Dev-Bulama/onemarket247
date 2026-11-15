@@ -1,17 +1,22 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { COLORS, SIZES } from '../../constants';
 import { ordersApi } from '../../api/orders';
+import { apiErrorMessage } from '../../api/client';
 import { Order } from '../../types';
 
 export default function OrderSuccessScreen({ route, navigation }: any) {
   const { orderId } = route.params as { orderId: string };
   const [order, setOrder] = useState<Order | null>(null);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    ordersApi.show(orderId).then(res => setOrder(res.data.data)).catch(() => {});
+  const load = useCallback(() => {
+    setError('');
+    ordersApi.show(orderId).then(res => setOrder(res.data.data)).catch(e => setError(apiErrorMessage(e, 'Could not load your order details.')));
   }, [orderId]);
+
+  useEffect(() => { load(); }, [load]);
 
   return (
     <View style={styles.flex}>
@@ -40,7 +45,12 @@ export default function OrderSuccessScreen({ route, navigation }: any) {
           </View>
         )}
 
-        {!order && <ActivityIndicator color={COLORS.primary} style={{ marginTop: 20 }} />}
+        {!order && !error && <ActivityIndicator color={COLORS.primary} style={{ marginTop: 20 }} />}
+        {error && (
+          <TouchableOpacity style={styles.errorBanner} onPress={load}>
+            <Text style={styles.errorBannerText}>{error} — Tap to retry.</Text>
+          </TouchableOpacity>
+        )}
 
         <TouchableOpacity
           style={styles.primaryBtn}
@@ -82,6 +92,9 @@ const styles = StyleSheet.create({
   totalCard: { width: '100%', flexDirection: 'row', justifyContent: 'space-between', backgroundColor: COLORS.white, borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadius, padding: 16, marginBottom: 20 },
   totalLabel: { fontSize: 14, fontWeight: '600', color: COLORS.text },
   totalValue: { fontSize: 16, fontWeight: 'bold', color: COLORS.primary },
+
+  errorBanner: { width: '100%', backgroundColor: COLORS.danger, padding: 14, borderRadius: SIZES.borderRadiusSm, marginTop: 20, marginBottom: 10 },
+  errorBannerText: { color: COLORS.white, fontSize: 12, textAlign: 'center' },
 
   primaryBtn: { backgroundColor: COLORS.primary, borderRadius: SIZES.borderRadius, paddingVertical: 14, alignItems: 'center', width: '100%', marginBottom: 10 },
   primaryBtnText: { color: COLORS.white, fontWeight: 'bold', fontSize: 15 },

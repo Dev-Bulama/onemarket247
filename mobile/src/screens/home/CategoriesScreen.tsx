@@ -1,17 +1,26 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { COLORS, SIZES } from '../../constants';
 import { productsApi } from '../../api/products';
+import { apiErrorMessage } from '../../api/client';
 import { Category } from '../../types';
 
 export default function CategoriesScreen({ navigation }: any) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    productsApi.categories().then(res => setCategories(res.data.data)).finally(() => setLoading(false));
+  const load = useCallback(() => {
+    setLoading(true);
+    setError('');
+    productsApi.categories()
+      .then(res => setCategories(res.data.data))
+      .catch(e => setError(apiErrorMessage(e, 'Could not load categories.')))
+      .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => { load(); }, [load]);
 
   return (
     <View style={styles.flex}>
@@ -21,6 +30,10 @@ export default function CategoriesScreen({ navigation }: any) {
 
       {loading ? (
         <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 40 }} />
+      ) : error ? (
+        <TouchableOpacity style={styles.errorBanner} onPress={load}>
+          <Text style={styles.errorBannerText}>{error} — Tap to retry.</Text>
+        </TouchableOpacity>
       ) : (
         <FlatList
           data={categories}
@@ -50,4 +63,6 @@ const styles = StyleSheet.create({
   iconBox: { width: 56, height: 56, borderRadius: 28, backgroundColor: COLORS.grayLight, alignItems: 'center', justifyContent: 'center', marginBottom: 8, overflow: 'hidden' },
   image: { width: 56, height: 56 },
   name: { fontSize: 11, color: COLORS.text, textAlign: 'center', paddingHorizontal: 4 },
+  errorBanner: { backgroundColor: COLORS.danger, padding: 14, margin: SIZES.screenPadding, borderRadius: SIZES.borderRadiusSm },
+  errorBannerText: { color: COLORS.white, fontSize: 12, textAlign: 'center' },
 });

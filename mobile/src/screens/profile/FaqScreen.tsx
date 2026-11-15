@@ -1,17 +1,26 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { COLORS, SIZES } from '../../constants';
 import { FaqPage, pagesApi } from '../../api/content';
+import { apiErrorMessage } from '../../api/client';
 
 export default function FaqScreen({ navigation }: any) {
   const [faq, setFaq] = useState<FaqPage | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
-  useEffect(() => {
-    pagesApi.faq().then(res => setFaq(res.data.data)).finally(() => setLoading(false));
+  const load = useCallback(() => {
+    setLoading(true);
+    setError('');
+    pagesApi.faq()
+      .then(res => setFaq(res.data.data))
+      .catch(e => setError(apiErrorMessage(e, 'Could not load the FAQ.')))
+      .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => { load(); }, [load]);
 
   return (
     <View style={styles.flex}>
@@ -23,6 +32,10 @@ export default function FaqScreen({ navigation }: any) {
 
       {loading ? (
         <ActivityIndicator size="large" color={COLORS.primary} style={styles.loader} />
+      ) : error ? (
+        <TouchableOpacity style={styles.errorBanner} onPress={load}>
+          <Text style={styles.errorBannerText}>{error} — Tap to retry.</Text>
+        </TouchableOpacity>
       ) : (
         <ScrollView contentContainerStyle={styles.content}>
           {faq?.questions.map((qa, idx) => {
@@ -57,4 +70,6 @@ const styles = StyleSheet.create({
   questionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
   question: { flex: 1, fontSize: 13, fontWeight: '700', color: COLORS.text },
   answer: { fontSize: 12, color: COLORS.textSecondary, marginTop: 10, lineHeight: 18 },
+  errorBanner: { backgroundColor: COLORS.danger, padding: 14, margin: SIZES.screenPadding, borderRadius: SIZES.borderRadiusSm },
+  errorBannerText: { color: COLORS.white, fontSize: 12, textAlign: 'center' },
 });

@@ -28,15 +28,27 @@ export default function StoreScreen({ route, navigation }: any) {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
+  const load = useCallback(() => {
     setLoading(true);
-    storesApi.show(slug).then(res => setStore(res.data.data)).catch(e => setError(apiErrorMessage(e, 'Could not load this store.')));
-    storesApi.products(slug).then(res => {
-      setProducts(res.data.data);
-      setPage(res.data.meta.pagination.current_page);
-      setLastPage(res.data.meta.pagination.last_page);
-    }).finally(() => setLoading(false));
-  }, [slug, language, currency]);
+    setError('');
+    Promise.all([
+      storesApi.show(slug).then(res => setStore(res.data.data)),
+      storesApi.products(slug).then(res => {
+        setProducts(res.data.data);
+        setPage(res.data.meta.pagination.current_page);
+        setLastPage(res.data.meta.pagination.last_page);
+      }),
+    ])
+      .catch(e => setError(apiErrorMessage(e, 'Could not load this store.')))
+      .finally(() => setLoading(false));
+  }, [slug]);
+
+  // language/currency aren't read inside load() directly, but they drive
+  // the X-Language/X-Currency headers apiClient attaches to every request
+  // (see localeStore), so a change to either still needs to re-trigger it.
+  useEffect(() => {
+    load();
+  }, [load, language, currency]);
 
   const handleChatWithVendor = async () => {
     if (!isAuthenticated) {
@@ -62,17 +74,26 @@ export default function StoreScreen({ route, navigation }: any) {
     storesApi.products(slug, { page: page + 1 }).then(res => {
       setProducts(prev => [...prev, ...res.data.data]);
       setPage(res.data.meta.pagination.current_page);
-    }).finally(() => setLoadingMore(false));
+    }).catch(e => useToastStore.getState().show(apiErrorMessage(e, 'Could not load more products.'), 'error'))
+      .finally(() => setLoadingMore(false));
   }, [slug, page, lastPage, loadingMore]);
 
   if (loading) {
     return <View style={styles.centerFlex}><ActivityIndicator size="large" color={COLORS.primary} /></View>;
   }
 
-  if (error || !store) {
+  if (error) {
+    return (
+      <TouchableOpacity style={styles.centerFlex} onPress={load}>
+        <Text style={styles.errorText}>{error} — Tap to retry.</Text>
+      </TouchableOpacity>
+    );
+  }
+
+  if (!store) {
     return (
       <View style={styles.centerFlex}>
-        <Text style={styles.errorText}>{error || 'Store not found.'}</Text>
+        <Text style={styles.errorText}>Store not found.</Text>
       </View>
     );
   }

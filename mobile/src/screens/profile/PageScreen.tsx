@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import RenderHTML from 'react-native-render-html';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { COLORS, SIZES } from '../../constants';
 import { pagesApi, LegalPageContent, StaticPage } from '../../api/content';
+import { apiErrorMessage } from '../../api/client';
 
 const { width } = Dimensions.get('window');
 
@@ -25,11 +26,18 @@ export default function PageScreen({ route, navigation }: any) {
   const isHtml = (HTML_PAGES as readonly string[]).includes(page);
   const [content, setContent] = useState<StaticPage | LegalPageContent | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
+  const load = useCallback(() => {
     setLoading(true);
-    LOADERS[page]().then(res => setContent(res.data.data)).finally(() => setLoading(false));
+    setError('');
+    LOADERS[page]()
+      .then(res => setContent(res.data.data))
+      .catch(e => setError(apiErrorMessage(e, 'Could not load this page.')))
+      .finally(() => setLoading(false));
   }, [page]);
+
+  useEffect(() => { load(); }, [load]);
 
   return (
     <View style={styles.flex}>
@@ -41,6 +49,10 @@ export default function PageScreen({ route, navigation }: any) {
 
       {loading ? (
         <ActivityIndicator size="large" color={COLORS.primary} style={styles.loader} />
+      ) : error ? (
+        <TouchableOpacity style={styles.errorBanner} onPress={load}>
+          <Text style={styles.errorBannerText}>{error} — Tap to retry.</Text>
+        </TouchableOpacity>
       ) : (
         <ScrollView contentContainerStyle={styles.content}>
           {isHtml && content ? (
@@ -76,4 +88,6 @@ const styles = StyleSheet.create({
   section: { marginBottom: 18 },
   sectionHeading: { fontSize: 14, fontWeight: '700', color: COLORS.text, marginBottom: 6 },
   sectionBody: { fontSize: 13, color: COLORS.textSecondary, lineHeight: 20 },
+  errorBanner: { backgroundColor: COLORS.danger, padding: 14, margin: SIZES.screenPadding, borderRadius: SIZES.borderRadiusSm },
+  errorBannerText: { color: COLORS.white, fontSize: 12, textAlign: 'center' },
 });

@@ -4,15 +4,21 @@ import { ActivityIndicator, FlatList, StyleSheet, Text, TouchableOpacity, View }
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { COLORS, SIZES } from '../../constants';
 import { addressesApi } from '../../api/addresses';
+import { apiErrorMessage } from '../../api/client';
 import { Address } from '../../types';
 
 export default function AddressesScreen({ navigation }: any) {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   const load = useCallback(() => {
     setLoading(true);
-    addressesApi.list().then(res => setAddresses(res.data.data)).finally(() => setLoading(false));
+    setError('');
+    addressesApi.list()
+      .then(res => setAddresses(res.data.data))
+      .catch(e => setError(apiErrorMessage(e, 'Could not load your addresses.')))
+      .finally(() => setLoading(false));
   }, []);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
@@ -32,6 +38,10 @@ export default function AddressesScreen({ navigation }: any) {
 
       {loading ? (
         <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 40 }} />
+      ) : error ? (
+        <TouchableOpacity style={styles.errorBanner} onPress={load}>
+          <Text style={styles.errorBannerText}>{error} — Tap to retry.</Text>
+        </TouchableOpacity>
       ) : addresses.length === 0 ? (
         <View style={styles.empty}>
           <IonIcon name="location-outline" size={48} color={COLORS.border} />
@@ -80,4 +90,6 @@ const styles = StyleSheet.create({
   line: { fontSize: 12, color: COLORS.textSecondary, marginTop: 2 },
   pill: { alignSelf: 'flex-start', backgroundColor: '#EAFBF0', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2, marginTop: 6 },
   pillText: { color: COLORS.accent, fontSize: 10, fontWeight: '700' },
+  errorBanner: { backgroundColor: COLORS.danger, padding: 14, margin: SIZES.screenPadding, borderRadius: SIZES.borderRadiusSm },
+  errorBannerText: { color: COLORS.white, fontSize: 12, textAlign: 'center' },
 });

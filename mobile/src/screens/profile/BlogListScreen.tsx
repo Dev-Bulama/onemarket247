@@ -3,6 +3,7 @@ import { ActivityIndicator, FlatList, Image, StyleSheet, Text, TouchableOpacity,
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { COLORS, SIZES } from '../../constants';
 import { blogApi, BlogPostSummary } from '../../api/content';
+import { apiErrorMessage } from '../../api/client';
 
 export default function BlogListScreen({ navigation }: any) {
   const [posts, setPosts] = useState<BlogPostSummary[]>([]);
@@ -10,14 +11,16 @@ export default function BlogListScreen({ navigation }: any) {
   const [lastPage, setLastPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [error, setError] = useState('');
 
   const load = useCallback((targetPage: number) => {
     if (targetPage === 1) setLoading(true); else setLoadingMore(true);
+    setError('');
     blogApi.list(targetPage).then(res => {
       setPosts(prev => (targetPage === 1 ? res.data.data : [...prev, ...res.data.data]));
       setPage(res.data.meta.pagination.current_page);
       setLastPage(res.data.meta.pagination.last_page);
-    }).finally(() => {
+    }).catch(e => setError(apiErrorMessage(e, 'Could not load the blog.'))).finally(() => {
       setLoading(false);
       setLoadingMore(false);
     });
@@ -35,6 +38,10 @@ export default function BlogListScreen({ navigation }: any) {
 
       {loading ? (
         <ActivityIndicator size="large" color={COLORS.primary} style={styles.loader} />
+      ) : error ? (
+        <TouchableOpacity style={styles.errorBanner} onPress={() => load(1)}>
+          <Text style={styles.errorBannerText}>{error} — Tap to retry.</Text>
+        </TouchableOpacity>
       ) : posts.length === 0 ? (
         <View style={styles.empty}>
           <IonIcon name="newspaper-outline" size={48} color={COLORS.border} />
@@ -88,4 +95,6 @@ const styles = StyleSheet.create({
   excerpt: { fontSize: 12, color: COLORS.textSecondary, lineHeight: 17, marginBottom: 8 },
   meta: { fontSize: 11, color: COLORS.textMuted },
   footerLoader: { marginVertical: 16 },
+  errorBanner: { backgroundColor: COLORS.danger, padding: 14, margin: SIZES.screenPadding, borderRadius: SIZES.borderRadiusSm },
+  errorBannerText: { color: COLORS.white, fontSize: 12, textAlign: 'center' },
 });
