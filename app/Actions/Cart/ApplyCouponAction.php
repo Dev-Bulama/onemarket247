@@ -5,6 +5,7 @@ namespace App\Actions\Cart;
 use App\Models\Cart;
 use App\Models\CartCoupon;
 use App\Models\Coupon;
+use App\Support\PriceDisplay;
 use RuntimeException;
 
 class ApplyCouponAction
@@ -30,8 +31,8 @@ class ApplyCouponAction
         }
 
         if ($coupon->minimum_spend !== null && $subtotal < $coupon->minimum_spend) {
-            $minimum = number_format($coupon->minimum_spend / 100, 2);
-            throw new RuntimeException("This coupon requires a minimum spend of \${$minimum}.");
+            $minimum = PriceDisplay::format($coupon->minimum_spend);
+            throw new RuntimeException("This coupon requires a minimum spend of {$minimum}.");
         }
 
         $cart->coupon()->delete();

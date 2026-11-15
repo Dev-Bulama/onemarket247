@@ -3,7 +3,9 @@
 namespace App\Filament\Resources\CommissionRules\Tables;
 
 use App\Enums\CommissionScopeType;
+use App\Enums\CommissionType;
 use App\Models\CommissionRule;
+use App\Support\PriceDisplay;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -34,9 +36,9 @@ class CommissionRulesTable
                 TextColumn::make('rate_type')
                     ->badge(),
                 TextColumn::make('rate_value')
-                    ->formatStateUsing(fn (CommissionRule $record) => $record->rate_type->value === 'percentage'
+                    ->formatStateUsing(fn (CommissionRule $record) => $record->rate_type === CommissionType::Percentage
                         ? number_format((float) $record->rate_value, 2).'%'
-                        : '$'.number_format((float) $record->rate_value, 2)),
+                        : PriceDisplay::format((int) round((float) $record->rate_value * 100))),
                 IconColumn::make('is_active')->boolean(),
                 TextColumn::make('created_at')->dateTime(),
             ])

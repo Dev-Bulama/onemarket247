@@ -4,6 +4,7 @@ namespace App\Filament\Resources\CommissionRules\Schemas;
 
 use App\Enums\CommissionScopeType;
 use App\Enums\CommissionType;
+use App\Support\PriceDisplay;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -51,10 +52,12 @@ class CommissionRuleForm
                 ->numeric()
                 ->required()
                 ->minValue(0)
-                ->prefix(fn (Get $get) => $get('rate_type') === CommissionType::Fixed ? '$' : null)
+                ->prefix(fn (Get $get) => $get('rate_type') === CommissionType::Fixed ? PriceDisplay::baseCurrencyCode() : null)
                 ->suffix(fn (Get $get) => $get('rate_type') === CommissionType::Percentage ? '%' : null)
                 ->maxValue(fn (Get $get) => $get('rate_type') === CommissionType::Percentage ? 100 : null)
-                ->helperText(fn (Get $get) => $get('rate_type') === CommissionType::Fixed ? 'A flat dollar amount, e.g. 5.00 for $5.00.' : null),
+                ->helperText(fn (Get $get) => $get('rate_type') === CommissionType::Fixed
+                    ? 'A flat amount in the store\'s base currency ('.PriceDisplay::baseCurrencyCode().'), e.g. 5.00.'
+                    : null),
             Toggle::make('is_active')
                 ->default(true),
         ]);

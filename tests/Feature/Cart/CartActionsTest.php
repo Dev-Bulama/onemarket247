@@ -11,6 +11,7 @@ use App\Enums\StockStatus;
 use App\Exceptions\InsufficientStockException;
 use App\Models\Cart;
 use App\Models\Coupon;
+use App\Models\Currency;
 use App\Models\Product;
 use App\Models\ProductVariation;
 use App\Models\User;
@@ -153,6 +154,25 @@ test('a coupon below its minimum spend is rejected', function () {
 
     expect(fn () => app(ApplyCouponAction::class)->handle($cart, 'BIGSPEND'))
         ->toThrow(RuntimeException::class);
+});
+
+test('the minimum spend error message is formatted in the store base currency, not hardcoded dollars', function () {
+    Currency::query()->update(['is_default' => false]);
+    Currency::factory()->create(['code' => 'NGN', 'symbol' => '₦', 'is_default' => true]);
+
+    $cart = Cart::factory()->create();
+    $product = Product::factory()->create(['price' => 500]);
+    app(AddCartItemAction::class)->handle($cart, $product, null, 1);
+    Coupon::factory()->create(['code' => 'BIGSPEND', 'minimum_spend' => 5000]);
+
+    try {
+        app(ApplyCouponAction::class)->handle($cart, 'BIGSPEND');
+        $this->fail('Expected a RuntimeException to be thrown.');
+    } catch (RuntimeException $e) {
+        expect($e->getMessage())
+            ->toContain('₦50.00')
+            ->not->toContain('$50.00');
+    }
 });
 
 test('a vendor coupon only discounts that vendors items in the cart', function () {

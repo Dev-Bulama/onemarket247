@@ -4,7 +4,9 @@ use App\Enums\CommissionScopeType;
 use App\Enums\CommissionType;
 use App\Filament\Resources\CommissionRules\Pages\CreateCommissionRule;
 use App\Filament\Resources\CommissionRules\Pages\EditCommissionRule;
+use App\Filament\Resources\CommissionRules\Pages\ListCommissionRules;
 use App\Models\CommissionRule;
+use App\Models\Currency;
 use App\Models\User;
 use App\Models\Vendor;
 use Database\Seeders\RolePermissionSeeder;
@@ -78,6 +80,20 @@ test('finance staff can create a vendor-scoped commission rule through the react
     $rule = CommissionRule::where('vendor_id', $vendor->id)->firstOrFail();
     expect($rule->scope_type)->toBe(CommissionScopeType::Vendor)
         ->and((float) $rule->rate_value)->toBe(12.0);
+});
+
+test('a fixed-amount commission rate is displayed in the store base currency, not hardcoded dollars', function () {
+    Currency::factory()->create(['code' => 'NGN', 'symbol' => '₦', 'is_default' => true]);
+    $admin = financeAdminUser();
+    CommissionRule::factory()->global()->create([
+        'rate_type' => CommissionType::Fixed,
+        'rate_value' => 5,
+    ]);
+
+    Livewire::actingAs($admin, 'admin')
+        ->test(ListCommissionRules::class)
+        ->assertSee('₦5.00')
+        ->assertDontSee('$5.00');
 });
 
 test('finance staff can edit an existing commission rule', function () {
