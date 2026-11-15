@@ -24,9 +24,18 @@ class PickupStationsTable
                     ->searchable(),
                 TextColumn::make('country.name')
                     ->label('Country'),
+                TextColumn::make('state.name')
+                    ->label('State')
+                    ->placeholder('—')
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('city.name')
+                    ->label('City')
+                    ->placeholder('—'),
                 TextColumn::make('address_line_1')
                     ->label('Address')
                     ->limit(40),
+                TextColumn::make('phone')
+                    ->placeholder('—'),
                 IconColumn::make('is_active')
                     ->boolean(),
                 TextColumn::make('created_at')
