@@ -70,6 +70,7 @@ class ProductDetailResource extends JsonResource
                 'id' => $this->vendor->id,
                 'store_name' => $this->vendor->store->name,
                 'store_slug' => $this->vendor->store->slug,
+                'phone' => $this->vendor->store->phone,
             ] : null,
         ];
     }

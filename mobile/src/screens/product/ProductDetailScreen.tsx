@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ActivityIndicator, Dimensions, Image, ScrollView, Share, StyleSheet, Text,
+  ActivityIndicator, Dimensions, Image, Linking, ScrollView, Share, StyleSheet, Text,
   TextInput, TouchableOpacity, View,
 } from 'react-native';
 import IonIcon from 'react-native-vector-icons/Ionicons';
@@ -34,6 +34,7 @@ export default function ProductDetailScreen({ route, navigation }: any) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeImage, setActiveImage] = useState(0);
+  const imageScrollRef = useRef<ScrollView>(null);
   const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({});
   const [quantity, setQuantity] = useState(1);
   const [adding, setAdding] = useState(false);
@@ -180,8 +181,21 @@ export default function ProductDetailScreen({ route, navigation }: any) {
     }
   };
 
+  const handleCallVendor = () => {
+    if (product.vendor?.phone) Linking.openURL(`tel:${product.vendor.phone}`);
+  };
+
   const images = product.images.length > 0 ? product.images : [{ url: '', thumbnail: '' }];
-  const mainImageUrl = matchedVariation?.image || images[activeImage]?.url;
+
+  const goToImage = (idx: number) => {
+    setActiveImage(idx);
+    imageScrollRef.current?.scrollTo({ x: idx * width, animated: true });
+  };
+
+  const handleImageScrollEnd = (event: { nativeEvent: { contentOffset: { x: number } } }) => {
+    const idx = Math.round(event.nativeEvent.contentOffset.x / width);
+    if (idx !== activeImage) setActiveImage(idx);
+  };
 
   return (
     <View style={styles.flex}>
@@ -214,8 +228,23 @@ export default function ProductDetailScreen({ route, navigation }: any) {
 
         {/* Image */}
         <View style={styles.imageWrap}>
-          {mainImageUrl ? (
-            <Image source={{ uri: mainImageUrl }} style={styles.mainImage} resizeMode="contain" />
+          {matchedVariation?.image ? (
+            // A variation can carry its own photo that isn't part of the
+            // product's main gallery array, so it overrides swiping with a
+            // single static image while that variation is selected.
+            <Image source={{ uri: matchedVariation.image }} style={styles.mainImage} resizeMode="contain" />
+          ) : images[0]?.url ? (
+            <ScrollView
+              ref={imageScrollRef}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onMomentumScrollEnd={handleImageScrollEnd}
+            >
+              {images.map((img, idx) => (
+                <Image key={idx} source={{ uri: img.url }} style={[styles.mainImage, { width }]} resizeMode="contain" />
+              ))}
+            </ScrollView>
           ) : (
             <View style={[styles.mainImage, styles.imagePlaceholder]}>
               <IonIcon name="image-outline" size={64} color={COLORS.border} />
@@ -229,7 +258,7 @@ export default function ProductDetailScreen({ route, navigation }: any) {
         {images.length > 1 && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.thumbRow} contentContainerStyle={{ paddingHorizontal: SIZES.screenPadding }}>
             {images.map((img, idx) => (
-              <TouchableOpacity key={idx} onPress={() => setActiveImage(idx)} style={[styles.thumbBox, activeImage === idx && styles.thumbBoxActive]}>
+              <TouchableOpacity key={idx} onPress={() => goToImage(idx)} style={[styles.thumbBox, activeImage === idx && styles.thumbBoxActive]}>
                 {img.thumbnail ? <Image source={{ uri: img.thumbnail }} style={styles.thumbImage} /> : null}
               </TouchableOpacity>
             ))}
@@ -327,10 +356,17 @@ export default function ProductDetailScreen({ route, navigation }: any) {
                 <Text style={styles.vendorText}>Sold by {product.vendor.store_name}</Text>
                 <IonIcon name="chevron-forward" size={14} color={COLORS.textMuted} />
               </TouchableOpacity>
-              <TouchableOpacity style={styles.chatVendorBtn} onPress={handleChatWithVendor}>
-                <IonIcon name="chatbubble-ellipses-outline" size={16} color={COLORS.primary} />
-                <Text style={styles.chatVendorBtnText}>Chat with Vendor</Text>
-              </TouchableOpacity>
+              <View style={styles.vendorContactRow}>
+                <TouchableOpacity style={[styles.chatVendorBtn, { flex: 1 }]} onPress={handleChatWithVendor}>
+                  <IonIcon name="chatbubble-ellipses-outline" size={16} color={COLORS.primary} />
+                  <Text style={styles.chatVendorBtnText}>Chat with Vendor</Text>
+                </TouchableOpacity>
+                {product.vendor.phone ? (
+                  <TouchableOpacity style={styles.callVendorBtn} onPress={handleCallVendor}>
+                    <IonIcon name="call-outline" size={16} color={COLORS.text} />
+                  </TouchableOpacity>
+                ) : null}
+              </View>
             </>
           )}
 
@@ -514,6 +550,11 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 7,
   },
   chatVendorBtnText: { fontSize: 12, fontWeight: '600', color: COLORS.primary },
+  vendorContactRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  callVendorBtn: {
+    marginTop: 10, borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm,
+    paddingHorizontal: 12, paddingVertical: 7, alignItems: 'center', justifyContent: 'center',
+  },
 
   addedMessage: { marginTop: 12, color: COLORS.accent, fontWeight: '600', fontSize: 13 },
 

@@ -50,6 +50,7 @@ export interface VendorSummary {
   store_name: string;
   store_slug: string;
   city?: string | null;
+  phone?: string | null;
 }
 
 export interface Conversation {
