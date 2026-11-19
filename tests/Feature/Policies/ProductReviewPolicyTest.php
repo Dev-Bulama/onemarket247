@@ -85,6 +85,17 @@ test('checking access to a review on a product whose vendor has been deleted doe
         ->and($vendor->user->can('update', $review->fresh()))->toBeFalse();
 });
 
+test('checking access to a review on a soft-deleted product does not crash', function () {
+    $vendor = Vendor::factory()->create();
+    Store::factory()->for($vendor)->create();
+    $product = Product::factory()->create(['vendor_id' => $vendor->id]);
+    $review = ProductReview::factory()->for($product)->approved()->create();
+    $product->delete();
+
+    expect($review->fresh()->product)->toBeNull()
+        ->and($vendor->user->can('update', $review->fresh()))->toBeFalse();
+});
+
 test('an admin with reviews.moderate can view, update, and moderate any review', function () {
     Permission::findOrCreate('reviews.moderate', 'web');
 

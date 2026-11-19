@@ -44,6 +44,13 @@ class ProductQuestionPolicy
 
     private function hasStoreQuestionAccess(User $user, ProductQuestion $question): bool
     {
+        // Product is soft-deletable, so a question can outlive the product
+        // it was asked about, leaving ->product null — treated as "no store
+        // access" rather than crashing authorization on a null dereference.
+        if ($question->product === null) {
+            return false;
+        }
+
         $vendorId = $question->product->vendor_id;
 
         if ($question->product->vendor?->user_id === $user->id) {

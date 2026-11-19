@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Modal, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { COLORS, SIZES } from '../../constants';
@@ -26,10 +26,18 @@ export default function AddAddressScreen({ navigation }: any) {
   const [pickerFor, setPickerFor] = useState<'country' | 'state' | 'city' | null>(null);
 
   const [saving, setSaving] = useState(false);
+  const [countriesError, setCountriesError] = useState('');
 
-  useEffect(() => {
-    referenceApi.countries().then(res => setCountries(res.data.data)).catch(() => {});
+  const loadCountries = useCallback(() => {
+    setCountriesError('');
+    referenceApi.countries()
+      .then(res => setCountries(res.data.data))
+      .catch(e => setCountriesError(apiErrorMessage(e, 'Could not load countries.')));
   }, []);
+
+  // Saving requires a country (handleSave below), so a failed fetch here
+  // used to leave the picker permanently empty with no way to recover.
+  useEffect(() => { loadCountries(); }, [loadCountries]);
 
   useEffect(() => {
     if (countryId) referenceApi.states(countryId).then(res => setStates(res.data.data)).catch(() => {});
@@ -101,10 +109,16 @@ export default function AddAddressScreen({ navigation }: any) {
         <TextInput style={styles.input} value={addressLine2} onChangeText={setAddressLine2} placeholder="Apartment, suite, etc." placeholderTextColor={COLORS.placeholder} />
 
         <Text style={styles.label}>Country</Text>
-        <TouchableOpacity style={styles.selectInput} onPress={() => setPickerFor('country')}>
-          <Text style={selectedCountry ? styles.selectValue : styles.selectPlaceholder}>{selectedCountry?.name ?? 'Select Country'}</Text>
-          <IonIcon name="chevron-down" size={16} color={COLORS.textMuted} />
-        </TouchableOpacity>
+        {countriesError ? (
+          <TouchableOpacity style={styles.errorBanner} onPress={loadCountries}>
+            <Text style={styles.errorBannerText}>{countriesError} — Tap to retry.</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity style={styles.selectInput} onPress={() => setPickerFor('country')}>
+            <Text style={selectedCountry ? styles.selectValue : styles.selectPlaceholder}>{selectedCountry?.name ?? 'Select Country'}</Text>
+            <IonIcon name="chevron-down" size={16} color={COLORS.textMuted} />
+          </TouchableOpacity>
+        )}
 
         {countryId && (
           <>
@@ -178,6 +192,8 @@ const styles = StyleSheet.create({
   selectInput: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 12, backgroundColor: COLORS.grayLight },
   selectValue: { fontSize: 13, color: COLORS.text },
   selectPlaceholder: { fontSize: 13, color: COLORS.placeholder },
+  errorBanner: { backgroundColor: COLORS.danger, padding: 14, borderRadius: SIZES.borderRadiusSm },
+  errorBannerText: { color: COLORS.white, fontSize: 12, textAlign: 'center' },
   defaultRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 18 },
   saveBtn: { backgroundColor: COLORS.primary, borderRadius: SIZES.borderRadius, paddingVertical: 14, alignItems: 'center', marginTop: 24 },
   saveBtnText: { color: COLORS.white, fontWeight: 'bold', fontSize: 15 },

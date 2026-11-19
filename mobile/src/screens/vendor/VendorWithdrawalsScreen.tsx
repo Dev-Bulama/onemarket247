@@ -20,11 +20,18 @@ export default function VendorWithdrawalsScreen({ navigation }: any) {
   const [error, setError] = useState('');
 
   const [methods, setMethods] = useState<VendorWithdrawalMethod[]>([]);
+  const [methodsError, setMethodsError] = useState('');
   const [addMethodVisible, setAddMethodVisible] = useState(false);
   const [requestVisible, setRequestVisible] = useState(false);
 
+  // A failed fetch here used to leave `methods` empty with no error, which
+  // the request sheet below reads as "you have no bank account yet" — a
+  // misleading reason to show a vendor trying to withdraw their money.
   const loadMethods = useCallback(() => {
-    vendorWithdrawalsApi.methods().then(res => setMethods(res.data.data)).catch(() => {});
+    setMethodsError('');
+    vendorWithdrawalsApi.methods()
+      .then(res => setMethods(res.data.data))
+      .catch(e => setMethodsError(apiErrorMessage(e, 'Could not load your bank accounts.')));
   }, []);
 
   const load = useCallback(async (targetPage: number) => {
@@ -126,6 +133,8 @@ export default function VendorWithdrawalsScreen({ navigation }: any) {
       <Modal visible={requestVisible} transparent animationType="slide" onRequestClose={() => setRequestVisible(false)}>
         <RequestWithdrawalSheet
           methods={methods}
+          methodsError={methodsError}
+          onRetryMethods={loadMethods}
           onClose={() => setRequestVisible(false)}
           onRequested={withdrawal => { setWithdrawals(prev => [withdrawal, ...prev]); setRequestVisible(false); }}
           onAddAccount={() => { setRequestVisible(false); setAddMethodVisible(true); }}
@@ -180,8 +189,10 @@ function AddMethodSheet({ onClose, onAdded }: { onClose: () => void; onAdded: (m
   );
 }
 
-function RequestWithdrawalSheet({ methods, onClose, onRequested, onAddAccount }: {
+function RequestWithdrawalSheet({ methods, methodsError, onRetryMethods, onClose, onRequested, onAddAccount }: {
   methods: VendorWithdrawalMethod[];
+  methodsError: string;
+  onRetryMethods: () => void;
   onClose: () => void;
   onRequested: (withdrawal: VendorWithdrawal) => void;
   onAddAccount: () => void;
@@ -211,7 +222,11 @@ function RequestWithdrawalSheet({ methods, onClose, onRequested, onAddAccount }:
       <View style={styles.sheet} onStartShouldSetResponder={() => true}>
         <Text style={styles.sheetTitle}>Request Withdrawal</Text>
 
-        {methods.length === 0 ? (
+        {methodsError ? (
+          <TouchableOpacity style={styles.errorBanner} onPress={onRetryMethods}>
+            <Text style={styles.errorBannerText}>{methodsError} — Tap to retry.</Text>
+          </TouchableOpacity>
+        ) : methods.length === 0 ? (
           <View style={styles.noMethodBox}>
             <Text style={styles.hint}>Add a bank account before requesting a withdrawal.</Text>
             <TouchableOpacity style={styles.saveBtn} onPress={onAddAccount}>

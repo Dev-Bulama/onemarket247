@@ -39,6 +39,26 @@ test('a customer can start a conversation directly from a product', function () 
     $response->assertCreated()->assertJsonPath('data.product.id', $product->id);
 });
 
+test('starting a conversation about a product whose vendor was soft-deleted is rejected without crashing', function () {
+    $vendor = Vendor::factory()->create();
+    Store::factory()->for($vendor)->create();
+    $product = Product::factory()->create(['vendor_id' => $vendor->id]);
+    $customer = User::factory()->create();
+    $token = $customer->createToken('t', ['customer:*'])->plainTextToken;
+
+    // Vendor is soft-deletable (see CompleteCheckoutAction's note on the
+    // same issue) — the product stays viewable, leaving ->vendor null.
+    // StartConversationAction's Vendor parameter isn't nullable, so this
+    // used to 500 instead of rejecting with a friendly message.
+    $vendor->delete();
+
+    $response = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/conversations', ['product_id' => $product->id]);
+
+    $response->assertStatus(422)->assertJsonPath('error_code', 'VENDOR_UNAVAILABLE');
+    expect(Conversation::count())->toBe(0);
+});
+
 test('a vendor cannot start a new conversation', function () {
     $vendor = Vendor::factory()->create();
     Store::factory()->for($vendor)->create();

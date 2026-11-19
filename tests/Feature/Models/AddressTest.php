@@ -26,3 +26,13 @@ test('ownerUserId resolves for a store-owned address via its vendor', function (
 
     expect($address->ownerUserId())->toBe($vendor->user_id);
 });
+
+test('ownerUserId returns null instead of crashing when a store address outlives its soft-deleted vendor', function () {
+    $vendor = Vendor::factory()->create();
+    $store = Store::factory()->create(['vendor_id' => $vendor->id]);
+    $address = Address::factory()->create(['addressable_type' => Store::class, 'addressable_id' => $store->id]);
+
+    $vendor->delete();
+
+    expect($address->fresh()->ownerUserId())->toBeNull();
+});

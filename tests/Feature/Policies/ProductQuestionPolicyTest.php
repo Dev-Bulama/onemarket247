@@ -67,6 +67,17 @@ test('checking access to a question on a product whose vendor has been deleted d
         ->and($vendor->user->can('answer', $question->fresh()))->toBeFalse();
 });
 
+test('checking access to a question on a soft-deleted product does not crash', function () {
+    $vendor = Vendor::factory()->create();
+    Store::factory()->for($vendor)->create();
+    $product = Product::factory()->create(['vendor_id' => $vendor->id]);
+    $question = ProductQuestion::factory()->for($product)->create();
+    $product->delete();
+
+    expect($question->fresh()->product)->toBeNull()
+        ->and($vendor->user->can('answer', $question->fresh()))->toBeFalse();
+});
+
 test('an admin with questions.manage can view, delete, and answer any question', function () {
     Permission::findOrCreate('questions.manage', 'web');
 

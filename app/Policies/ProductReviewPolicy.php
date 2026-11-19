@@ -55,6 +55,13 @@ class ProductReviewPolicy
 
     private function hasStoreReviewAccess(User $user, ProductReview $review): bool
     {
+        // Product is soft-deletable, so a review can outlive the product it
+        // was written about, leaving ->product null — treated as "no store
+        // access" rather than crashing authorization on a null dereference.
+        if ($review->product === null) {
+            return false;
+        }
+
         $vendorId = $review->product->vendor_id;
 
         if ($review->product->vendor?->user_id === $user->id) {

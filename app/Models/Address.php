@@ -58,7 +58,11 @@ class Address extends Model
         return match (true) {
             $this->addressable instanceof User => $this->addressable->id,
             $this->addressable instanceof Vendor => $this->addressable->user_id,
-            $this->addressable instanceof Store => $this->addressable->vendor->user_id,
+            // Vendor is soft-deletable, so a Store address can outlive the
+            // vendor account that owns it, leaving ->vendor null — without
+            // the null-safe operator, AddressPolicy crashes authorizing any
+            // view/update/delete on that address instead of just denying it.
+            $this->addressable instanceof Store => $this->addressable->vendor?->user_id,
             default => null,
         };
     }

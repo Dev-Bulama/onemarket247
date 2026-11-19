@@ -43,6 +43,7 @@ export default function CheckoutScreen({ navigation }: any) {
   const [guestCountryId, setGuestCountryId] = useState<number | null>(null);
   const [guestStateId, setGuestStateId] = useState<number | null>(null);
   const [guestCityId, setGuestCityId] = useState<number | null>(null);
+  const [deliveryError, setDeliveryError] = useState('');
 
   const [paymentMethods, setPaymentMethods] = useState<string[]>([]);
   const [paymentMethod, setPaymentMethod] = useState<'paystack' | 'bank_transfer'>('bank_transfer');
@@ -52,6 +53,16 @@ export default function CheckoutScreen({ navigation }: any) {
   const [webviewUrl, setWebviewUrl] = useState<string | null>(null);
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
   const reachedPaystack = useRef(false);
+
+  // Guest checkout is unusable without a country to pick (canPlaceOrder
+  // requires guestCountryId) — a failed fetch used to leave the picker
+  // permanently empty with no indication anything went wrong.
+  const loadGuestCountries = useCallback(() => {
+    setDeliveryError('');
+    referenceApi.countries()
+      .then(res => setCountries(res.data.data))
+      .catch(e => setDeliveryError(apiErrorMessage(e, 'Could not load countries.')));
+  }, []);
 
   // Deliberately run-once: re-running init() on every guestToken/auth change
   // would mint a new checkout session mid-flow.
@@ -69,7 +80,7 @@ export default function CheckoutScreen({ navigation }: any) {
     useDisclaimerStore.getState().loadForTrigger('before_checkout');
 
     if (!isAuthenticated) {
-      referenceApi.countries().then(res => setCountries(res.data.data)).catch(() => {});
+      loadGuestCountries();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -78,27 +89,28 @@ export default function CheckoutScreen({ navigation }: any) {
   // so returning from "Add a delivery address" — pushed on top of this
   // screen, which never unmounts — picks up the address just created
   // instead of showing the stale pre-add list.
-  useFocusEffect(
-    useCallback(() => {
-      if (!isAuthenticated) return;
-      addressesApi.list().then(res => {
-        const fetched = res.data.data;
-        setAddresses(prevAddresses => {
-          setSelectedAddressId(prevSelected => {
-            // A newly added address wasn't in the list before this fetch —
-            // prefer it (it's also the new default, per AddAddressScreen)
-            // over whatever was previously selected.
-            const justAdded = fetched.find(a => !prevAddresses.some(p => p.id === a.id));
-            if (justAdded) return justAdded.id;
-            if (prevSelected && fetched.some(a => a.id === prevSelected)) return prevSelected;
-            const def = fetched.find(a => a.is_default_shipping) ?? fetched[0];
-            return def ? def.id : null;
-          });
-          return fetched;
+  const loadAddresses = useCallback(() => {
+    if (!isAuthenticated) return;
+    setDeliveryError('');
+    addressesApi.list().then(res => {
+      const fetched = res.data.data;
+      setAddresses(prevAddresses => {
+        setSelectedAddressId(prevSelected => {
+          // A newly added address wasn't in the list before this fetch —
+          // prefer it (it's also the new default, per AddAddressScreen)
+          // over whatever was previously selected.
+          const justAdded = fetched.find(a => !prevAddresses.some(p => p.id === a.id));
+          if (justAdded) return justAdded.id;
+          if (prevSelected && fetched.some(a => a.id === prevSelected)) return prevSelected;
+          const def = fetched.find(a => a.is_default_shipping) ?? fetched[0];
+          return def ? def.id : null;
         });
-      }).catch(() => {});
-    }, [isAuthenticated])
-  );
+        return fetched;
+      });
+    }).catch(e => setDeliveryError(apiErrorMessage(e, 'Could not load your addresses.')));
+  }, [isAuthenticated]);
+
+  useFocusEffect(useCallback(() => { loadAddresses(); }, [loadAddresses]));
 
   useEffect(() => {
     if (guestCountryId) referenceApi.states(guestCountryId).then(res => setStates(res.data.data)).catch(() => {});
@@ -236,7 +248,11 @@ export default function CheckoutScreen({ navigation }: any) {
             )}
           </View>
 
-          {isAuthenticated ? (
+          {deliveryError ? (
+            <TouchableOpacity style={styles.errorBanner} onPress={isAuthenticated ? loadAddresses : loadGuestCountries}>
+              <Text style={styles.errorBannerText}>{deliveryError} — Tap to retry.</Text>
+            </TouchableOpacity>
+          ) : isAuthenticated ? (
             selectedAddress ? (
               <View style={styles.addressRow}>
                 <IonIcon name="location" size={20} color={COLORS.primary} style={{ marginTop: 2 }} />
@@ -486,6 +502,8 @@ const styles = StyleSheet.create({
   errorText: { color: COLORS.textSecondary, marginVertical: 12, textAlign: 'center' },
   retryBtn: { backgroundColor: COLORS.primary, borderRadius: SIZES.borderRadius, paddingHorizontal: 24, paddingVertical: 12 },
   retryBtnText: { color: COLORS.white, fontWeight: 'bold' },
+  errorBanner: { backgroundColor: COLORS.danger, padding: 14, borderRadius: SIZES.borderRadiusSm },
+  errorBannerText: { color: COLORS.white, fontSize: 12, textAlign: 'center' },
 
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',

@@ -55,6 +55,15 @@ class ConversationController extends Controller
         $product = isset($data['product_id']) ? Product::findOrFail($data['product_id']) : null;
         $vendor = $product ? $product->vendor : Vendor::findOrFail($data['vendor_id']);
 
+        // Vendor is soft-deletable (see CompleteCheckoutAction's note on
+        // the same issue) — a product can stay viewable after its vendor
+        // account is suspended, leaving ->vendor null here. Rejected with
+        // a friendly message rather than crashing StartConversationAction,
+        // whose Vendor parameter isn't nullable.
+        if ($vendor === null) {
+            return ApiResponse::error('This seller is no longer available.', [], 'VENDOR_UNAVAILABLE');
+        }
+
         $conversation = $action->handle($vendor, $request->user(), $product, $data['message'] ?? null);
 
         return ApiResponse::success(
