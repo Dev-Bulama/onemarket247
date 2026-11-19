@@ -3,6 +3,8 @@
 use App\Enums\ReviewStatus;
 use App\Models\Address;
 use App\Models\Country;
+use App\Models\Currency;
+use App\Models\Language;
 use App\Models\Product;
 use App\Models\ProductQuestion;
 use App\Models\ProductReview;
@@ -137,6 +139,38 @@ test('a customer can view and update their profile', function () {
         ->assertJsonPath('data.marketing_opt_in', true);
 
     expect($user->fresh()->name)->toBe('Updated Name');
+});
+
+test('updating the profile with only name and phone never wipes other preferences a caller did not send', function () {
+    [$user, $token] = apiCustomerToken();
+
+    $language = Language::factory()->create();
+    $currency = Currency::factory()->create();
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->patchJson('/api/v1/profile', [
+            'name' => $user->name,
+            'date_of_birth' => '1990-01-01',
+            'gender' => 'male',
+            'preferred_language_id' => $language->id,
+            'preferred_currency_id' => $currency->id,
+            'marketing_opt_in' => true,
+        ])
+        ->assertOk();
+
+    // Mimics the mobile app's profile screen, which only ever edits
+    // name/phone — none of the fields set above should be touched.
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->patchJson('/api/v1/profile', ['name' => 'Mobile Edited Name', 'phone' => '+15559876543'])
+        ->assertOk()
+        ->assertJsonPath('data.name', 'Mobile Edited Name');
+
+    $profile = $user->fresh()->customerProfile;
+    expect($user->fresh()->phone)->toBe('+15559876543')
+        ->and($profile->date_of_birth->toDateString())->toBe('1990-01-01')
+        ->and($profile->gender->value)->toBe('male')
+        ->and($profile->preferred_language_id)->toBe($language->id)
+        ->and($profile->preferred_currency_id)->toBe($currency->id)
+        ->and($profile->marketing_opt_in)->toBeTrue();
 });
 
 test('a customer can change their password with the correct current password', function () {

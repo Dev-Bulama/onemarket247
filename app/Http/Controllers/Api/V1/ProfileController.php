@@ -38,18 +38,28 @@ class ProfileController extends Controller
         ]);
 
         $user = $request->user();
+        // Relation METHOD, not property access: the property accessor caches
+        // its result on the model instance, and a guard that holds onto a
+        // resolved user across requests (as Sanctum's does within a single
+        // test, and potentially a long-lived worker) would otherwise read a
+        // stale cached value here instead of the current row.
+        $profile = $user->customerProfile()->first();
 
         $user->update([
             'name' => $validated['name'],
-            'phone' => $validated['phone'] ?? null,
+            'phone' => $request->has('phone') ? ($validated['phone'] ?? null) : $user->phone,
         ]);
 
+        // A caller that only ever edits a subset of these (the mobile app's
+        // profile screen sends just name/phone, not the web form's full set)
+        // must never wipe the fields it doesn't know about back to null —
+        // only a field actually present in the request can change it.
         $user->customerProfile()->updateOrCreate([], [
-            'date_of_birth' => $validated['date_of_birth'] ?? null,
-            'gender' => $validated['gender'] ?? null,
-            'preferred_language_id' => $validated['preferred_language_id'] ?? null,
-            'preferred_currency_id' => $validated['preferred_currency_id'] ?? null,
-            'marketing_opt_in' => $validated['marketing_opt_in'] ?? false,
+            'date_of_birth' => $request->has('date_of_birth') ? ($validated['date_of_birth'] ?? null) : $profile?->date_of_birth,
+            'gender' => $request->has('gender') ? ($validated['gender'] ?? null) : $profile?->gender,
+            'preferred_language_id' => $request->has('preferred_language_id') ? ($validated['preferred_language_id'] ?? null) : $profile?->preferred_language_id,
+            'preferred_currency_id' => $request->has('preferred_currency_id') ? ($validated['preferred_currency_id'] ?? null) : $profile?->preferred_currency_id,
+            'marketing_opt_in' => $request->has('marketing_opt_in') ? ($validated['marketing_opt_in'] ?? false) : ($profile?->marketing_opt_in ?? false),
         ]);
 
         return ApiResponse::success($this->payload($user->fresh('customerProfile')));
