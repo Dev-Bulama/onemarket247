@@ -12,6 +12,7 @@ export default function DeleteAccountScreen({ navigation }: any) {
   const { logout } = useAuthStore();
   const { clearLocal } = useCartStore();
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   const handleDelete = () => {
@@ -60,14 +61,19 @@ export default function DeleteAccountScreen({ navigation }: any) {
         </View>
 
         <Text style={styles.label}>Confirm Your Password</Text>
-        <TextInput
-          style={styles.input}
-          value={password}
-          onChangeText={setPassword}
-          placeholder="Leave blank if you signed in with Google/Facebook"
-          placeholderTextColor={COLORS.placeholder}
-          secureTextEntry
-        />
+        <View style={styles.passwordRow}>
+          <TextInput
+            style={styles.passwordInput}
+            value={password}
+            onChangeText={setPassword}
+            placeholder="Leave blank if you signed in with Google/Facebook"
+            placeholderTextColor={COLORS.placeholder}
+            secureTextEntry={!showPassword}
+          />
+          <TouchableOpacity onPress={() => setShowPassword(v => !v)} style={styles.eyeBtn}>
+            <IonIcon name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color={COLORS.textSecondary} />
+          </TouchableOpacity>
+        </View>
 
         <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete} disabled={deleting}>
           {deleting ? <ActivityIndicator color={COLORS.white} /> : <Text style={styles.deleteBtnText}>Delete My Account</Text>}
@@ -98,6 +104,9 @@ const styles = StyleSheet.create({
   warningText: { fontSize: 12, color: COLORS.textSecondary, textAlign: 'center', lineHeight: 18 },
   label: { fontSize: 13, fontWeight: '700', color: COLORS.text, marginBottom: 6 },
   input: { borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, color: COLORS.text, backgroundColor: COLORS.grayLight },
+  passwordRow: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, backgroundColor: COLORS.grayLight },
+  passwordInput: { flex: 1, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, color: COLORS.text },
+  eyeBtn: { paddingHorizontal: 12 },
   deleteBtn: { backgroundColor: COLORS.danger, borderRadius: SIZES.borderRadius, paddingVertical: 14, alignItems: 'center', marginTop: 24 },
   deleteBtnText: { color: COLORS.white, fontWeight: 'bold', fontSize: 15 },
   cancelBtn: { paddingVertical: 14, alignItems: 'center', marginTop: 8 },
