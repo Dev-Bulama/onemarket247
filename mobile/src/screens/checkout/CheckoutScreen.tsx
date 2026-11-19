@@ -120,7 +120,16 @@ export default function CheckoutScreen({ navigation }: any) {
     : !!(guestName && guestEmail && guestAddressLine1 && guestCountryId);
 
   const handlePlaceOrder = async () => {
-    if (!sessionKey || !canPlaceOrder) return;
+    if (!sessionKey) return;
+    if (!canPlaceOrder) {
+      useToastStore.getState().show(
+        isAuthenticated
+          ? 'Please select a delivery address before placing your order.'
+          : 'Please fill in your delivery details before placing your order.',
+        'error',
+      );
+      return;
+    }
     setPlacing(true);
     try {
       const payload = isAuthenticated && selectedAddress
@@ -332,7 +341,12 @@ export default function CheckoutScreen({ navigation }: any) {
             <Text style={styles.secureNote}>Secure and encrypted payment</Text>
           </View>
         </View>
-        <TouchableOpacity style={[styles.placeOrderBtn, (!canPlaceOrder || placing) && styles.disabledBtn]} onPress={handlePlaceOrder} disabled={!canPlaceOrder || placing}>
+        {/* Still tappable when canPlaceOrder is false — handlePlaceOrder
+            shows a toast explaining what's missing instead of the button
+            just silently doing nothing, which is how this used to behave
+            when it was fully disabled. Only an in-flight request blocks
+            the tap outright. */}
+        <TouchableOpacity style={[styles.placeOrderBtn, !canPlaceOrder && styles.disabledBtn]} onPress={handlePlaceOrder} disabled={placing}>
           {placing ? <ActivityIndicator size="small" color={COLORS.white} /> : <Text style={styles.placeOrderText}>Place Order</Text>}
         </TouchableOpacity>
       </View>
