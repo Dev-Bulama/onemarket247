@@ -36,5 +36,6 @@
             @yield('content')
         </div>
     </div>
+    @include('partials.password-toggle-script')
 </body>
 </html>

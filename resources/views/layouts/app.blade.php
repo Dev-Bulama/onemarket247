@@ -64,5 +64,6 @@
         @yield('content')
     </main>
     @include('partials.disclaimer-popup')
+    @include('partials.password-toggle-script')
 </body>
 </html>
