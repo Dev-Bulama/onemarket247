@@ -23,6 +23,7 @@ use App\Models\User;
 use App\Models\Vendor;
 use App\Models\Warehouse;
 use App\Notifications\OrderConfirmationNotification;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 
 /**
@@ -111,6 +112,26 @@ test('completing checkout creates one order split by vendor with reserved stock'
     expect($order->payments)->toHaveCount(1)
         ->and($order->payments->first()->status->value)->toBe('pending')
         ->and($order->payments->first()->amount)->toBe(4000);
+});
+
+test('checking out a product with no sku on record never fails with a null-column error', function () {
+    // Simulates a product saved before Product's own auto-fill existed —
+    // a direct DB write bypasses that model event, same as legacy data
+    // would already be sitting in the database uncovered by the fix.
+    Currency::factory()->create(['is_default' => true]);
+    $country = Country::factory()->create();
+    seedFreeShippingFor($country);
+
+    $product = Product::factory()->create(['price' => 1000, 'manage_stock' => false]);
+    DB::table('products')->where('id', $product->id)->update(['sku' => null]);
+
+    $cart = Cart::factory()->create();
+    app(AddCartItemAction::class)->handle($cart, $product->fresh(), null, 1);
+
+    $session = app(InitiateCheckoutAction::class)->handle($cart);
+    $order = app(CompleteCheckoutAction::class)->handle($session, shippingDataFor($country));
+
+    expect($order->vendorOrders->first()->orderItems->first()->sku)->toBe('PROD-'.$product->id);
 });
 
 test('completing checkout sends an order confirmation to a guest by email', function () {

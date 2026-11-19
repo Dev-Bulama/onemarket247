@@ -57,6 +57,20 @@ class Product extends Model implements HasMedia
     protected static function booted(): void
     {
         static::addGlobalScope(new BelongsToVendorScope);
+
+        // sku is nullable here (both the vendor API and the Filament
+        // vendor form allow leaving it blank for a Simple/Digital
+        // product), but order_items.sku is NOT NULL — a product saved
+        // without one became unpurchasable, crashing checkout with a DB
+        // constraint violation. A Variable product's own sku is never
+        // used (its variations each carry their own required one), so
+        // only Simple/Digital products need one here.
+        static::created(function (self $product) {
+            if ($product->sku === null && $product->type !== ProductType::Variable) {
+                $product->sku = 'PROD-'.$product->id;
+                $product->saveQuietly();
+            }
+        });
     }
 
     public function registerMediaCollections(): void

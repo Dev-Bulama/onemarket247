@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ProductType;
 use App\Enums\StockStatus;
 use App\Models\AttributeValue;
 use App\Models\Category;
@@ -9,6 +10,30 @@ use App\Models\ProductDigitalFile;
 use App\Models\ProductTranslation;
 use App\Models\ProductVariation;
 use Illuminate\Support\Facades\Storage;
+
+test('a simple product saved without a sku gets one auto-filled', function () {
+    $product = Product::factory()->create(['sku' => null, 'type' => ProductType::Simple]);
+
+    expect($product->fresh()->sku)->toBe('PROD-'.$product->id);
+});
+
+test('a digital product saved without a sku gets one auto-filled', function () {
+    $product = Product::factory()->create(['sku' => null, 'type' => ProductType::Digital]);
+
+    expect($product->fresh()->sku)->toBe('PROD-'.$product->id);
+});
+
+test('a variable product saved without a sku is left alone, since its variations each carry their own', function () {
+    $product = Product::factory()->create(['sku' => null, 'type' => ProductType::Variable]);
+
+    expect($product->fresh()->sku)->toBeNull();
+});
+
+test('a product saved with an explicit sku keeps it', function () {
+    $product = Product::factory()->create(['sku' => 'MY-OWN-SKU']);
+
+    expect($product->fresh()->sku)->toBe('MY-OWN-SKU');
+});
 
 test('translated name returns the translation for the requested language when one exists', function () {
     $product = Product::factory()->create(['name' => 'Widget']);

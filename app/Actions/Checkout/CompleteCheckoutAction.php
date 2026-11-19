@@ -174,7 +174,11 @@ class CompleteCheckoutAction
                         'product_variation_id' => $item->product_variation_id,
                         'warehouse_id' => $stock?->warehouse_id,
                         'product_name' => $item->product->name,
-                        'sku' => $item->variation->sku ?? $item->product->sku,
+                        // Falls back for any product saved before Product's
+                        // own auto-fill existed, or whose sku was cleared
+                        // since — order_items.sku is NOT NULL, so checkout
+                        // must never pass through a null one.
+                        'sku' => $item->variation->sku ?? $item->product->sku ?? 'PROD-'.$item->product_id,
                         'unit_price' => $item->unit_price,
                         'quantity' => $item->quantity,
                         'line_total' => $item->lineTotal(),
