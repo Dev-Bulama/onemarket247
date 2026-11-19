@@ -39,6 +39,16 @@ test('adding the same product twice sums the quantity instead of duplicating the
         ->and($cart->items()->first()->quantity)->toBe(5);
 });
 
+test('adding a simple product with no price set is rejected instead of crashing', function () {
+    $cart = Cart::factory()->create();
+    $product = Product::factory()->create(['price' => null]);
+
+    expect(fn () => app(AddCartItemAction::class)->handle($cart, $product, null, 1))
+        ->toThrow(RuntimeException::class);
+
+    expect($cart->items()->count())->toBe(0);
+});
+
 test('adding a variable product without a variation is rejected', function () {
     $cart = Cart::factory()->create();
     $product = Product::factory()->variable()->create();

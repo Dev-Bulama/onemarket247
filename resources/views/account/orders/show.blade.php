@@ -34,9 +34,9 @@
                             <div class="p-4 flex items-center justify-between text-sm">
                                 <div>
                                     <p class="text-gray-900">{{ $item->product_name }}</p>
-                                    <p class="text-xs text-gray-500">Qty {{ $item->quantity }} &middot; ${{ number_format($item->unit_price / 100, 2) }}</p>
+                                    <p class="text-xs text-gray-500">Qty {{ $item->quantity }} &middot; @price($item->unit_price)</p>
                                 </div>
-                                <p class="text-gray-900">${{ number_format($item->line_total / 100, 2) }}</p>
+                                <p class="text-gray-900">@price($item->line_total)</p>
                             </div>
                         @endforeach
                     </div>
@@ -94,21 +94,21 @@
             <dl class="space-y-2 text-sm border-t border-gray-100 pt-4">
                 <div class="flex justify-between">
                     <dt class="text-gray-600">Subtotal</dt>
-                    <dd class="text-gray-900">${{ number_format($order->subtotal / 100, 2) }}</dd>
+                    <dd class="text-gray-900">@price($order->subtotal)</dd>
                 </div>
                 @if ($order->discount_amount > 0)
                     <div class="flex justify-between">
                         <dt class="text-gray-600">Discount</dt>
-                        <dd class="text-green-700">-${{ number_format($order->discount_amount / 100, 2) }}</dd>
+                        <dd class="text-green-700">-@price($order->discount_amount)</dd>
                     </div>
                 @endif
                 <div class="flex justify-between">
                     <dt class="text-gray-600">Shipping</dt>
-                    <dd class="text-gray-900">${{ number_format($order->shipping_amount / 100, 2) }}</dd>
+                    <dd class="text-gray-900">@price($order->shipping_amount)</dd>
                 </div>
                 <div class="flex justify-between font-semibold text-gray-900 border-t border-gray-100 pt-2">
                     <dt>Total</dt>
-                    <dd>${{ number_format($order->total / 100, 2) }}</dd>
+                    <dd>@price($order->total)</dd>
                 </div>
             </dl>
         </div>

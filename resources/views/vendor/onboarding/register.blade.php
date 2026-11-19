@@ -159,7 +159,7 @@
                         <select name="vendor_subscription_plan_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                             @foreach ($plans as $plan)
                                 <option value="{{ $plan->id }}" @selected(old('vendor_subscription_plan_id', $plans->firstWhere('is_default', true)?->id) == $plan->id)>
-                                    {{ $plan->name }} ({{ $plan->isFree() ? 'Free' : number_format($plan->price / 100, 2).' / '.$plan->billing_period->getLabel() }})
+                                    {{ $plan->name }} ({{ $plan->isFree() ? 'Free' : \App\Support\PriceDisplay::format($plan->price).' / '.$plan->billing_period->getLabel() }})
                                 </option>
                             @endforeach
                         </select>

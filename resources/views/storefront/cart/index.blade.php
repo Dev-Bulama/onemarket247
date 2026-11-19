@@ -21,11 +21,26 @@
                 @foreach ($vendorGroups as $vendorId => $items)
                     <div class="bg-white shadow rounded-lg overflow-hidden">
                         <div class="px-4 py-3 border-b border-gray-100 text-sm font-medium text-gray-700">
-                            {{ $items->first()->product->vendor?->store?->name ?? 'Sold by marketplace' }}
+                            {{ $vendorId === null ? 'No longer available' : ($items->first()->product->vendor?->store?->name ?? 'Sold by marketplace') }}
                         </div>
 
                         <div class="divide-y divide-gray-100">
                             @foreach ($items as $item)
+                                @if (! $item->product)
+                                    {{-- The product behind this line was removed from the catalog
+                                         (soft-deleted) after it was added to the cart — nothing about
+                                         it (name, image, price) can be shown, so only a way to clear
+                                         it is offered. --}}
+                                    <div class="p-4 flex items-center justify-between text-sm">
+                                        <span class="text-gray-500">This item is no longer available.</span>
+                                        <form method="POST" action="{{ route('cart.items.destroy', $item) }}">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="text-xs text-red-600 hover:underline">Remove</button>
+                                        </form>
+                                    </div>
+                                    @continue
+                                @endif
                                 <div class="p-4 flex gap-4">
                                     @php $thumb = $item->product->getFirstMediaUrl('images', 'thumb') ?: $item->product->getFirstMediaUrl('images'); @endphp
                                     <div class="h-20 w-20 shrink-0 rounded-md bg-gray-100 overflow-hidden flex items-center justify-center">
@@ -94,20 +109,26 @@
                             @foreach ($cart->savedItems as $item)
                                 <div class="p-4 flex items-center justify-between">
                                     <div>
-                                        <a href="{{ route('products.show', $item->product) }}" class="font-medium text-gray-900 hover:text-brand-orange">
-                                            {{ $item->product->name }}
-                                        </a>
-                                        @if ($item->variation)
-                                            <p class="text-xs text-gray-500">{{ $item->variation->attributeValues->pluck('value')->implode(' / ') }}</p>
+                                        @if ($item->product)
+                                            <a href="{{ route('products.show', $item->product) }}" class="font-medium text-gray-900 hover:text-brand-orange">
+                                                {{ $item->product->name }}
+                                            </a>
+                                            @if ($item->variation)
+                                                <p class="text-xs text-gray-500">{{ $item->variation->attributeValues->pluck('value')->implode(' / ') }}</p>
+                                            @endif
+                                            <p class="text-xs text-gray-500">Qty {{ $item->quantity }} &middot; @price($item->unit_price)</p>
+                                        @else
+                                            <span class="font-medium text-gray-500">This item is no longer available.</span>
                                         @endif
-                                        <p class="text-xs text-gray-500">Qty {{ $item->quantity }} &middot; @price($item->unit_price)</p>
                                     </div>
                                     <div class="flex items-center gap-4">
-                                        <form method="POST" action="{{ route('cart.items.move-to-cart', $item) }}">
-                                            @csrf
-                                            @method('PATCH')
-                                            <button type="submit" class="text-xs text-brand-orange hover:underline">Move to cart</button>
-                                        </form>
+                                        @if ($item->product)
+                                            <form method="POST" action="{{ route('cart.items.move-to-cart', $item) }}">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit" class="text-xs text-brand-orange hover:underline">Move to cart</button>
+                                            </form>
+                                        @endif
                                         <form method="POST" action="{{ route('cart.items.destroy', $item) }}">
                                             @csrf
                                             @method('DELETE')

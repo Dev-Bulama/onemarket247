@@ -240,6 +240,29 @@ test('a price drift since the cart was last touched is rejected without creating
     expect(Order::count())->toBe(0);
 });
 
+test('a product deleted from the catalog after being added to the cart is rejected without crashing checkout', function () {
+    Currency::factory()->create(['is_default' => true]);
+    $country = Country::factory()->create();
+    seedFreeShippingFor($country);
+    $product = Product::factory()->create(['price' => 1000]);
+
+    $cart = Cart::factory()->create();
+    app(AddCartItemAction::class)->handle($cart, $product, null, 1);
+    $session = app(InitiateCheckoutAction::class)->handle($cart);
+
+    // The vendor (or an admin) removed the product from the catalog after
+    // it was already sitting in this customer's cart — Product uses
+    // SoftDeletes, so CartItem::product() still finds a row at the FK
+    // level but Eloquent's default global scope hides it, and
+    // currentUnitPrice() previously read ->price straight off that null.
+    $product->delete();
+
+    expect(fn () => app(CompleteCheckoutAction::class)->handle($session, shippingDataFor($country)))
+        ->toThrow(CheckoutValidationException::class);
+
+    expect(Order::count())->toBe(0);
+});
+
 test('insufficient stock at completion time is rejected without creating an order', function () {
     Currency::factory()->create(['is_default' => true]);
     $country = Country::factory()->create();

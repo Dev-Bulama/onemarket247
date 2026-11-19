@@ -49,7 +49,13 @@ class Cart extends Model
 
     public function subtotal(): int
     {
-        return $this->activeItems->sum(fn (CartItem $item) => $item->unit_price * $item->quantity);
+        // A cart item's product can be soft-deleted after it was added
+        // (see CartItem::currentUnitPrice()'s note) — its stale unit_price
+        // is excluded here so the displayed total never counts an item the
+        // customer can no longer actually buy.
+        return $this->activeItems
+            ->filter(fn (CartItem $item) => $item->product !== null)
+            ->sum(fn (CartItem $item) => $item->unit_price * $item->quantity);
     }
 
     public function discount(): int

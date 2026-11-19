@@ -2,6 +2,7 @@
 
 use App\Actions\Wallet\CreditVendorWalletAction;
 use App\Filament\Vendor\Pages\Withdrawals;
+use App\Models\Currency;
 use App\Models\OrderItem;
 use App\Models\OrderItemCommission;
 use App\Models\Store;
@@ -42,6 +43,19 @@ test('the earnings page ledger table only shows this vendor\'s own wallet transa
         ->assertOk()
         ->assertSee('$90.00')
         ->assertDontSee('$45.00');
+});
+
+test('the earnings page balances are shown in the store base currency, not a hardcoded dollar sign', function () {
+    Currency::factory()->create(['code' => 'NGN', 'symbol' => '₦', 'is_default' => true]);
+
+    $vendor = Vendor::factory()->create();
+    Store::factory()->for($vendor)->create();
+    VendorWallet::factory()->create(['vendor_id' => $vendor->id, 'available_balance' => 150000]);
+
+    $this->actingAs($vendor->user, 'vendor')->get('/vendor/earnings')
+        ->assertOk()
+        ->assertSee('₦1,500.00')
+        ->assertDontSee('$1,500.00');
 });
 
 test('a vendor can add a bank account and request a withdrawal from the withdrawals page', function () {

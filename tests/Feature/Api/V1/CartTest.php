@@ -35,6 +35,19 @@ test('replaying the same guest_token on later calls returns the same cart', func
         ->assertJsonCount(1, 'data.items');
 });
 
+test('fetching the cart never crashes when a product in it was deleted from the catalog', function () {
+    $product = Product::factory()->create(['price' => 1000, 'manage_stock' => false]);
+
+    $first = $this->postJson('/api/v1/cart/items', ['product_id' => $product->id, 'quantity' => 1])->assertCreated();
+    $token = $first->json('data.guest_token');
+
+    $product->delete();
+
+    $this->getJson("/api/v1/cart?cart_token={$token}")
+        ->assertOk()
+        ->assertJsonPath('data.items.0.product.id', null);
+});
+
 test('two different guests never see each other\'s cart', function () {
     $product = Product::factory()->create(['price' => 1000, 'manage_stock' => false]);
 

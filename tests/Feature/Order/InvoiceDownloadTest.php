@@ -1,8 +1,12 @@
 <?php
 
+use App\Models\Currency;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\User;
+use App\Models\VendorOrder;
 use Database\Seeders\RolePermissionSeeder;
+use Illuminate\Support\Facades\View;
 use Spatie\Permission\Models\Role;
 
 function makeInvoicedOrder(array $attributes = []): Order
@@ -55,6 +59,20 @@ test('an admin authenticated only on the admin guard can download any invoice', 
     $this->app['auth']->guard('admin')->setUser($admin);
 
     $this->get(route('orders.invoice', $order))->assertOk();
+});
+
+test('the invoice view shows amounts in the store base currency, not a hardcoded dollar sign', function () {
+    Currency::factory()->create(['code' => 'NGN', 'symbol' => '₦', 'is_default' => true]);
+
+    $order = makeInvoicedOrder(['subtotal' => 1500, 'total' => 1500]);
+    $vendorOrder = VendorOrder::factory()->create(['order_id' => $order->id]);
+    OrderItem::factory()->create(['vendor_order_id' => $vendorOrder->id, 'unit_price' => 1500, 'line_total' => 1500]);
+    $order->load(['vendorOrders.orderItems', 'invoice']);
+
+    $html = View::make('pdf.invoice', ['order' => $order])->render();
+
+    expect($html)->toContain('₦15.00')
+        ->not->toContain('$15.00');
 });
 
 test('an admin without orders.view cannot download an invoice for someone elses order', function () {

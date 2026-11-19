@@ -15,12 +15,16 @@ class CartItemResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            // The product can be soft-deleted after already sitting in a
+            // cart (see CartItem::currentUnitPrice()'s note) — null-safe
+            // throughout so a stale cart item never 500s this endpoint,
+            // just comes back with nulled-out product fields.
             'product' => [
-                'id' => $this->product->id,
-                'slug' => $this->product->slug,
-                'name' => $this->product->translatedName(),
-                'thumbnail' => $this->product->getFirstMediaUrl('images', 'thumb') ?: $this->product->getFirstMediaUrl('images') ?: null,
-                'vendor_store' => $this->product->vendor?->store?->name,
+                'id' => $this->product?->id,
+                'slug' => $this->product?->slug,
+                'name' => $this->product?->translatedName(),
+                'thumbnail' => $this->product ? ($this->product->getFirstMediaUrl('images', 'thumb') ?: $this->product->getFirstMediaUrl('images') ?: null) : null,
+                'vendor_store' => $this->product?->vendor?->store?->name,
             ],
             'variation' => $this->whenLoaded('variation', fn () => $this->variation ? [
                 'id' => $this->variation->id,

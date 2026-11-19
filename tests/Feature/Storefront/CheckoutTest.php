@@ -31,6 +31,21 @@ test('an empty cart redirects away from checkout', function () {
     $this->get(route('checkout.index'))->assertRedirect(route('cart.index'));
 });
 
+test('the checkout review page never crashes when a cart product was deleted from the catalog', function () {
+    $product = Product::factory()->create(['price' => 1000, 'name' => 'Vanishing Widget']);
+
+    $addResponse = $this->post(route('cart.items.store'), ['product_id' => $product->id, 'quantity' => 1]);
+    $token = $addResponse->getCookie('cart_token')->getValue();
+
+    // Soft-deleted after already being added to this guest's cart.
+    $product->delete();
+
+    $this->withCookie('cart_token', $token)->get(route('checkout.index'))
+        ->assertOk()
+        ->assertSee('This item is no longer available')
+        ->assertDontSee('Vanishing Widget');
+});
+
 test('guest can complete checkout end to end and see the confirmation page', function () {
     Currency::factory()->create(['is_default' => true]);
     $country = Country::factory()->create();

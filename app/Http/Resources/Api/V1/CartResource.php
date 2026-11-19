@@ -19,9 +19,13 @@ class CartResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $vendorGroups = $this->activeItems->groupBy(fn ($item) => $item->product->vendor_id)
+        // A product can be soft-deleted after already being added to the
+        // cart (see CartItem::currentUnitPrice()'s note) — null-safe here
+        // groups those lines under a null key instead of 500ing the
+        // endpoint, same as the storefront cart page.
+        $vendorGroups = $this->activeItems->groupBy(fn ($item) => $item->product?->vendor_id)
             ->map(fn ($items) => [
-                'store_name' => $items->first()->product->vendor?->store?->name,
+                'store_name' => $items->first()->product?->vendor?->store?->name,
                 'items' => CartItemResource::collection($items->values()),
             ])->values();
 

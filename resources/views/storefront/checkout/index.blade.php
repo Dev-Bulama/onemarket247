@@ -105,7 +105,7 @@
                 @foreach ($cart->activeItems as $item)
                     <div class="py-3 flex items-center justify-between text-sm">
                         <div>
-                            <p class="text-gray-900">{{ $item->product->name }}</p>
+                            <p class="text-gray-900">{{ $item->product?->name ?? 'This item is no longer available' }}</p>
                             <p class="text-xs text-gray-500">Qty {{ $item->quantity }}</p>
                         </div>
                         <p class="text-gray-900">@price($item->lineTotal())</p>

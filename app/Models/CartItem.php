@@ -38,12 +38,17 @@ class CartItem extends Model
 
     public function currentUnitPrice(): ?int
     {
-        return $this->variation?->price ?? $this->product->price;
+        // Product is soft-deletable, so a product removed from the catalog
+        // after this line was added to the cart leaves ->product null
+        // (Eloquent's default global scope hides the trashed row) rather
+        // than missing entirely — null-safe here so checkout's "price
+        // changed" guard catches it instead of crashing on a null access.
+        return $this->variation?->price ?? $this->product?->price;
     }
 
     public function isInStock(): bool
     {
-        return $this->variation?->isInStock() ?? $this->product->isInStock();
+        return $this->variation?->isInStock() ?? $this->product?->isInStock() ?? false;
     }
 
     public function hasPriceDrifted(): bool

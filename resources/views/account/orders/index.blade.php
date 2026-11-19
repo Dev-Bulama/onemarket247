@@ -19,7 +19,7 @@
                             <p class="text-xs text-gray-500">Placed {{ $order->placed_at->format('M j, Y') }} &middot; {{ $order->vendorOrders->count() }} {{ Str::plural('seller', $order->vendorOrders->count()) }}</p>
                         </div>
                         <div class="text-right">
-                            <p class="text-sm font-semibold text-gray-900">${{ number_format($order->total / 100, 2) }}</p>
+                            <p class="text-sm font-semibold text-gray-900">@price($order->total)</p>
                             <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700">{{ $order->status->getLabel() }}</span>
                         </div>
                     </div>

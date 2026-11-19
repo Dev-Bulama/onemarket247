@@ -127,6 +127,28 @@ test('the admin product list shows the real price, not a 100x-inflated one', fun
         ->assertDontSee('2,999.00');
 });
 
+/**
+ * Regression coverage for a real bug: products.price is nullable at the
+ * DB level, but cart_items.unit_price (what a null product price feeds
+ * into at add-to-cart time) is NOT NULL. The vendor form already required
+ * price for non-Variable products; the admin form didn't, so an admin
+ * could blank out the price on a live, Simple/Digital product and leave
+ * it unsellable (crashing on add-to-cart) with no validation error here.
+ */
+test('an admin cannot clear the price on a simple product', function () {
+    Filament::setCurrentPanel('admin');
+    $admin = priceSyncAdmin();
+    $product = Product::factory()->create(['type' => ProductType::Simple, 'price' => 1000]);
+
+    Livewire::actingAs($admin, 'admin')
+        ->test(AdminEditProduct::class, ['record' => $product->getRouteKey()])
+        ->fillForm(['price' => null])
+        ->call('save')
+        ->assertHasFormErrors(['price']);
+
+    expect($product->fresh()->price)->toBe(1000);
+});
+
 test('a variation price round-trips correctly through the vendor relation manager', function () {
     Filament::setCurrentPanel('vendor');
     $vendor = Vendor::factory()->create();

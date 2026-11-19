@@ -4,6 +4,7 @@ use App\Actions\Order\UpdateVendorOrderStatusAction;
 use App\Enums\OrderNoteVisibility;
 use App\Enums\UserType;
 use App\Enums\VendorOrderStatus;
+use App\Models\Currency;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\User;
@@ -40,6 +41,25 @@ test('a customer can view their own order detail page', function () {
         ->assertSee('Your order is being packed.');
 
     $response->assertDontSee('Internal only note.');
+});
+
+test('order history and detail pages show amounts in the store base currency, not a hardcoded dollar sign', function () {
+    Currency::factory()->create(['code' => 'NGN', 'symbol' => '₦', 'is_default' => true]);
+
+    $user = User::factory()->create(['user_type' => UserType::Customer, 'email_verified_at' => now()]);
+    $order = Order::factory()->create(['customer_id' => $user->id, 'subtotal' => 1500, 'total' => 1500]);
+    $vendorOrder = VendorOrder::factory()->create(['order_id' => $order->id]);
+    OrderItem::factory()->create(['vendor_order_id' => $vendorOrder->id, 'unit_price' => 1500, 'line_total' => 1500]);
+
+    $this->actingAs($user)->get(route('account.orders.index'))
+        ->assertOk()
+        ->assertSee('₦15.00')
+        ->assertDontSee('$15.00');
+
+    $this->actingAs($user)->get(route('account.orders.show', $order))
+        ->assertOk()
+        ->assertSee('₦15.00')
+        ->assertDontSee('$15.00');
 });
 
 test('a customer cannot view another customer order', function () {

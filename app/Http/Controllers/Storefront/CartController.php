@@ -21,7 +21,11 @@ class CartController extends Controller
             'coupon',
         ]);
 
-        $vendorGroups = $cart->activeItems->groupBy(fn ($item) => $item->product->vendor_id);
+        // A product can be soft-deleted after already sitting in a
+        // customer's cart — ->product is then null (see CartItem's note),
+        // so these items are grouped under a null key instead of crashing
+        // the page; the view shows them as unavailable.
+        $vendorGroups = $cart->activeItems->groupBy(fn ($item) => $item->product?->vendor_id);
 
         return view('storefront.cart.index', [
             'cart' => $cart,

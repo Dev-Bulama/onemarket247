@@ -4,6 +4,7 @@ use App\Enums\StoreStaffStatus;
 use App\Enums\UserType;
 use App\Enums\VendorSubscriptionStatus;
 use App\Filament\Vendor\Pages\Subscription;
+use App\Models\Currency;
 use App\Models\Store;
 use App\Models\StoreStaff;
 use App\Models\User;
@@ -52,6 +53,19 @@ test('a vendor cannot self-service switch to a paid plan', function () {
         ->call('switchTo', $paidPlan->id);
 
     expect(VendorSubscription::where('vendor_id', $vendor->id)->where('vendor_subscription_plan_id', $paidPlan->id)->exists())->toBeFalse();
+});
+
+test('the subscription page shows plan prices in the store base currency, not a hardcoded dollar sign', function () {
+    Currency::factory()->create(['code' => 'NGN', 'symbol' => '₦', 'is_default' => true]);
+
+    $vendor = Vendor::factory()->create();
+    Store::factory()->for($vendor)->create();
+    VendorSubscriptionPlan::factory()->create(['price' => 2900, 'is_active' => true]);
+
+    $this->actingAs($vendor->user, 'vendor')->get('/vendor/subscription')
+        ->assertOk()
+        ->assertSee('₦29.00')
+        ->assertDontSee('$29.00');
 });
 
 test('vendor staff cannot access the subscription page', function () {

@@ -144,6 +144,24 @@ test('an item can be removed from the cart', function () {
     expect(CartItem::find($itemId))->toBeNull();
 });
 
+test('viewing the cart never crashes when a product in it was deleted from the catalog', function () {
+    $product = Product::factory()->create(['price' => 1000, 'name' => 'Soon Gone Widget']);
+
+    $response = $this->post(route('cart.items.store'), ['product_id' => $product->id, 'quantity' => 1]);
+    $token = $response->getCookie('cart_token')->getValue();
+
+    // A vendor or admin removes it from the catalog after it's already in
+    // this guest's cart — Product is soft-deletable, so the row still
+    // exists at the FK level but the default relation query hides it.
+    $product->delete();
+
+    $this->withCookie('cart_token', $token)
+        ->get(route('cart.index'))
+        ->assertOk()
+        ->assertSee('This item is no longer available.')
+        ->assertDontSee('Soon Gone Widget');
+});
+
 test('a guest cannot mutate a cart item belonging to a different guest cart', function () {
     $productA = Product::factory()->create();
     $productB = Product::factory()->create();

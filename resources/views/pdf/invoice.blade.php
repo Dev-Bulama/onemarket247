@@ -65,9 +65,9 @@
             @foreach ($vendorOrder->orderItems as $item)
                 <tr>
                     <td>{{ $item->product_name }} <span class="muted">({{ $item->sku }})</span></td>
-                    <td class="text-right">${{ number_format($item->unit_price / 100, 2) }}</td>
+                    <td class="text-right">@price($item->unit_price)</td>
                     <td class="text-right">{{ $item->quantity }}</td>
-                    <td class="text-right">${{ number_format($item->line_total / 100, 2) }}</td>
+                    <td class="text-right">@price($item->line_total)</td>
                 </tr>
             @endforeach
         </table>
@@ -76,25 +76,25 @@
     <table class="totals">
         <tr>
             <td>Subtotal</td>
-            <td class="text-right">${{ number_format($order->subtotal / 100, 2) }}</td>
+            <td class="text-right">@price($order->subtotal)</td>
         </tr>
         @if ($order->discount_amount > 0)
             <tr>
                 <td>Discount @if ($order->coupon_code) ({{ $order->coupon_code }}) @endif</td>
-                <td class="text-right">-${{ number_format($order->discount_amount / 100, 2) }}</td>
+                <td class="text-right">-@price($order->discount_amount)</td>
             </tr>
         @endif
         <tr>
             <td>Shipping</td>
-            <td class="text-right">${{ number_format($order->shipping_amount / 100, 2) }}</td>
+            <td class="text-right">@price($order->shipping_amount)</td>
         </tr>
         <tr>
             <td>Tax</td>
-            <td class="text-right">${{ number_format($order->tax_amount / 100, 2) }}</td>
+            <td class="text-right">@price($order->tax_amount)</td>
         </tr>
         <tr class="grand">
             <td>Total</td>
-            <td class="text-right">${{ number_format($order->total / 100, 2) }}</td>
+            <td class="text-right">@price($order->total)</td>
         </tr>
     </table>
 </body>

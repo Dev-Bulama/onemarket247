@@ -27,6 +27,18 @@ class AddCartItemAction
         $sellable = $variation ?? $product;
         $unitPrice = $variation?->price ?? $product->price;
 
+        // products.price is nullable at the DB level (a variable product's
+        // own row never has one — its variations carry the price instead),
+        // but cart_items.unit_price is NOT NULL. A simple/digital product
+        // can still end up with a null price if it's edited without going
+        // through the vendor form's required validation (e.g. the admin
+        // panel's product form doesn't enforce it), so this is checked
+        // explicitly rather than letting a null reach the insert and crash
+        // with a raw database error.
+        if ($unitPrice === null) {
+            throw new RuntimeException('This product is not available for purchase right now.');
+        }
+
         $existing = $cart->items()
             ->where('product_id', $product->id)
             ->where('product_variation_id', $variation?->id)

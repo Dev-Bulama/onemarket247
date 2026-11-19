@@ -1,10 +1,12 @@
 <?php
 
 use App\Enums\VendorApplicationStatus;
+use App\Models\Currency;
 use App\Models\Setting;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Models\VendorApplication;
+use App\Models\VendorSubscriptionPlan;
 use Database\Seeders\RolePermissionSeeder;
 use Database\Seeders\SettingsSeeder;
 use Database\Seeders\VendorSubscriptionPlanSeeder;
@@ -38,6 +40,15 @@ function submitVendorApplication(array $overrides = []): TestResponse
 
     return test()->post('/vendor/register', $data);
 }
+
+test('the registration form shows paid plan prices in the store base currency, not bare numbers', function () {
+    Currency::factory()->create(['code' => 'NGN', 'symbol' => '₦', 'is_default' => true]);
+    VendorSubscriptionPlan::factory()->create(['name' => 'Pro', 'price' => 2900, 'is_active' => true]);
+
+    $this->get(route('vendor.register'))
+        ->assertOk()
+        ->assertSee('₦29.00');
+});
 
 test('a complete application is accepted and stored as pending under manual approval', function () {
     $response = submitVendorApplication();

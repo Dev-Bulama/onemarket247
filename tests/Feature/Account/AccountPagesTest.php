@@ -101,6 +101,21 @@ test('a customer can add and remove a product from their compare list', function
     expect($user->fresh()->compareList->products()->where('product_id', $product->id)->exists())->toBeFalse();
 });
 
+test('the compare page shows prices in the store base currency, not a hardcoded dollar sign', function () {
+    Currency::query()->update(['is_default' => false]);
+    Currency::factory()->create(['code' => 'NGN', 'symbol' => '₦', 'is_default' => true]);
+
+    $user = User::factory()->create(['user_type' => UserType::Customer, 'email_verified_at' => now()]);
+    $product = Product::factory()->create(['price' => 1500]);
+    $user->compareList()->create();
+    $user->compareList->products()->attach($product->id);
+
+    $this->actingAs($user)->get(route('account.compare.index'))
+        ->assertOk()
+        ->assertSee('₦15.00')
+        ->assertDontSee('$15.00');
+});
+
 test('the product page shows wishlist and compare actions for an authenticated customer', function () {
     $user = User::factory()->create(['user_type' => UserType::Customer, 'email_verified_at' => now()]);
     $product = Product::factory()->create();

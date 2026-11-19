@@ -14,7 +14,7 @@
             <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4 flex flex-col">
                 <p class="text-base font-semibold">{{ $plan->name }}</p>
                 <p class="text-sm text-gray-500 mb-2">
-                    {{ $plan->isFree() ? 'Free' : '$'.number_format($plan->price / 100, 2).' / '.$plan->billing_period->getLabel() }}
+                    {{ $plan->isFree() ? 'Free' : \App\Support\PriceDisplay::format($plan->price).' / '.$plan->billing_period->getLabel() }}
                 </p>
                 <p class="text-sm text-gray-600 mb-4">{{ $plan->description }}</p>
 

@@ -52,7 +52,7 @@
                         <th class="p-4 text-left text-gray-500 font-medium">Price</th>
                         @foreach ($products as $product)
                             @php $price = $product->displayPrice(); @endphp
-                            <td class="p-4">{{ $price !== null ? '$'.number_format($price / 100, 2) : '—' }}</td>
+                            <td class="p-4">{{ $price !== null ? \App\Support\PriceDisplay::format($price) : '—' }}</td>
                         @endforeach
                     </tr>
                     <tr>

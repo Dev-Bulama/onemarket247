@@ -10,6 +10,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 
 /**
@@ -56,6 +57,7 @@ class ProductForm
                     ->columnSpanFull(),
                 TextInput::make('price')
                     ->numeric()
+                    ->required(fn (Get $get) => $get('type') !== ProductType::Variable->value)
                     ->prefix(PriceDisplay::baseCurrencyCode())
                     ->helperText('The selling price, e.g. 29.99.')
                     ->afterStateHydrated(MinorUnitsInput::hydrate())
