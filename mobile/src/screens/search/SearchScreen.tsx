@@ -10,6 +10,7 @@ import { useWishlistStore } from '../../store/wishlistStore';
 import { useBootstrapStore } from '../../store/bootstrapStore';
 import ProductCard, { computeGridCardWidth } from '../../components/ProductCard';
 import ProductFilterModal, { AppliedFilters } from '../../components/ProductFilterModal';
+import { apiErrorMessage } from '../../api/client';
 
 const RECENT_SEARCHES = ['headphones', 'smartphone', 'laptop', 'smart watch'];
 
@@ -17,6 +18,9 @@ export default function SearchScreen({ navigation }: any) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Product[] | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [lastQuery, setLastQuery] = useState('');
+  const [lastFilters, setLastFilters] = useState<AppliedFilters>({});
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState<AppliedFilters>({});
   const { addItem } = useCartStore();
@@ -45,9 +49,15 @@ export default function SearchScreen({ navigation }: any) {
   const runSearch = async (q: string, filters: AppliedFilters = appliedFilters) => {
     if (!q.trim()) return;
     setLoading(true);
+    setError('');
+    setLastQuery(q);
+    setLastFilters(filters);
     try {
       const res = await searchApi.search(q.trim(), filters);
       setResults(res.data.data);
+    } catch (e) {
+      setError(apiErrorMessage(e, 'Could not run this search.'));
+      setResults(null);
     } finally {
       setLoading(false);
     }
@@ -84,7 +94,13 @@ export default function SearchScreen({ navigation }: any) {
 
       {loading && <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 40 }} />}
 
-      {!loading && results === null && (
+      {!loading && error !== '' && (
+        <TouchableOpacity style={styles.errorBanner} onPress={() => runSearch(lastQuery, lastFilters)}>
+          <Text style={styles.errorBannerText}>{error} — Tap to retry.</Text>
+        </TouchableOpacity>
+      )}
+
+      {!loading && error === '' && results === null && (
         <View style={styles.recentBox}>
           <Text style={styles.recentTitle}>Popular Searches</Text>
           <View style={styles.chipsRow}>
@@ -97,14 +113,14 @@ export default function SearchScreen({ navigation }: any) {
         </View>
       )}
 
-      {!loading && results !== null && results.length === 0 && (
+      {!loading && error === '' && results !== null && results.length === 0 && (
         <View style={styles.empty}>
           <IonIcon name="search-outline" size={48} color={COLORS.border} />
           <Text style={styles.emptyText}>No results for "{query}"</Text>
         </View>
       )}
 
-      {!loading && results && results.length > 0 && (
+      {!loading && error === '' && results && results.length > 0 && (
         <FlatList
           key={gridColumns}
           data={results}
@@ -142,6 +158,8 @@ const styles = StyleSheet.create({
   input: { flex: 1, paddingVertical: 12, fontSize: 13, color: COLORS.text },
   filterBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 10, paddingVertical: 8, marginTop: 8, alignSelf: 'flex-start' },
   filterBtnText: { fontSize: 12, color: COLORS.text, fontWeight: '600' },
+  errorBanner: { backgroundColor: COLORS.danger, padding: 14, margin: SIZES.screenPadding, borderRadius: SIZES.borderRadiusSm },
+  errorBannerText: { color: COLORS.white, fontSize: 12, textAlign: 'center' },
   recentBox: { padding: SIZES.screenPadding },
   recentTitle: { fontSize: 13, fontWeight: '700', color: COLORS.text, marginBottom: 10 },
   chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
