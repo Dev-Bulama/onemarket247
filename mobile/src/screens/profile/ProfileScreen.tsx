@@ -17,6 +17,7 @@ export default function ProfileScreen({ navigation }: any) {
   };
 
   const accountItems = [
+    { icon: 'person-outline', label: 'Edit Profile', onPress: () => navigation.navigate('EditProfile') },
     { icon: 'receipt-outline', label: 'My Orders', onPress: () => navigation.navigate('Orders') },
     { icon: 'chatbubbles-outline', label: 'My Chats', onPress: () => navigation.navigate('ChatList') },
     { icon: 'location-outline', label: 'My Addresses', onPress: () => navigation.navigate('Addresses') },

@@ -30,6 +30,7 @@ export interface User {
   id: number;
   name: string;
   email: string;
+  phone?: string | null;
   user_type: string;
   email_verified: boolean;
   location_sharing_enabled?: boolean;

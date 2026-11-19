@@ -72,6 +72,10 @@ export default function LoginScreen({ navigation }: any) {
           </TouchableOpacity>
         </View>
 
+        <TouchableOpacity style={styles.forgotRow} onPress={() => navigation.navigate('ForgotPassword')}>
+          <Text style={styles.forgotText}>Forgot password?</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.primaryBtn} onPress={handleLogin} disabled={isLoading} activeOpacity={0.85}>
           {isLoading ? <ActivityIndicator color={COLORS.white} /> : <Text style={styles.primaryBtnText}>Log In</Text>}
         </TouchableOpacity>
@@ -98,6 +102,8 @@ const styles = StyleSheet.create({
   passwordRow: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.borderRadius, backgroundColor: COLORS.grayLight },
   passwordInput: { flex: 1, paddingHorizontal: 14, paddingVertical: 12, fontSize: 14, color: COLORS.text },
   eyeBtn: { paddingHorizontal: 12 },
+  forgotRow: { alignSelf: 'flex-end', marginTop: 10 },
+  forgotText: { color: COLORS.primary, fontSize: 13, fontWeight: '600' },
   primaryBtn: { backgroundColor: COLORS.primary, borderRadius: SIZES.borderRadius, paddingVertical: 14, alignItems: 'center', marginTop: SIZES.xl },
   primaryBtnText: { color: COLORS.white, fontWeight: 'bold', fontSize: 15 },
   linkRow: { alignItems: 'center', marginTop: SIZES.lg },

@@ -34,6 +34,8 @@ import PageScreen from '../screens/profile/PageScreen';
 import PreferencesScreen from '../screens/profile/PreferencesScreen';
 import LocationSharingScreen from '../screens/profile/LocationSharingScreen';
 import DeleteAccountScreen from '../screens/profile/DeleteAccountScreen';
+import EditProfileScreen from '../screens/profile/EditProfileScreen';
+import ChangePasswordScreen from '../screens/profile/ChangePasswordScreen';
 import VendorOnboardingScreen from '../screens/vendor/VendorOnboardingScreen';
 import AgentOnboardingScreen from '../screens/agent/AgentOnboardingScreen';
 
@@ -130,6 +132,8 @@ function ProfileStackNav() {
       <ProfileStack.Screen name="Preferences" component={PreferencesScreen} />
       <ProfileStack.Screen name="LocationSharing" component={LocationSharingScreen} />
       <ProfileStack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
+      <ProfileStack.Screen name="EditProfile" component={EditProfileScreen} />
+      <ProfileStack.Screen name="ChangePassword" component={ChangePasswordScreen} />
       <ProfileStack.Screen name="VendorOnboarding" component={VendorOnboardingScreen} />
       <ProfileStack.Screen name="AgentOnboarding" component={AgentOnboardingScreen} />
     </ProfileStack.Navigator>

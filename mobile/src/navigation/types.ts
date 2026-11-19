@@ -7,6 +7,7 @@ export type RootStackParamList = {
 export type AuthStackParamList = {
   Login: undefined;
   Register: undefined;
+  ForgotPassword: undefined;
 };
 
 export type HomeStackParamList = {
@@ -42,6 +43,8 @@ export type ProfileStackParamList = {
   Store: { slug: string };
   VendorOnboarding: undefined;
   LocationSharing: undefined;
+  EditProfile: undefined;
+  ChangePassword: undefined;
 };
 
 // Vendor dashboard (createBottomTabNavigator, see VendorNavigator.tsx) —
