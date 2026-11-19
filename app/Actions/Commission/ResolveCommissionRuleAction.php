@@ -55,6 +55,17 @@ class ResolveCommissionRuleAction
 
         $vendor = $item->vendorOrder->vendor;
 
+        // Vendor is soft-deletable — CompleteCheckoutAction already rejects
+        // checkout for a product whose vendor is gone, but this action has
+        // no way to enforce that itself, so it degrades to "no vendor-tier
+        // rule" (same as a vendor with no commission_rules row at all)
+        // rather than crashing a caller that isn't checkout.
+        if ($vendor === null) {
+            return CommissionRule::where('scope_type', CommissionScopeType::Global)
+                ->where('is_active', true)
+                ->first();
+        }
+
         $vendorRule = CommissionRule::where('scope_type', CommissionScopeType::Vendor)
             ->where('vendor_id', $vendor->id)
             ->where('is_active', true)

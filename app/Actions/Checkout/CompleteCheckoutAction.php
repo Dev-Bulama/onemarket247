@@ -74,6 +74,15 @@ class CompleteCheckoutAction
                     throw new CheckoutValidationException('Prices have changed since you added items to your cart. Please review your cart before checking out.');
                 }
 
+                // Vendor is soft-deletable, so a product can stay purchasable
+                // in someone's cart after its vendor account is removed —
+                // caught here, before anything is created, rather than
+                // crashing later when commission resolution looks up the
+                // (now gone) vendor via the order item it would have produced.
+                if ($item->product?->vendor === null) {
+                    throw new CheckoutValidationException('One of the items in your cart is no longer available. Please remove it and try again.');
+                }
+
                 $this->assertAvailable($sellable, $item->quantity);
             }
 
@@ -83,7 +92,7 @@ class CompleteCheckoutAction
                 throw new CheckoutValidationException('No currency is configured for this store yet.');
             }
 
-            $itemsByVendor = $items->groupBy(fn (CartItem $item) => $item->product->vendor_id);
+            $itemsByVendor = $items->groupBy(fn (CartItem $item) => $item->product?->vendor_id);
 
             $shippingCosts = $itemsByVendor->map(function (Collection $vendorItems) use ($shippingData) {
                 $lines = $vendorItems->map(fn (CartItem $item) => [

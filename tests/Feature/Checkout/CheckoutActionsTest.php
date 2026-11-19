@@ -263,6 +263,30 @@ test('a product deleted from the catalog after being added to the cart is reject
     expect(Order::count())->toBe(0);
 });
 
+test('a product whose vendor was soft-deleted after it was added to the cart is rejected without crashing checkout', function () {
+    Currency::factory()->create(['is_default' => true]);
+    $country = Country::factory()->create();
+    seedFreeShippingFor($country);
+    $vendor = Vendor::factory()->create();
+    $product = Product::factory()->create(['vendor_id' => $vendor->id, 'price' => 1000]);
+
+    $cart = Cart::factory()->create();
+    app(AddCartItemAction::class)->handle($cart, $product, null, 1);
+    $session = app(InitiateCheckoutAction::class)->handle($cart);
+
+    // Vendor is soft-deletable too — an admin removing a vendor account
+    // doesn't touch that vendor's products, so one can still be sitting in
+    // a cart. ResolveCommissionRuleAction previously crashed reading ->id
+    // off the now-null vendor relation while recording commission for the
+    // order item checkout had already created.
+    $vendor->delete();
+
+    expect(fn () => app(CompleteCheckoutAction::class)->handle($session, shippingDataFor($country)))
+        ->toThrow(CheckoutValidationException::class);
+
+    expect(Order::count())->toBe(0);
+});
+
 test('insufficient stock at completion time is rejected without creating an order', function () {
     Currency::factory()->create(['is_default' => true]);
     $country = Country::factory()->create();

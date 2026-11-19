@@ -106,6 +106,19 @@ test('a subscription-plan commission_rate_override is used when the vendor has n
         ->and((float) $rule->rate_value)->toBe(6.0);
 });
 
+test('a soft-deleted vendor falls back to the global rule instead of crashing', function () {
+    $vendor = Vendor::factory()->create(['commission_rate' => 15]);
+    $product = Product::factory()->create(['vendor_id' => $vendor->id]);
+    $globalRule = CommissionRule::factory()->global()->create(['rate_value' => 5]);
+
+    $item = itemFor($product, 10000);
+    $vendor->delete();
+
+    $rule = app(ResolveCommissionRuleAction::class)->handle($item->fresh());
+
+    expect($rule->id)->toBe($globalRule->id);
+});
+
 test('the global rule is used when nothing more specific matches', function () {
     $vendor = Vendor::factory()->create(['commission_rate' => null]);
     $product = Product::factory()->create(['vendor_id' => $vendor->id]);
