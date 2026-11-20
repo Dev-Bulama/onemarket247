@@ -49,6 +49,7 @@ class Product extends Model implements HasMedia
             'view_count' => 'integer',
             'reviewed_at' => 'datetime',
             'published_at' => 'datetime',
+            'archived_by_vendor_suspension_at' => 'datetime',
             'flash_sale_starts_at' => 'datetime',
             'flash_sale_ends_at' => 'datetime',
         ];

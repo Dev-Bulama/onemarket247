@@ -1,6 +1,9 @@
 <?php
 
+use App\Enums\ProductStatus;
 use App\Enums\VendorStatus;
+use App\Models\CartItem;
+use App\Models\Product;
 use App\Models\Store;
 use App\Models\User;
 use App\Models\Vendor;
@@ -45,6 +48,43 @@ test('soft-deleting a vendor leaves its owning user account intact', function ()
 
     expect(Vendor::withTrashed()->find($vendor->id))->not->toBeNull()
         ->and(User::find($userId))->not->toBeNull();
+});
+
+test('soft-deleting a vendor archives its published products and clears them from carts', function () {
+    $vendor = Vendor::factory()->create();
+    $published = Product::factory()->create(['vendor_id' => $vendor->id, 'status' => ProductStatus::Published]);
+    $alreadyDraft = Product::factory()->create(['vendor_id' => $vendor->id, 'status' => ProductStatus::Draft]);
+    $cartItem = CartItem::factory()->create(['product_id' => $published->id]);
+
+    $vendor->delete();
+
+    expect($published->fresh()->status)->toBe(ProductStatus::Archived)
+        ->and($published->fresh()->archived_by_vendor_suspension_at)->not->toBeNull()
+        ->and($alreadyDraft->fresh()->status)->toBe(ProductStatus::Draft)
+        ->and($alreadyDraft->fresh()->archived_by_vendor_suspension_at)->toBeNull()
+        ->and(CartItem::find($cartItem->id))->toBeNull();
+});
+
+test('restoring a vendor re-publishes only the products it auto-archived on suspension', function () {
+    $vendor = Vendor::factory()->create();
+    $autoArchived = Product::factory()->create(['vendor_id' => $vendor->id, 'status' => ProductStatus::Published]);
+    $manuallyArchived = Product::factory()->create(['vendor_id' => $vendor->id, 'status' => ProductStatus::Archived]);
+
+    $vendor->delete();
+    $vendor->restore();
+
+    expect($autoArchived->fresh()->status)->toBe(ProductStatus::Published)
+        ->and($autoArchived->fresh()->archived_by_vendor_suspension_at)->toBeNull()
+        ->and($manuallyArchived->fresh()->status)->toBe(ProductStatus::Archived);
+});
+
+test('force-deleting a vendor does not archive its products (the FK cascade removes them entirely)', function () {
+    $vendor = Vendor::factory()->create();
+    $product = Product::factory()->create(['vendor_id' => $vendor->id, 'status' => ProductStatus::Published]);
+
+    $vendor->forceDelete();
+
+    expect(Product::withTrashed()->find($product->id))->toBeNull();
 });
 
 test('force-deleting a vendor also deletes its owning user account, freeing the email', function () {

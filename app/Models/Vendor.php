@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ProductStatus;
 use App\Enums\VendorStatus;
 use App\Enums\VendorSubscriptionStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -28,6 +29,44 @@ class Vendor extends Model
         // since nothing else in the app deletes a vendor's User for them.
         static::forceDeleting(function (self $vendor) {
             $vendor->user?->delete();
+        });
+
+        // A suspended vendor's products otherwise stay published and
+        // purchasable indefinitely — visible in search/listings and
+        // addable to cart — with nothing surfacing that their vendor is
+        // gone until checkout rejects it (see CompleteCheckoutAction's
+        // vendor-null guard). Archiving them here closes that gap at the
+        // source instead of only catching it downstream. Skipped during a
+        // force-delete: the FK's cascadeOnDelete already removes these
+        // product rows entirely, so there's nothing to archive.
+        static::deleting(function (self $vendor) {
+            if ($vendor->isForceDeleting()) {
+                return;
+            }
+
+            $publishedProductIds = $vendor->products()->where('status', ProductStatus::Published)->pluck('id');
+
+            if ($publishedProductIds->isEmpty()) {
+                return;
+            }
+
+            $vendor->products()->whereIn('id', $publishedProductIds)->update([
+                'status' => ProductStatus::Archived,
+                'archived_by_vendor_suspension_at' => now(),
+            ]);
+
+            CartItem::whereIn('product_id', $publishedProductIds)->delete();
+        });
+
+        // The mirror of the above — only re-publishes products this same
+        // suspension archived (archived_by_vendor_suspension_at is set),
+        // never one a vendor had already archived themselves for an
+        // unrelated reason before being suspended.
+        static::restored(function (self $vendor) {
+            $vendor->products()->whereNotNull('archived_by_vendor_suspension_at')->update([
+                'status' => ProductStatus::Published,
+                'archived_by_vendor_suspension_at' => null,
+            ]);
         });
     }
 
