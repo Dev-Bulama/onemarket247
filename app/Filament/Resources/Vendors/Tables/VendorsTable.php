@@ -181,13 +181,17 @@ class VendorsTable
                 // already soft-deleted (Filament's default for these three),
                 // which made Force Delete/Restore effectively undiscoverable
                 // from the list — the admin had to re-open an already-
-                // trashed record's edit page to find them. Visible here
-                // directly, same default trashed-state logic.
+                // trashed record's edit page to find them.
                 DeleteAction::make()
                     ->modalDescription('This suspends the vendor and can be undone with Restore. Their login and email stay reserved — to fully remove the account and free up their email for re-registration, use Force Delete instead.'),
-                RestoreAction::make(),
+                // Shown next to Delete regardless of trashed state (unlike
+                // Filament's default, which hides this until the record is
+                // already soft-deleted) — an admin can go straight to a full
+                // removal without a separate suspend-then-force-delete step.
                 ForceDeleteAction::make()
+                    ->visible(true)
                     ->modalDescription('This permanently deletes the vendor\'s login account too, freeing their email for a new registration. This cannot be undone.'),
+                RestoreAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

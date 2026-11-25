@@ -61,15 +61,15 @@ test('deleting an approved application does not touch the live vendor it created
         ->and($vendor->fresh()->store)->not->toBeNull();
 });
 
-test('force delete and restore are hidden on an active vendor row, and appear once it is suspended', function () {
+test('force delete is visible next to delete on an active vendor row, while restore stays hidden until suspended', function () {
     $admin = deleteOptionsAdmin();
     $vendor = Vendor::factory()->create();
 
     Filament::setCurrentPanel('admin');
 
     $component = Livewire::actingAs($admin, 'admin')->test(ListVendors::class);
-    $component->assertTableActionExists('delete', record: $vendor)
-        ->assertTableActionHidden('forceDelete', record: $vendor)
+    $component->assertTableActionVisible('delete', record: $vendor)
+        ->assertTableActionVisible('forceDelete', record: $vendor)
         ->assertTableActionHidden('restore', record: $vendor);
 
     $component->callTableAction('delete', $vendor);
@@ -79,17 +79,16 @@ test('force delete and restore are hidden on an active vendor row, and appear on
         ->assertTableActionVisible('restore', record: $vendor->fresh());
 });
 
-test('force-deleting a vendor directly from the list frees its email for a new registration', function () {
+test('force-deleting a vendor directly from the list frees its email for a new registration, with no prior suspension needed', function () {
     $admin = deleteOptionsAdmin();
     $vendor = Vendor::factory()->create();
     $email = $vendor->user->email;
-    $vendor->delete();
 
     Filament::setCurrentPanel('admin');
 
     Livewire::actingAs($admin, 'admin')
         ->test(ListVendors::class)
-        ->callTableAction('forceDelete', $vendor->fresh());
+        ->callTableAction('forceDelete', $vendor);
 
     expect(Vendor::withTrashed()->find($vendor->id))->toBeNull()
         ->and(User::where('email', $email)->exists())->toBeFalse();
