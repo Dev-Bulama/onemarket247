@@ -109,6 +109,17 @@
                     <span class="mt-0.5">Sign in</span>
                 </a>
             @endauth
+            @auth('vendor')
+                <a href="{{ route('filament.vendor.pages.dashboard') }}" class="flex flex-col items-center hover:text-brand-orange">
+                    <i class="fa-solid fa-store" aria-hidden="true"></i>
+                    <span class="mt-0.5">Vendor</span>
+                </a>
+            @else
+                <a href="{{ route('vendor.login') }}" class="flex flex-col items-center hover:text-brand-orange">
+                    <i class="fa-solid fa-store" aria-hidden="true"></i>
+                    <span class="mt-0.5">Vendor Login</span>
+                </a>
+            @endauth
             <a href="{{ route('account.orders.index') }}" class="flex flex-col items-center hover:text-brand-orange">
                 <i class="fa-solid fa-box" aria-hidden="true"></i>
                 <span class="mt-0.5">Orders</span>

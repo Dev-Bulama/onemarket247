@@ -54,4 +54,9 @@
         Don't have an account?
         <a href="{{ route('register') }}" class="text-brand-orange hover:underline">Register</a>
     </p>
+
+    <p class="mt-2 text-center text-sm text-gray-600">
+        Are you a vendor?
+        <a href="{{ route('vendor.login') }}" class="text-brand-orange hover:underline">Log in to your store</a>
+    </p>
 @endsection
