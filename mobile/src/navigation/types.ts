@@ -1,11 +1,11 @@
 export type RootStackParamList = {
   Main: undefined;
-  Auth: { screen?: 'Login' | 'Register' } | undefined;
+  Auth: { screen?: 'Login' | 'Register'; params?: { asVendor?: boolean } } | undefined;
   Vendor: undefined;
 };
 
 export type AuthStackParamList = {
-  Login: undefined;
+  Login: { asVendor?: boolean } | undefined;
   Register: undefined;
   ForgotPassword: undefined;
 };

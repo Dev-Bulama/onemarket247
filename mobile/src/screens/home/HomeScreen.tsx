@@ -147,6 +147,15 @@ export default function HomeScreen({ navigation }: any) {
   const firstName = user?.name?.trim().split(' ')[0] ?? '';
   const activeSortLabel = SORT_OPTIONS.find(o => o.value === sort)?.label ?? 'Popular';
 
+  const isVendorAccount = user?.user_type === 'vendor_owner' || user?.user_type === 'vendor_staff';
+  const handleVendorPress = () => {
+    if (isVendorAccount) {
+      navigation.getParent()?.getParent()?.navigate('Vendor');
+    } else {
+      navigation.getParent()?.getParent()?.navigate('Auth', { screen: 'Login', params: { asVendor: true } });
+    }
+  };
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -156,6 +165,10 @@ export default function HomeScreen({ navigation }: any) {
           <View style={styles.badge}><Text style={styles.badgeText}>24/7</Text></View>
         </View>
         <View style={styles.headerIcons}>
+          <TouchableOpacity onPress={handleVendorPress} style={styles.vendorBtn}>
+            <IonIcon name="storefront-outline" size={16} color={COLORS.primary} />
+            <Text style={styles.vendorBtnText}>{isVendorAccount ? 'Dashboard' : 'Vendor'}</Text>
+          </TouchableOpacity>
           <TouchableOpacity onPress={() => navigation.getParent()?.navigate('SearchTab')} style={styles.iconBtn}>
             <IonIcon name="search-outline" size={22} color={COLORS.text} />
           </TouchableOpacity>
@@ -408,6 +421,11 @@ const styles = StyleSheet.create({
   badge: { backgroundColor: COLORS.accent, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, marginLeft: 6 },
   badgeText: { color: COLORS.white, fontWeight: 'bold', fontSize: 11 },
   headerIcons: { flexDirection: 'row', alignItems: 'center' },
+  vendorBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 4, borderWidth: 1, borderColor: COLORS.primary,
+    borderRadius: SIZES.borderRadiusSm, paddingHorizontal: 8, paddingVertical: 5,
+  },
+  vendorBtnText: { fontSize: 11, fontWeight: '700', color: COLORS.primary },
   iconBtn: { padding: 6, marginLeft: 6 },
   notifBadge: {
     position: 'absolute', top: -4, right: -6, backgroundColor: COLORS.danger, borderRadius: 9,

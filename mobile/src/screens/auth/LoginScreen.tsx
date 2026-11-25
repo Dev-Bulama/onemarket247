@@ -7,12 +7,13 @@ import { useCartStore } from '../../store/cartStore';
 import { useToastStore } from '../../store/toastStore';
 import { apiErrorMessage } from '../../api/client';
 
-export default function LoginScreen({ navigation }: any) {
+export default function LoginScreen({ navigation, route }: any) {
   const { login, isLoading } = useAuthStore();
   const { mergeIntoAccount } = useCartStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [asVendor, setAsVendor] = useState(!!route?.params?.asVendor);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -25,6 +26,20 @@ export default function LoginScreen({ navigation }: any) {
       useToastStore.getState().show(apiErrorMessage(e, 'Could not log in. Please check your credentials.'), 'error');
       return;
     }
+
+    // Vendor mode routes straight to the vendor dashboard once the
+    // account actually turns out to be a vendor one — a customer account
+    // entered here just falls through to the normal flow below instead
+    // of being blocked, since the account itself is still real either way.
+    if (asVendor) {
+      const loggedInUser = useAuthStore.getState().user;
+      const isVendorAccount = loggedInUser?.user_type === 'vendor_owner' || loggedInUser?.user_type === 'vendor_staff';
+      if (isVendorAccount) {
+        navigation.getParent()?.getParent()?.navigate('Vendor');
+        return;
+      }
+    }
+
     // Already logged in successfully at this point — a cart-merge failure
     // must not be reported as a login failure (it isn't one).
     try {
@@ -32,7 +47,10 @@ export default function LoginScreen({ navigation }: any) {
     } catch {
       // best-effort — the guest cart simply won't have merged in
     }
-    useToastStore.getState().show('Welcome back!');
+    useToastStore.getState().show(
+      asVendor ? "This account isn't registered as a vendor — logged in as a customer instead." : 'Welcome back!',
+      asVendor ? 'error' : undefined,
+    );
     navigation.getParent()?.goBack();
   };
 
@@ -43,8 +61,19 @@ export default function LoginScreen({ navigation }: any) {
           <IonIcon name="close" size={24} color={COLORS.text} />
         </TouchableOpacity>
 
-        <Text style={styles.title}>Welcome back</Text>
-        <Text style={styles.subtitle}>Log in to continue shopping on OneMarket 24/7</Text>
+        <View style={styles.modeRow}>
+          <TouchableOpacity style={[styles.modePill, !asVendor && styles.modePillActive]} onPress={() => setAsVendor(false)}>
+            <Text style={[styles.modePillText, !asVendor && styles.modePillTextActive]}>Customer</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.modePill, asVendor && styles.modePillActive]} onPress={() => setAsVendor(true)}>
+            <Text style={[styles.modePillText, asVendor && styles.modePillTextActive]}>Vendor</Text>
+          </TouchableOpacity>
+        </View>
+
+        <Text style={styles.title}>{asVendor ? 'Vendor Sign In' : 'Welcome back'}</Text>
+        <Text style={styles.subtitle}>
+          {asVendor ? 'Log in to manage your store on OneMarket 24/7' : 'Log in to continue shopping on OneMarket 24/7'}
+        </Text>
 
         <Text style={styles.label}>Email</Text>
         <TextInput
@@ -92,6 +121,11 @@ const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: COLORS.white },
   container: { padding: SIZES.screenPadding, paddingTop: 56, flexGrow: 1 },
   closeBtn: { position: 'absolute', top: 16, right: 16, zIndex: 1 },
+  modeRow: { flexDirection: 'row', backgroundColor: COLORS.grayLight, borderRadius: SIZES.borderRadius, padding: 4, marginBottom: SIZES.lg, alignSelf: 'flex-start' },
+  modePill: { paddingHorizontal: 18, paddingVertical: 8, borderRadius: SIZES.borderRadiusSm },
+  modePillActive: { backgroundColor: COLORS.primary },
+  modePillText: { fontSize: 13, fontWeight: '600', color: COLORS.textSecondary },
+  modePillTextActive: { color: COLORS.white },
   title: { fontSize: 24, fontWeight: 'bold', color: COLORS.text, marginBottom: 6 },
   subtitle: { fontSize: 14, color: COLORS.textSecondary, marginBottom: SIZES.xl },
   label: { fontSize: 13, fontWeight: '600', color: COLORS.text, marginBottom: 6, marginTop: 14 },
