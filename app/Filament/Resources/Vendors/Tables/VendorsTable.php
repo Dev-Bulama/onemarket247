@@ -8,9 +8,12 @@ use App\Filament\Resources\Conversations\ConversationResource;
 use App\Models\Vendor;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\ForceDeleteBulkAction;
+use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
@@ -174,6 +177,17 @@ class VendorsTable
                     ->visible(fn (Vendor $record) => filled($record->user?->phone))
                     ->url(fn (Vendor $record) => 'tel:'.$record->user->phone),
                 EditAction::make(),
+                // Not visible from the Edit page until the vendor is
+                // already soft-deleted (Filament's default for these three),
+                // which made Force Delete/Restore effectively undiscoverable
+                // from the list — the admin had to re-open an already-
+                // trashed record's edit page to find them. Visible here
+                // directly, same default trashed-state logic.
+                DeleteAction::make()
+                    ->modalDescription('This suspends the vendor and can be undone with Restore. Their login and email stay reserved — to fully remove the account and free up their email for re-registration, use Force Delete instead.'),
+                RestoreAction::make(),
+                ForceDeleteAction::make()
+                    ->modalDescription('This permanently deletes the vendor\'s login account too, freeing their email for a new registration. This cannot be undone.'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

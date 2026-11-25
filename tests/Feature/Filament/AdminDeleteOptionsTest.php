@@ -4,6 +4,7 @@ use App\Actions\Vendor\ApproveVendorApplicationAction;
 use App\Enums\VendorApplicationStatus;
 use App\Filament\Resources\Stores\Pages\ListStores;
 use App\Filament\Resources\VendorApplications\Pages\ListVendorApplications;
+use App\Filament\Resources\Vendors\Pages\ListVendors;
 use App\Models\Store;
 use App\Models\User;
 use App\Models\Vendor;
@@ -58,6 +59,40 @@ test('deleting an approved application does not touch the live vendor it created
     expect(VendorApplication::find($application->id))->toBeNull()
         ->and(Vendor::find($vendor->id))->not->toBeNull()
         ->and($vendor->fresh()->store)->not->toBeNull();
+});
+
+test('force delete and restore are hidden on an active vendor row, and appear once it is suspended', function () {
+    $admin = deleteOptionsAdmin();
+    $vendor = Vendor::factory()->create();
+
+    Filament::setCurrentPanel('admin');
+
+    $component = Livewire::actingAs($admin, 'admin')->test(ListVendors::class);
+    $component->assertTableActionExists('delete', record: $vendor)
+        ->assertTableActionHidden('forceDelete', record: $vendor)
+        ->assertTableActionHidden('restore', record: $vendor);
+
+    $component->callTableAction('delete', $vendor);
+
+    $component->assertTableActionHidden('delete', record: $vendor->fresh())
+        ->assertTableActionVisible('forceDelete', record: $vendor->fresh())
+        ->assertTableActionVisible('restore', record: $vendor->fresh());
+});
+
+test('force-deleting a vendor directly from the list frees its email for a new registration', function () {
+    $admin = deleteOptionsAdmin();
+    $vendor = Vendor::factory()->create();
+    $email = $vendor->user->email;
+    $vendor->delete();
+
+    Filament::setCurrentPanel('admin');
+
+    Livewire::actingAs($admin, 'admin')
+        ->test(ListVendors::class)
+        ->callTableAction('forceDelete', $vendor->fresh());
+
+    expect(Vendor::withTrashed()->find($vendor->id))->toBeNull()
+        ->and(User::where('email', $email)->exists())->toBeFalse();
 });
 
 test('an admin can delete a single store from the stores list', function () {
